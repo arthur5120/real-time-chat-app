@@ -1,12 +1,18 @@
 import express from 'express'
 import dotenv from 'dotenv'
+import router from './routes/user-routes'
+import { midSetCors } from './utils/middleware'
 
 dotenv.config()
 
+const app = express()
 const PORT = process.env.PORT
 
-const app = express()
+app.use(
+    midSetCors,
+    router,
+)
 
 app.listen(PORT, () => {
-    console.log('The Server is Running')
+    console.log(`Server Running on ${PORT}`)
 })
