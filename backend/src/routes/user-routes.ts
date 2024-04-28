@@ -8,12 +8,14 @@ import {
     conUpdateUser 
 } from '../controllers/user-controller'
 
-const router = express.Router()
+import { midBodyParsers } from '../utils/middleware'
 
-router.get('/get-users', conGetUsers)
-router.get('/get-user/:id', conGetUserById)
-router.post('/create-user', ...conCreateUser)
-router.put('/update-user/:id', ...conUpdateUser)
-router.delete('/delete-user/:id', conDeleteUser)
+const userRouter = express.Router()
 
-export default router
+userRouter.get('/get-users', conGetUsers)
+userRouter.get('/get-user/:id', conGetUserById)
+userRouter.post('/create-user', midBodyParsers, conCreateUser)
+userRouter.put('/update-user/:id', midBodyParsers, conUpdateUser)
+userRouter.delete('/delete-user/:id', conDeleteUser)
+
+export default userRouter

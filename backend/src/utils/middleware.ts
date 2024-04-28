@@ -3,6 +3,7 @@ import Cors from "cors";
 import bcrypt from 'bcrypt'
 import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
+import cookieParser from "cookie-parser"
 
 dotenv.config()
 
@@ -17,6 +18,7 @@ export const midSetCors = Cors({
 })
 
 export const midBodyParsers = [    
+    cookieParser(),
     express.json(),
     express.text()
 ]
@@ -31,9 +33,7 @@ export const midComparePasswrod = (password : string, hashedPassword : string) =
     return result
 }
 
-export const test = (payload : Object) => {
-    jwt.sign(payload, secretKey, {
-        expiresIn : 1000 * 60 * 5,
-            
-    })
+export const midGenerateToken = (payload : Object) => {
+    const Token = jwt.sign(payload, secretKey)
+    return Token
 }

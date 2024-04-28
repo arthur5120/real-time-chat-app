@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { midBodyParsers } from "../utils/middleware";
 
 import { 
     modCreateUser, 
@@ -9,7 +8,7 @@ import {
     modUpdateUser 
 } from "../models/user-model";
 
-export const conCreateUser = [midBodyParsers, async (req : Request, res : Response) => {
+export const conCreateUser = async (req : Request, res : Response) => {
     try {
         await modCreateUser(req, res)
         res.status(200).json({message : 'User Created Successfully'})
@@ -19,9 +18,9 @@ export const conCreateUser = [midBodyParsers, async (req : Request, res : Respon
             message : 'Internal Error'            
         })
     }
-}]
+}
 
-export const conUpdateUser = [midBodyParsers, async (req : Request, res : Response) => {
+export const conUpdateUser = async (req : Request, res : Response) => {
 
     try {
         await modUpdateUser(req, res)
@@ -33,7 +32,7 @@ export const conUpdateUser = [midBodyParsers, async (req : Request, res : Respon
             message : 'Internal Error'            
         })
     }
-}]
+}
 
 export const conDeleteUser = async (req : Request, res : Response) => {
 

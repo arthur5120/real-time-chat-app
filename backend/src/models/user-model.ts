@@ -4,9 +4,7 @@ import { midHashPassword } from "../utils/middleware";
 
 const prisma = new PrismaClient()
 
-export const modCreateUser = async (req : Request, res : Response) => {
-
-    console.log('trying to create')
+export const modCreateUser = async (req : Request, res : Response) => {    
 
     const {password, ...newUser} = req.body
     
@@ -25,8 +23,10 @@ export const modUpdateUser = async (req : Request, res : Response) => {
 
     const userId = req.params.id
 
+    console.log(`Trying to update user with id ${userId} and info ${JSON.stringify(req.body)}`)
+
     try {
-        prisma.user.update({
+        await prisma.user.update({
             where : {id : userId},
             data : req.body
         })
