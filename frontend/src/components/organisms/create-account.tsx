@@ -53,15 +53,9 @@ const CreateAccount = () => {
           fields={fieldList}       
         />
 
-        <h3 className='flex text-center justify-center items-center'>
-          {message}
-        
-        </h3>
-
-        <h3 className='flex text-center justify-center items-center'>
-          {loading ? 'please wait...' : ''}
-        </h3>  
-      
+          <CustomTitle value={message}/>
+          
+          {loading ? <CustomTitle value={'please wait...'}/> : ''}      
 
     </>
 

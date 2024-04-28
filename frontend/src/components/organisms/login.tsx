@@ -1,15 +1,13 @@
 import CustomTitle from "../atoms/title"
 import Form from "../molecules/form"
-import { FormEvent, useEffect, useState } from "react"
+import { FormEvent, useState } from "react"
 import { TUser, TFieldKeys } from "../../utils/types"
 import { userPlaceholder } from "../../utils/placeholders"
-import { getUsers } from "../../hooks/useAxios"
 import { validateUser } from "../../utils/validation-functions"
 
 const Login = () => {
 
   const [data, setData] = useState<TUser>(userPlaceholder)
-  const [dataCollection, setDataCollection] = useState<TUser[]>([userPlaceholder])
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)   
   
@@ -17,13 +15,6 @@ const Login = () => {
     'email', 
     'password',
   ]
-
-  const fetchUsers = async () => {
-    setLoading(true)
-    const users = await getUsers()
-    setDataCollection(users)
-    setLoading(false)
-  }  
   
   const onSubmit = (e : FormEvent<HTMLFormElement>) => {    
     setLoading(true)
@@ -32,10 +23,6 @@ const Login = () => {
     setMessage(JSON.stringify(res))
     setLoading(false)
   }
-
-  useEffect(() => {
-    fetchUsers()
-  }, [dataCollection.length])
 
   return (
 
@@ -50,14 +37,9 @@ const Login = () => {
           fields={fieldList}       
         />
 
-        <h3 className='flex text-center justify-center items-center'>
-          {message}
-        
-        </h3>
+        <CustomTitle value={message}/>
 
-        <h3 className='flex text-center justify-center items-center'>
-          {loading ? 'please wait...' : ''}
-        </h3>  
+        {loading ? <CustomTitle value={'please wait...'}/> : ''}
       
     </>
 
