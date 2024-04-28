@@ -11,7 +11,7 @@ const CreateAccount = () => {
   const [data, setData] = useState<TUser>(userPlaceholder)
   const [dataCollection, setDataCollection] = useState<TUser[]>([userPlaceholder])
   const [message, setMessage] = useState('')
-  const [loading, setLoading] = useState(false)   
+  const [loading, setLoading] = useState(false)
   
   const fieldList : TFieldKeys[] = [
     'name', 
@@ -43,7 +43,7 @@ const CreateAccount = () => {
 
     <>
 
-        <CustomTitle value='Create Account Page' />
+        <CustomTitle value='Create Account Page' className="text-green-500"/>
 
         <Form 
           data={data} 
@@ -53,9 +53,9 @@ const CreateAccount = () => {
           fields={fieldList}       
         />
 
-          <CustomTitle value={message}/>
+          <CustomTitle value={message} variationName="varthree"/>
           
-          {loading ? <CustomTitle value={'please wait...'}/> : ''}      
+          {loading ? <CustomTitle value={'please wait...'} variationName="varthree"/> : ''}      
 
     </>
 

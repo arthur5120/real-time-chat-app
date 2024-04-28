@@ -8,9 +8,9 @@ type TTitle = {
 } & HTMLAttributes<HTMLHeadingElement>
 
 const titleVariations = {
-  varone : 'text-red-500',
-  vartwo : 'text-yellow-500',
-  varthree : 'text-green-500'
+  varone : 'text-xl font-bold text-red-500',
+  vartwo : 'text-lg font-bold text-yellow-500',
+  varthree : 'text font text-green-500'
 }
 
 const CustomTitle : FC<TTitle> = ({value, className='', variationName='varone', ...props}) => {
