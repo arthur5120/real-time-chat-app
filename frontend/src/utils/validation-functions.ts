@@ -8,6 +8,8 @@
 import { ZodError } from "zod"
 import { userSchema } from "./validation-schemas"
 
+type fieldType = keyof typeof userSchema
+
 export const validateUser = (value : object) => {
     try {
         const result = userSchema.parse(value)

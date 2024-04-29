@@ -3,23 +3,23 @@ import Form from "../molecules/form"
 import { FormEvent, useState } from "react"
 import { TUser, TFieldKeys } from "../../utils/types"
 import { userPlaceholder } from "../../utils/placeholders"
-import { validateUser } from "../../utils/validation-functions"
 
 const Login = () => {
 
   const [data, setData] = useState<TUser>(userPlaceholder)
   const [message, setMessage] = useState('')
-  const [loading, setLoading] = useState(false)   
+  const [loading, setLoading] = useState(false)
   
   const fieldList : TFieldKeys[] = [
     'email', 
     'password',
   ]
   
-  const onSubmit = (e : FormEvent<HTMLFormElement>) => {    
+  const onSubmit = (e : FormEvent<HTMLFormElement>) => { 
+    alert(JSON.stringify(data))   
     setLoading(true)
     e.preventDefault()
-    const res = validateUser(data)
+    const res = `Congrats you're logged in!` // Dummy Auth Response
     setMessage(JSON.stringify(res))
     setLoading(false)
   }
@@ -30,16 +30,16 @@ const Login = () => {
 
         <CustomTitle value='Login Page'/>
 
-        <Form 
+        <Form
           data={data}
           setData={setData}
           onSubmit={onSubmit}
-          fields={fieldList}       
+          fields={fieldList}
         />
 
-        <CustomTitle value={message}/>
-
-        {loading ? <CustomTitle value={'please wait...'}/> : ''}
+        <CustomTitle value={message} variationName="varthree"/>
+          
+        {loading ? <CustomTitle value={'please wait...'} variationName="varthree"/> : ''}
       
     </>
 
