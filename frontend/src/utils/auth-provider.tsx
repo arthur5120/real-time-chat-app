@@ -4,8 +4,11 @@ import {
   FC, 
   ReactElement, 
   Dispatch, 
-  SetStateAction 
+  SetStateAction,   
+  useEffect
 } from 'react';
+
+import Cookies from 'js-cookie';
 
 type TAuth = {
   auth ? : boolean,
@@ -14,12 +17,21 @@ type TAuth = {
 
 export const authContext = createContext<TAuth>({})
 
-const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
+const AuthProvider : FC<{children : ReactElement}> = ({children}) => {  
 
   const [auth, setAuth] = useState(false)
 
+  const checkToken = () => {
+    const hasCookie = !!Cookies.get('auth')    
+    setAuth(hasCookie)
+  }
+
+  useEffect(() => {
+    checkToken()
+  }, [auth])
+
   return (
-    
+
       <authContext.Provider value={{auth, setAuth}}>
         {children}
       </authContext.Provider>

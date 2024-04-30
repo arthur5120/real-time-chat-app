@@ -2,7 +2,8 @@ export type TUser = Partial <{
     name : string,
     username : string,
     email : string,
-    password : string
+    password : string,
+    role : string
 }>
 
 export type TElementProps = Partial<{

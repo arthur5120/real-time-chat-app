@@ -9,7 +9,7 @@ type TFormProps = {
   setData : Dispatch<SetStateAction<object>>
   onSubmit : Function
   fields : TFieldKeys[]
-  dataCollection ? : TUser[]
+  dataCollection ? : Object[]
 }
 
 const Form : FC<TFormProps> = ({data, setData, onSubmit, fields, dataCollection=null}) => {

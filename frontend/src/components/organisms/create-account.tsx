@@ -14,9 +14,9 @@ const CreateAccount = () => {
   const [loading, setLoading] = useState(false)
   
   const fieldList : TFieldKeys[] = [
-    'name', 
-    'email', 
-    'username', 
+    'name',
+    'email',
+    'username',    
     'password',
   ]
 
@@ -62,11 +62,11 @@ const CreateAccount = () => {
         <CustomTitle value='Create Account Page' className="text-green-500"/>
 
         <Form 
-          data={data} 
-          setData={setData} 
-          dataCollection={dataCollection} 
-          onSubmit={onSubmit}   
-          fields={fieldList}       
+          data={data}
+          setData={setData}
+          dataCollection={dataCollection}
+          onSubmit={onSubmit}
+          fields={fieldList}
         />
 
           <CustomTitle value={message} variationName="varthree"/>

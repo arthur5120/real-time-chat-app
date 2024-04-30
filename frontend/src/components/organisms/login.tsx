@@ -27,8 +27,8 @@ const Login = () => {
       try {
         const serverResponse = await authUser(data)
         if (serverResponse.message = 'success')
-        setAuth(true)
-        setMessage('Authenticated')
+        setAuth(true)      
+        setMessage('Authenticated'+`${JSON.stringify(serverResponse)}`)
       } catch (e) {
         setMessage('Invalid Credentials')
       }
