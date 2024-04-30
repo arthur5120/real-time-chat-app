@@ -1,12 +1,13 @@
+import { modGetUserByEmail } from "../models/user-model";
 import { midGenerateToken } from "../utils/middleware";
 import { Request, Response } from "express";
 
-export const conAuth = async (req : Request, res : Response) => {
-    try {        
+export const conAuth = async (req : Request, res : Response) => {    
+    try {
+        const user = await modGetUserByEmail(req, res)
         const token = midGenerateToken(req.body)
-        res.cookie('auth', token).json({message : 'Authenticated'})
+        return res.status(200).cookie('auth', token).send(user)
     } catch (e) {
-        console.log(e)
-        return res.status(500).json({message : 'Internal Error'})
+        return res.status(404).send(null)
     }
 }

@@ -1,4 +1,5 @@
 import { baseURL } from "../utils/axios-instance";
+import { TUser } from "../utils/types";
 
 export const getUsers = async() => {
     const res = await baseURL.get(`/get-users`)
@@ -10,7 +11,7 @@ export const getUserById = async(id : string) => {
     return res.data
 }
 
-export const createUser = async(data : object) => {
+export const createUser = async(data : TUser) => {
     const res = await baseURL.post(`/create-user`, data)
     return res.data
 }
@@ -25,7 +26,7 @@ export const deleteUser = async(id : string) => {
     return res.data
 }
 
-export const auth = async(data : object) => {
+export const authUser = async(data : TUser) => {
     const res = await baseURL.post(`/auth`, data)
     return res.data
 }

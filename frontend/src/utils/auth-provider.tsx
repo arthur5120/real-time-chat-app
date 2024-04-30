@@ -1,11 +1,18 @@
-import { useState, createContext, FC, ReactElement } from "react";
+import { 
+  useState, 
+  createContext, 
+  FC, 
+  ReactElement, 
+  Dispatch, 
+  SetStateAction 
+} from 'react';
 
 type TAuth = {
   auth ? : boolean,
-  setAuth ? : React.Dispatch<React.SetStateAction<boolean>>
-} | null
+  setAuth ? : Dispatch<SetStateAction<boolean>>
+}
 
-export const authContext = createContext<TAuth>(null)
+export const authContext = createContext<TAuth>({})
 
 const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
 

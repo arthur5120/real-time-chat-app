@@ -3,7 +3,7 @@ import CustomTitle from "../atoms/title"
 import { FormEvent, useEffect, useState } from "react"
 import { TUser, TFieldKeys } from "../../utils/types"
 import { userPlaceholder } from "../../utils/placeholders"
-import { getUsers } from "../../hooks/useAxios"
+import { createUser, getUsers } from "../../hooks/useAxios"
 import { validateUser } from "../../utils/validation-functions"
 
 const CreateAccount = () => {
@@ -27,12 +27,28 @@ const CreateAccount = () => {
     setLoading(false)
   }  
   
-  const onSubmit = (e : FormEvent<HTMLFormElement>) => {    
-    setLoading(true)
-    e.preventDefault()
-    const res = validateUser(data)
-    setMessage(JSON.stringify(res))
-    setLoading(false)
+  const onSubmit = async (e : FormEvent<HTMLFormElement>) => {  
+
+      e.preventDefault()
+      setLoading(true)
+    
+      const validationResult = validateUser(data)
+    
+      if (validationResult.success) {
+
+        try {
+          const serverResponse = await createUser(data)
+          setMessage(serverResponse.message)
+        } catch (e) {
+          setMessage('Failed to create user. Please try again.')
+        }
+
+      } else {
+        setMessage(validationResult.message)
+      }
+    
+      setLoading(false)
+
   }
 
   useEffect(() => {

@@ -15,3 +15,9 @@ export type TVariations = {
   }
 
 export type TFieldKeys = keyof TUser
+
+export type TResponse = {
+    success : boolean,
+    message : string,
+    body ? : object,
+}

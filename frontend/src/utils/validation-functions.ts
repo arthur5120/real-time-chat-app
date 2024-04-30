@@ -7,17 +7,33 @@
 
 import { ZodError } from "zod"
 import { userSchema } from "./validation-schemas"
+import { TUser } from "./types"
+import { TResponse } from "./types"
 
-type fieldType = keyof typeof userSchema
+export const validateUser = (value : TUser) : TResponse => {
 
-export const validateUser = (value : object) => {
-    try {
-        const result = userSchema.parse(value)
+    try {  
+
+        const result : TResponse = {
+            success : true, 
+            message : `success`,
+            body : userSchema.parse(value)
+        }     
+
         return result
+
     } catch (e) {
-        if (e instanceof ZodError) {
-            return e.issues[0].message
+
+        const result : TResponse = (e instanceof ZodError) ? {
+            success : false, 
+            message : e.issues[0].message
+        } : {
+            success : false, 
+            message : 'unknown error'
         }
+
+        return result
+
     }
 
 }

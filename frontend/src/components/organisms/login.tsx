@@ -1,26 +1,39 @@
 import CustomTitle from "../atoms/title"
 import Form from "../molecules/form"
-import { FormEvent, useState } from "react"
+import { FormEvent, useContext, useState } from "react"
 import { TUser, TFieldKeys } from "../../utils/types"
 import { userPlaceholder } from "../../utils/placeholders"
+import { authUser } from "../../hooks/useAxios"
+import { authContext } from "../../utils/auth-provider"
 
 const Login = () => {
 
   const [data, setData] = useState<TUser>(userPlaceholder)
   const [message, setMessage] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false)  
   
   const fieldList : TFieldKeys[] = [
     'email', 
     'password',
   ]
+
+  const {setAuth} = useContext(authContext)
   
-  const onSubmit = (e : FormEvent<HTMLFormElement>) => { 
-    alert(JSON.stringify(data))   
-    setLoading(true)
+  const onSubmit = async (e : FormEvent<HTMLFormElement>) => { 
     e.preventDefault()
-    const res = `Congrats you're logged in!` // Dummy Auth Response
-    setMessage(JSON.stringify(res))
+    setLoading(true)
+
+    if (setAuth != null) {
+      try {
+        const serverResponse = await authUser(data)
+        if (serverResponse.message = 'success')
+        setAuth(true)
+        setMessage('Authenticated')
+      } catch (e) {
+        setMessage('Invalid Credentials')
+      }
+    }
+
     setLoading(false)
   }
 
