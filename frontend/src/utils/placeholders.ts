@@ -3,5 +3,5 @@ export const userPlaceholder = {
     username : '',
     email : '',
     password : '',
-    role : '',
+    role : 'User',
 }

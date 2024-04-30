@@ -8,7 +8,7 @@ import { authContext } from "../../utils/auth-provider"
 
 const Login = () => {
 
-  const [data, setData] = useState<TUser>(userPlaceholder)
+  const [data, setData] = useState<TUser>({...userPlaceholder, email : 'mockuser@hotmail.com', password : 'Password@123'})
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)  
   
@@ -17,7 +17,7 @@ const Login = () => {
     'password',
   ]
 
-  const {setAuth} = useContext(authContext)
+  const {auth, setAuth} = useContext(authContext)
   
   const onSubmit = async (e : FormEvent<HTMLFormElement>) => { 
     e.preventDefault()
@@ -25,10 +25,10 @@ const Login = () => {
 
     if (setAuth != null) {
       try {
-        const serverResponse = await authUser(data)
-        if (serverResponse.message = 'success')
-        setAuth(true)      
-        setMessage('Authenticated'+`${JSON.stringify(serverResponse)}`)
+        const serverResponse = await authUser(data)        
+        setMessage(`Authenticated as ${JSON.stringify(serverResponse)}`)
+        setAuth(true)
+        alert(auth)        
       } catch (e) {
         setMessage('Invalid Credentials')
       }

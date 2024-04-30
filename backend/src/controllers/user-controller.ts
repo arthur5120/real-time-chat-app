@@ -11,7 +11,7 @@ import {
 export const conCreateUser = async (req : Request, res : Response) => {
     try {
         await modCreateUser(req, res)
-        res.status(200).json({message : 'User Created Successfully'})
+        return res.status(200).json({message : 'User Created Successfully'})
     } catch (e) {
         console.log(e)
         return res.status(500).json({
@@ -24,7 +24,7 @@ export const conUpdateUser = async (req : Request, res : Response) => {
 
     try {
         await modUpdateUser(req, res)
-        res.status(200).json({message : 'User Updated Successfully'})
+        return res.status(200).json({message : 'User Updated Successfully'})
 
     } catch (e) {
         console.log(e)
@@ -38,7 +38,7 @@ export const conDeleteUser = async (req : Request, res : Response) => {
 
     try {
         await modDeleteUser(req, res)
-        res.status(200).json({message : 'User Delete Successfully'})
+        return res.status(200).json({message : 'User Delete Successfully'})
     } catch (e) {
         console.log(e)
         return res.status(500).json({
@@ -51,7 +51,7 @@ export const conGetUserById = async (req : Request, res : Response) => {
 
     try {        
         const user = await modGetUserById(req, res)        
-        res.status(200).send(user)
+        return res.status(200).send(user)
     } catch (e) {
         console.log(e)
         return res.status(500).json({
@@ -64,7 +64,7 @@ export const conGetUsers = async (req : Request, res : Response) => {
 
     try {
         const users = await modGetUsers(req, res)
-        res.status(200).send(users)
+        return res.status(200).send(users)
     } catch (e) {
         console.log(e)
         return res.status(500).json({

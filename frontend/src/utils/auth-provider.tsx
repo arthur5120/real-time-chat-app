@@ -22,8 +22,9 @@ const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
   const [auth, setAuth] = useState(false)
 
   const checkToken = () => {
-    const hasCookie = !!Cookies.get('auth')    
-    setAuth(hasCookie)
+    const hasCookie = !!Cookies.get('auth')
+    alert('Checking token has it? '+Cookies.get('auth'))
+    setAuth(hasCookie)    
   }
 
   useEffect(() => {
