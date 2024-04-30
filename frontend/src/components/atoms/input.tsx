@@ -5,7 +5,7 @@ import { capitilizeFirst } from "../../utils/useful-functions";
 
 type TInputProps = TElementProps & React.InputHTMLAttributes<HTMLInputElement>
 
-const CustomInput = ({name, className, variationName='varone', ...props} : TInputProps) => {  
+const CustomInput = ({name, className, variationName='varone', ...props} : TInputProps) => {
 
   const mergedClasses = twMerge(inputVariations[variationName], className)
 

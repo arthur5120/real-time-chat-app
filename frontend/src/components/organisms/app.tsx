@@ -6,11 +6,11 @@ import CustomTitle from "../atoms/title"
 
 const App = () => {
 
-  const {auth} = useContext(authContext)
+  const {auth, role} = useContext(authContext)
 
   const authStatus = auth ? 
-  {value : 'authenticated', className : 'bg-green-500 text-white rounded-xl m-2 p-2'} : 
-  {value : 'not authenticated', className : 'bg-red-500 text-white rounded-xl m-2 p-2'} 
+  {value : `Authenticated as ${role}`, className : 'bg-green-500 text-white rounded-xl m-2 p-2'} : 
+  {value : 'Not Authenticated', className : 'bg-red-500 text-white rounded-xl m-2 p-2'}
 
   return (
 

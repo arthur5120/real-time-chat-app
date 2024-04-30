@@ -30,3 +30,13 @@ export const authUser = async(data : TUser) => {
     const res = await baseURL.post(`/auth`, data)
     return res.data
 }
+
+export const checkAuth = async(data : any) => {
+    const res = await baseURL.post(`/get-auth`, data)
+    return res.data
+}
+
+export const logout = async(data : any) => {
+    const res = await baseURL.post(`/logout`, data)
+    return res.data
+}

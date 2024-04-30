@@ -30,9 +30,8 @@ const CreateAccount = () => {
   const onSubmit = async (e : FormEvent<HTMLFormElement>) => {  
 
     e.preventDefault()
-    setLoading(true)        
 
-    alert(`Trying to create ${JSON.stringify(data)}`)
+    setLoading(true)
 
       const validationResult = validateUser(data)
     
@@ -70,10 +69,6 @@ const CreateAccount = () => {
           role={true}
           fields={fieldList}
         />
-
-        <div className='flex flex-col justify-center items-center'>
-          
-        </div>
 
           <CustomTitle value={message} variationName="varthree"/>
           

@@ -43,8 +43,7 @@ const Form : FC<TFormProps> = ({data, setData, onSubmit, fields, role=false, dat
           ) : ''}
           
           {role ? <>
-            <h3 className='bg-transparent m-1'>Role</h3>
-            <CustomSelect values={[{name : 'User'}, {name : 'Admin'}]} onChange={(e) => handleChange(e)} className='bg-gray-500'/>
+            <CustomSelect name='role' values={[{name : 'User'}, {name : 'Admin'}]} onChange={(e) => handleChange(e)} className='bg-gray-500'/>
           </> : ''}          
           
           {dataCollection != null ? <CustomSelect values={dataCollection} className='bg-blue-700'/> : ''}

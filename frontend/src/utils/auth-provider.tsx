@@ -8,11 +8,13 @@ import {
   useEffect
 } from 'react';
 
-import Cookies from 'js-cookie';
+import { checkAuth, logout } from '../hooks/useAxios';
 
 type TAuth = {
   auth ? : boolean,
   setAuth ? : Dispatch<SetStateAction<boolean>>
+  role ? : string,
+  setRole ? : Dispatch<SetStateAction<string>>
 }
 
 export const authContext = createContext<TAuth>({})
@@ -20,11 +22,21 @@ export const authContext = createContext<TAuth>({})
 const AuthProvider : FC<{children : ReactElement}> = ({children}) => {  
 
   const [auth, setAuth] = useState(false)
+  const [role, setRole] = useState('none')
 
-  const checkToken = () => {
-    const hasCookie = !!Cookies.get('auth')
-    alert('Checking token has it? '+Cookies.get('auth'))
-    setAuth(hasCookie)    
+  const removeToken = async () => {
+    await logout({})
+  }
+
+  const checkToken = async () => {
+    try {
+      const {authenticated, role} = await checkAuth({})
+      setRole(role)
+      setAuth(authenticated)
+    } catch(e) {
+      setRole('none')
+      setAuth(false)
+    }
   }
 
   useEffect(() => {
@@ -33,7 +45,7 @@ const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
 
   return (
 
-      <authContext.Provider value={{auth, setAuth}}>
+      <authContext.Provider value={{auth, setAuth, role, setRole}}>
         {children}
       </authContext.Provider>
   )

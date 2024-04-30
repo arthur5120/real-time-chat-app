@@ -4,14 +4,14 @@ import { inputVariations } from "../../utils/tailwindVariations";
 
 type TButtonProps = TElementProps & React.ButtonHTMLAttributes<HTMLButtonElement>
 
-const CustomButton = ({value, className, variationName='varone', ...props} : TButtonProps) => {  
+const CustomButton = ({value, className, variationName='varone', ...props} : TButtonProps) => {
 
   const mergedClasses = twMerge(inputVariations[variationName], className)
 
-  return (    
+  return (
 
     <>        
-      <button {...props} className={mergedClasses}>{value}</button>      
+      <button {...props} className={mergedClasses}>{value}</button>
     </>
 
   )

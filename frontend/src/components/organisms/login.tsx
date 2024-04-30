@@ -10,14 +10,14 @@ const Login = () => {
 
   const [data, setData] = useState<TUser>({...userPlaceholder, email : 'mockuser@hotmail.com', password : 'Password@123'})
   const [message, setMessage] = useState('')
-  const [loading, setLoading] = useState(false)  
+  const [loading, setLoading] = useState(false)
   
   const fieldList : TFieldKeys[] = [
-    'email', 
+    'email',
     'password',
   ]
 
-  const {auth, setAuth} = useContext(authContext)
+  const {setAuth} = useContext(authContext)
   
   const onSubmit = async (e : FormEvent<HTMLFormElement>) => { 
     e.preventDefault()
@@ -27,8 +27,7 @@ const Login = () => {
       try {
         const serverResponse = await authUser(data)        
         setMessage(`Authenticated as ${JSON.stringify(serverResponse)}`)
-        setAuth(true)
-        alert(auth)        
+        setAuth(true)        
       } catch (e) {
         setMessage('Invalid Credentials')
       }
