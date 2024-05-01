@@ -1,5 +1,6 @@
-import Form from "../molecules/form"
+import CustomForm from "../molecules/form"
 import CustomTitle from "../atoms/title"
+import CustomButton from "../atoms/button"
 import { FormEvent, useEffect, useState } from "react"
 import { TUser, TFieldKeys } from "../../utils/types"
 import { userPlaceholder } from "../../utils/placeholders"
@@ -62,17 +63,16 @@ const CreateAccount = () => {
 
         <CustomTitle value='Create Account Page' className="text-green-500"/>
 
-        <Form 
-          data={data}
-          setData={setData}
-          onSubmit={onSubmit}
-          role={true}
-          fields={fieldList}
-        />
+        <CustomForm data={data} setData={setData} onSubmit={onSubmit} role={true} fields={fieldList}>
+            <div className='flex flex-row justify-center items-center bg-transparent'>
+              <CustomButton value='Clear' type="reset" className='bg-orange-500 p-5 my-5' variationName="varthree"/>
+              <CustomButton value='Submit' className='bg-purple-500 p-5 my-5' variationName="varthree"/>
+            </div>
+        </CustomForm>        
 
-          <CustomTitle value={message} variationName="varthree"/>
-          
-          {loading ? <CustomTitle value={'please wait...'} variationName="varthree"/> : ''}      
+        <CustomTitle value={message} variationName="varthree"/>
+        
+        {loading ? <CustomTitle value={'please wait...'} variationName="varthree"/> : ''}      
 
     </>
 

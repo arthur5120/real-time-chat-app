@@ -10,7 +10,7 @@ const CustomButton = ({value, className, variationName='varone', ...props} : TBu
 
   return (
 
-    <>        
+    <>
       <button {...props} className={mergedClasses}>{value}</button>
     </>
 

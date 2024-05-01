@@ -1,6 +1,5 @@
-import { FC, ChangeEvent, Dispatch, SetStateAction } from "react"
+import { FC, ChangeEvent, Dispatch, SetStateAction, ReactElement } from "react"
 import { TUser, TFieldKeys } from "../../utils/types"
-import CustomButton from "../atoms/button"
 import CustomInput from "../atoms/input"
 import CustomSelect from "../atoms/select"
 
@@ -11,9 +10,10 @@ type TFormProps = {
   fields : TFieldKeys[]
   role ? : boolean
   dataCollection ? : Object[]
+  children ? : ReactElement
 }
 
-const Form : FC<TFormProps> = ({data, setData, onSubmit, fields, role=false, dataCollection=null}) => {
+const CustomForm : FC<TFormProps> = ({data, setData, onSubmit, fields, role=false, dataCollection=null, children}) => {
   
   const handleChange = (e : ChangeEvent<HTMLInputElement | HTMLSelectElement>) => { 
     setData((values) => ({
@@ -28,7 +28,7 @@ const Form : FC<TFormProps> = ({data, setData, onSubmit, fields, role=false, dat
         
         <fieldset className="flex flex-col items-center justify-center  bg-gray-700 rounded-lg p-5">
 
-        {fields != null ? fields.map(
+          {fields != null ? fields.map(
             (field, index) => 
 
               <CustomInput 
@@ -44,16 +44,13 @@ const Form : FC<TFormProps> = ({data, setData, onSubmit, fields, role=false, dat
           
           {role ? <>
             <CustomSelect name='role' values={[{name : 'User'}, {name : 'Admin'}]} onChange={(e) => handleChange(e)} className='bg-gray-500'/>
-          </> : ''}          
+          </> : ''}
           
           {dataCollection != null ? <CustomSelect values={dataCollection} className='bg-blue-700'/> : ''}
 
-        </fieldset>
+        </fieldset>        
 
-        <div>
-          <CustomButton value='Clear' type="reset" className='bg-orange-500 p-5 my-5' variationName="varthree"/>
-          <CustomButton value='Submit' className='bg-purple-500 p-5 my-5' variationName="varthree"/>
-        </div>
+          {children ? children : ''}
       
     </form>
 
@@ -62,4 +59,4 @@ const Form : FC<TFormProps> = ({data, setData, onSubmit, fields, role=false, dat
 }
 
 
-export default Form
+export default CustomForm

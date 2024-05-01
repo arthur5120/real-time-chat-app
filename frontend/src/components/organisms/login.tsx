@@ -1,10 +1,12 @@
 import CustomTitle from "../atoms/title"
-import Form from "../molecules/form"
+import CustomForm from "../molecules/form"
+import CustomButton from "../atoms/button"
 import { FormEvent, useContext, useState } from "react"
 import { TUser, TFieldKeys } from "../../utils/types"
 import { userPlaceholder } from "../../utils/placeholders"
 import { authUser } from "../../hooks/useAxios"
 import { authContext } from "../../utils/auth-provider"
+import { Link, Navigate, redirect } from "react-router-dom"
 
 const Login = () => {
 
@@ -42,12 +44,19 @@ const Login = () => {
 
         <CustomTitle value='Login Page'/>
 
-        <Form
+        <CustomForm
           data={data}
           setData={setData}
           onSubmit={onSubmit}
-          fields={fieldList}
-        />
+          fields={fieldList} 
+        >
+          <div className='flex flex-row justify-center items-center bg-transparent'>
+              <Link to='/create-account'>
+                <CustomButton value='Sign Up' type="reset" className='bg-orange-500 p-5 my-5' variationName="varthree"/>
+              </Link>
+              <CustomButton value='Sign In' className='bg-purple-500 p-5 my-5' variationName="varthree"/>
+            </div>
+        </CustomForm>
 
         <CustomTitle value={message} variationName="varthree"/>
           
