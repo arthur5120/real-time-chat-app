@@ -17,16 +17,17 @@ type TAuth = {
   setRole ? : Dispatch<SetStateAction<string>>
 }
 
+export const removeToken = async (setAuth : Dispatch<SetStateAction<boolean>>) => {  
+  setAuth(false)
+  await logout({})
+}
+
 export const authContext = createContext<TAuth>({})
 
 const AuthProvider : FC<{children : ReactElement}> = ({children}) => {  
 
   const [auth, setAuth] = useState(false)
-  const [role, setRole] = useState('none')
-
-  const removeToken = async () => {
-    await logout({})
-  }
+  const [role, setRole] = useState('none')  
 
   const checkToken = async () => {
     try {

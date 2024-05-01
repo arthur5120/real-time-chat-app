@@ -6,7 +6,7 @@ import { TUser, TFieldKeys } from "../../utils/types"
 import { userPlaceholder } from "../../utils/placeholders"
 import { authUser } from "../../hooks/useAxios"
 import { authContext } from "../../utils/auth-provider"
-import { Link, Navigate, redirect } from "react-router-dom"
+import { Link } from "react-router-dom"
 
 const Login = () => {
 
@@ -27,8 +27,8 @@ const Login = () => {
 
     if (setAuth != null) {
       try {
-        const serverResponse = await authUser(data)        
-        setMessage(`Authenticated as ${JSON.stringify(serverResponse)}`)
+        const serverResponse = await authUser(data)
+        setMessage(`${serverResponse.success ? 'Authenticated' : 'Invalid Credentials'}`)
         setAuth(true)        
       } catch (e) {
         setMessage('Invalid Credentials')

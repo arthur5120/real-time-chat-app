@@ -53,6 +53,10 @@ const CreateAccount = () => {
 
   }
 
+  const onClear = () => {
+    setData(userPlaceholder)    
+  }
+
   useEffect(() => {
     fetchUsers()
   }, [dataCollection.length])
@@ -65,7 +69,7 @@ const CreateAccount = () => {
 
         <CustomForm data={data} setData={setData} onSubmit={onSubmit} role={true} fields={fieldList}>
             <div className='flex flex-row justify-center items-center bg-transparent'>
-              <CustomButton value='Clear' type="reset" className='bg-orange-500 p-5 my-5' variationName="varthree"/>
+              <CustomButton value='Clear' onClick={() => onClear()} type="reset" className='bg-orange-500 p-5 my-5' variationName="varthree"/>
               <CustomButton value='Submit' className='bg-purple-500 p-5 my-5' variationName="varthree"/>
             </div>
         </CustomForm>        

@@ -1,8 +1,18 @@
+import { useContext } from "react"
 import { Link } from "react-router-dom"
+import { authContext, removeToken } from "../../utils/auth-provider"
 
 const LinkStyle = `bg-pink-500 rounded p-2`
 
 const Navbar = () => {
+
+  const {auth, setAuth} = useContext(authContext)
+
+  const logout = () => {
+    if (setAuth) {
+      removeToken(setAuth)
+    }
+  }
 
   return (
 
@@ -11,7 +21,7 @@ const Navbar = () => {
       <ul className="flex gap-5 m-5 items-center justify-center">
           <li><Link className={LinkStyle} to='/profile'>Profile</Link></li>
           <li><Link className={LinkStyle} to='/create-account'>Create Account</Link></li>
-          <li><Link className={LinkStyle} to='/login'>Login</Link></li>
+          {auth ? <li><Link className={LinkStyle} to='/login' onClick={() => logout()}>Logout</Link></li> : <li><Link className={LinkStyle} to='/login'>Login</Link></li> }
       </ul>
       
     </nav>
