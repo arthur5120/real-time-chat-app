@@ -6,13 +6,14 @@ import { TUser, TFieldKeys } from "../../utils/types"
 import { userPlaceholder } from "../../utils/placeholders"
 import { authUser } from "../../hooks/useAxios"
 import { authContext } from "../../utils/auth-provider"
-import { Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 
 const Login = () => {
 
   const [data, setData] = useState<TUser>({...userPlaceholder, email : 'mockuser@hotmail.com', password : 'Password@123'})
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
   
   const fieldList : TFieldKeys[] = [
     'email',
@@ -22,7 +23,7 @@ const Login = () => {
   const {setAuth} = useContext(authContext)
   
   const onSubmit = async (e : FormEvent<HTMLFormElement>) => { 
-    e.preventDefault()
+    e.preventDefault()    
     setLoading(true)
 
     if (setAuth != null) {
@@ -36,6 +37,11 @@ const Login = () => {
     }
 
     setLoading(false)
+    navigate('/profile')
+  }
+
+  const onSignup = () => {
+    navigate('/create-account')
   }
 
   return (
@@ -51,11 +57,9 @@ const Login = () => {
           fields={fieldList} 
         >
           <div className='flex flex-row justify-center items-center bg-transparent'>
-              <Link to='/create-account'>
-                <CustomButton value='Sign Up' type="reset" className='bg-orange-500 p-5 my-5' variationName="varthree"/>
-              </Link>
-              <CustomButton value='Sign In' className='bg-purple-500 p-5 my-5' variationName="varthree"/>
-            </div>
+            <CustomButton value='Sign Up' type="reset" className='bg-orange-500 p-5 my-5' variationName="varthree" onClick={() => onSignup()}/>
+            <CustomButton value='Sign In' className='bg-purple-500 p-5 my-5' variationName="varthree"/>              
+          </div>
         </CustomForm>
 
         <CustomTitle value={message} variationName="varthree"/>
