@@ -5,7 +5,7 @@ const io = new Server({
 })
 
 io.on('connection', (socket) => {
-    socket.on('room', (receivedMessage) => { // Listeing to Room
+    socket.on('room', (receivedMessage) => { // Listening to Room
         console.log(receivedMessage)
         io.to(socket.id).emit('room', 'message.') // Sends String, Objects etc...
     })
