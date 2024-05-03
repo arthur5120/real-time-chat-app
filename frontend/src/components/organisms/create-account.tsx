@@ -26,7 +26,7 @@ const CreateAccount = () => {
     const users = await getUsers()
     setDataCollection(users)
     setLoading(false)
-  }  
+  }
   
   const onSubmit = async (e : FormEvent<HTMLFormElement>) => {  
 
