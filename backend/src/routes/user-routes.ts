@@ -1,11 +1,11 @@
 import express from 'express'
 
 import { 
-    conCreateUser, 
-    conDeleteUser, 
+    conCreateUser,
+    conDeleteUser,
     conGetUserById, 
     conGetUsers, 
-    conUpdateUser 
+    conUpdateUser,    
 } from '../controllers/user-controller'
 
 import { midBodyParsers } from '../utils/middleware'

@@ -6,10 +6,7 @@ const prisma = new PrismaClient()
 
 export const modCreateUser = async (req : Request, res : Response) => {  
     
-    console.log(`Trying to create : ${JSON.stringify(req.body)}`)
-
-    const {password, ...newUser} = req.body
-    
+    const {password, ...newUser} = req.body    
     const hashedPassword = await midHashPassword(password)    
 
     try {
@@ -19,6 +16,7 @@ export const modCreateUser = async (req : Request, res : Response) => {
     } catch(e) {    
         return e
     }
+
 }
 
 export const modUpdateUser = async (req : Request, res : Response) => {
@@ -27,7 +25,7 @@ export const modUpdateUser = async (req : Request, res : Response) => {
 
     console.log(`Trying to update user with id ${userId} and info ${JSON.stringify(req.body)}`)
 
-    try {
+    try {        
         await prisma.user.update({
             where : {id : userId},
             data : req.body

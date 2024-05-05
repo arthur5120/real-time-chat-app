@@ -65,7 +65,7 @@ const CreateAccount = () => {
 
     <>
 
-        <CustomTitle value='Create Account Page' className="text-green-500"/>
+        <CustomTitle value='Create Account Page' className='text-green-500 my-3'/>
 
         <CustomForm data={data} setData={setData} onSubmit={onSubmit} role={true} fields={fieldList}>
             <div className='flex flex-row justify-center items-center bg-transparent'>

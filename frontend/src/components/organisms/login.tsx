@@ -4,7 +4,7 @@ import CustomButton from "../atoms/button"
 import { FormEvent, useContext, useState } from "react"
 import { TUser, TFieldKeys } from "../../utils/types"
 import { userPlaceholder } from "../../utils/placeholders"
-import { authUser } from "../../hooks/useAxios"
+import { authLogin } from "../../hooks/useAxios"
 import { authContext } from "../../utils/auth-provider"
 import { useNavigate } from "react-router-dom"
 
@@ -28,7 +28,7 @@ const Login = () => {
 
     if (setAuth != null) {
       try {
-        const serverResponse = await authUser(data)
+        const serverResponse = await authLogin(data)
         setMessage(`${serverResponse.success ? 'Authenticated' : 'Invalid Credentials'}`)
         setAuth(true)        
       } catch (e) {
@@ -48,7 +48,7 @@ const Login = () => {
 
     <>
 
-        <CustomTitle value='Login Page'/>
+        <CustomTitle value='Login Page' className='text-yellow-500 my-3'/>
 
         <CustomForm
           data={data}

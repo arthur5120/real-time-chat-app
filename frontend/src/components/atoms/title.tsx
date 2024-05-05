@@ -14,7 +14,7 @@ const CustomTitle : FC<TTitle> = ({value, className='', variationName='varone', 
 
   return (
 
-        <span className="mb-5 flex flex-col justify-center items-center">
+        <span className="flex flex-col justify-center items-center bg-transparent">
           <h3 className={mergedClasses} {...props}>{value}</h3>
         </span>
 

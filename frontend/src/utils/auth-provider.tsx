@@ -8,7 +8,7 @@ import {
   useEffect
 } from 'react';
 
-import { checkAuth, logout } from '../hooks/useAxios';
+import { authStatus, authLogout } from '../hooks/useAxios';
 
 type TAuth = {
   auth ? : boolean,
@@ -19,7 +19,7 @@ type TAuth = {
 
 export const removeToken = async (setAuth : Dispatch<SetStateAction<boolean>>) => {  
   setAuth(false)
-  await logout({})
+  await authLogout({})
 }
 
 export const authContext = createContext<TAuth>({})
@@ -31,7 +31,7 @@ const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
 
   const checkToken = async () => {
     try {
-      const {authenticated, role} = await checkAuth({})
+      const {authenticated, role} = await authStatus({})
       setRole(role)
       setAuth(authenticated)
     } catch(e) {

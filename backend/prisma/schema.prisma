@@ -18,25 +18,38 @@ model User {
   name String @db.VarChar(50)
   username String @db.VarChar(50)
   email String @unique
-  password String @db.VarChar(50)
-  role String @default("User")
-  chats Chat[] @relation("UserChats")
+  password String
+  role Role @default(User)
+  chats UserChat[]
   messages Message[]
 }
 
 model Chat {
   id String @id @default(uuid())
-  users User[] @relation("UserChats")
+  users UserChat[]
   messages Message[]
+}
+
+model UserChat {
+  user User @relation(fields : [userId], references : [id], onDelete: Cascade)
+  chat Chat @relation(fields : [chatId], references : [id], onDelete: Cascade)
+  userId String
+  chatId String
+  @@id([userId, chatId])
 }
 
 model Message {
  id String @id @default(uuid()) 
  content String
- created_at DateTime
- updated_at DateTime
+ created_at DateTime @default(now())
+ updated_at DateTime @default(now())
  chat Chat @relation(fields: [chatId], references: [id])
  chatId String @default(uuid())
  user User @relation(fields : [senderId], references: [id])
  senderId String @default(uuid())
+}
+
+enum Role {
+  Admin
+  User
 }

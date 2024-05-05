@@ -14,9 +14,11 @@ const App = () => {
 
   return (
 
-    <>     
+    <>
 
-      <CustomTitle {...authStatus}/>
+      <div className={`flex items-center justify-center ${auth ? 'bg-emerald-500' : 'bg-red-500'} p-5 my-8`}>
+        <CustomTitle {...authStatus} className='bg-transparent text-white'/>
+      </div>
 
       <Navbar />
       <Outlet/>

@@ -33,10 +33,22 @@ export const conGetAuth = async (req : Request, res : Response) => {
     const {auth} = req.cookies         
 
     try {
-        const verifiedUser = jwt.verify(auth, secretKey) as {role : string} | null 
-        res.json({'authenticated':true, 'role':verifiedUser?.role})
-    } catch (e) {        
-        res.json({'authenticated':false, 'role':'none'})
+
+        const verifiedUser = jwt.verify(auth, secretKey) as {id : string, role : string} | null 
+        res.json({
+            id : verifiedUser?.id,
+            authenticated:true, 
+            role:verifiedUser?.role
+        })
+
+    } catch (e) {     
+
+        res.json({
+            id : 'none',
+            authenticated:false, 
+            role:'none'
+        })
+
     }
 
 }
