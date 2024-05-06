@@ -41,13 +41,13 @@ export const authStatus = async(data : any) => {
     return res.data
 }
 
-export const getChatById = async(id : string) => {
-    const res = await baseURL.get(`/chat/${id}`)
+export const createChat = async () => {
+    const res = await baseURL.post(`create-chat`)
     return res.data
 }
 
-export const getChats = async() => {
-    const res = await baseURL.get(`/chats`)
+export const deleteChat = async (chatId : string) => {
+    const res = await baseURL.delete(`delete-chat/${chatId}`)
     return res.data
 }
 
@@ -60,6 +60,16 @@ export const addUserToChat = async(userId : string, chatId : string) => {
 export const removeUserFromChat = async(userId : string, chatId : string) => {
     const data = {userId : userId}
     const res = await baseURL.delete(`/remove-user-from-chat/${chatId}`, {data : data})
+    return res.data
+}
+
+export const getChats = async() => {
+    const res = await baseURL.get(`/chats`)
+    return res.data
+}
+
+export const getChatById = async(id : string) => {
+    const res = await baseURL.get(`/chat/${id}`)
     return res.data
 }
 

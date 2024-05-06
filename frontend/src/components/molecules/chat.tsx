@@ -1,32 +1,34 @@
-import { useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { authStatus, createMessage, getChats, getMessages, getUserById, } from '../../hooks/useAxios'
-import { TUser, TRes, TMessage, TChatMessage } from '../../utils/types'
+import { useEffect, useRef, useState } from 'react'
+import { authStatus, createChat, createMessage, getChats, getMessages, getUserById, } from '../../hooks/useAxios'
+import { TUser, TMessage, TChatMessage } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { getTime } from '../../utils/useful-functions'
 
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
-import { authContext } from '../../utils/auth-provider'
 
 const Chat = () => {
 
   const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
-  const [rooms, setRooms]  = useState<{id : string}[] | null>(null)
+  const [room, setRoom] = useState<{id : string} | null>(null)
+  const [rooms, setRooms] = useState<{id : string}[] | null>(null)
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder) 
   const [messages, setMessages] = useState<TChatMessage[]>([])   
-  const {auth} = useContext(authContext)
 
-  const chatContainerRef = useRef<HTMLDivElement>(null);  
+  const chatContainerRef = useRef<HTMLDivElement>(null)
 
-  const memoizedRooms = useMemo(() => {
-    rooms
-  }, [rooms, auth])
+  const scrollToLatest = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }
 
-  const memoizedMessages = useMemo(() => {
-    messages
-  }, [messages, auth])
+  const retrieveMessages = async () => {
+    const chatMessages = await getMessages()
+    return chatMessages
+  }
   
-  const sendMessage = async() => {
+  const sendMessage = async() => {    
 
     if (currentUser) {
 
@@ -49,6 +51,8 @@ const Chat = () => {
       ...message, content : ''
     })
 
+    scrollToLatest()
+
   }
 
   const updateMessage = (e : React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -60,36 +64,32 @@ const Chat = () => {
     })
   }
 
-  const retrieveMessages = async () => {
-    const chatMessages = await getMessages()
-    return chatMessages
-  }
-  
-  const getCredentials = async () => {
-
-    
-
-    const res = await authStatus({}) as TRes
-
-    if (res.authenticated) {
-      const user = await getUserById(res.id)        
-      setCurrentUser(user)
-    }
-    
-  }
-
-  const getRooms = async () => {    
+  const setPrep = async () => {    
 
     const authInfo = await authStatus({})
     const user = await getUserById(authInfo.id)
     const chatRooms = await getChats()    
-    const storedMessages = await retrieveMessages()
+    const storedMessages = await retrieveMessages()        
 
-    setRooms(chatRooms)
+    authInfo.authenticated ? setCurrentUser(user) : ''
+    
+    if(chatRooms?.length == 0) {
+      await createChat()
+    }    
+    
+    setRoom(chatRooms[0])
+    setRooms(chatRooms)    
 
     const roomMessages = storedMessages.filter(
-      (m : TMessage) => (m.chatId == chatRooms[0].id && m.senderId == authInfo.id)
-    )
+      (m : TMessage) => {
+        const roomId = room?.id ? room.id : 0
+        if (m.chatId == chatRooms[roomId].id && m.senderId == authInfo.id) {          
+          return m
+        }
+      }
+    )   
+    
+    const messageArray : TChatMessage[] = []
 
     roomMessages.map((m : TMessage) => {      
 
@@ -100,37 +100,25 @@ const Chat = () => {
         content : m.content,
         when : lastUpdated,
         room : m.chatId
-      }
-    
-      setMessages((rest) => ([
-        roomMessage,
-        ...rest,
-      ]))
-      
-    })   
-    
-    
-    
+      }  
+
+      messageArray.push(roomMessage)
+
+    })
+
+    setMessages(messageArray)
+
   }  
 
-  const setScroll = () => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }
+  // Deps : current user, rooms, messages | auth, room?.id, messages.length
 
-  // Deps : current user, rooms, messages
+  useEffect(() => {  
+      setPrep()
+      scrollToLatest()
+  }, [])
 
-  useEffect(() => {
-    getCredentials()
-    getRooms()    
-  }, [memoizedRooms])
+  return (
 
-  useEffect(() => {
-    setScroll()
-  }, [memoizedMessages])
-
-  return (    
     
     <section className='flex flex-col gap-3 bg-transparent justify-center items-center text-center'>
 
@@ -177,12 +165,12 @@ const Chat = () => {
         />
 
       </div>
-
-      {rooms ? <CustomSelect name='Chat Rooms' values={
-        rooms.map(room => {
+      
+      {rooms ? <CustomSelect name='Chat Rooms' onChange={(e) => (setRoom({id : e.target.value}))} values={
+        rooms.map((room) => {
           return {name : room.id}
         })
-      }/> : ''}      
+      }/> : ''}     
 
     </section>    
     
