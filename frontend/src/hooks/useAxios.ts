@@ -93,11 +93,11 @@ export const deleteMessage = async(messageId : string) => {
 }
 
 export const getMessages = async() => {
-    const res = await baseURL.get(`get-messages`)
+    const res = await baseURL.get(`messages`)
     return res.data
 }
 
 export const getMessageById = async (messageId : string) => {
-    const res = await baseURL.get(`get-messages/${messageId}`)
+    const res = await baseURL.get(`message/${messageId}`)
     return res.data
 }

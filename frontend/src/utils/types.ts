@@ -22,3 +22,25 @@ export type TResponse = {
     message : string,
     body ? : object,
 }
+
+export type TMessage = {
+    id: string;
+    content: string;
+    created_at: string;
+    updated_at: string;
+    chatId: string;
+    senderId: string;
+}
+  
+export type TChatMessage = {
+    user : string,  
+    content : string
+    when : number
+    room : string
+}
+
+export type TRes = {
+    id: string,
+    authenticated:boolean,
+    role: string
+}

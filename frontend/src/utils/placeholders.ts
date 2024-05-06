@@ -5,3 +5,10 @@ export const userPlaceholder = {
     password : '',
     role : 'User',
 }
+
+export const messagePlaceholder = {
+    user : '', 
+    content : '', 
+    when : 0, 
+    room : ''
+  }

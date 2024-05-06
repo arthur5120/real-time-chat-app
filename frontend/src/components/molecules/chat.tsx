@@ -1,32 +1,30 @@
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { authStatus, createMessage, getChats, getMessages, getUserById, } from '../../hooks/useAxios'
-import { TUser } from '../../utils/types'
-import { userPlaceholder } from '../../utils/placeholders'
+import { TUser, TRes, TMessage, TChatMessage } from '../../utils/types'
+import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { getTime } from '../../utils/useful-functions'
 
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
-
-type TMessage = {
-  user : string,  
-  content : string
-  when : number
-  room : string
-}
-
-const MessagePlaceholder = {
-  user : '', 
-  content : '', 
-  when : 0, 
-  room : ''
-}
+import { authContext } from '../../utils/auth-provider'
 
 const Chat = () => {
 
   const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
   const [rooms, setRooms]  = useState<{id : string}[] | null>(null)
-  const [message, setMessage] = useState<TMessage>(MessagePlaceholder) 
-  const [messages, setMessages] = useState<TMessage[]>([])
+  const [message, setMessage] = useState<TChatMessage>(messagePlaceholder) 
+  const [messages, setMessages] = useState<TChatMessage[]>([])   
+  const {auth} = useContext(authContext)
+
+  const chatContainerRef = useRef<HTMLDivElement>(null);  
+
+  const memoizedRooms = useMemo(() => {
+    rooms
+  }, [rooms, auth])
+
+  const memoizedMessages = useMemo(() => {
+    messages
+  }, [messages, auth])
   
   const sendMessage = async() => {
 
@@ -64,52 +62,86 @@ const Chat = () => {
 
   const retrieveMessages = async () => {
     const chatMessages = await getMessages()
-    alert(JSON.stringify(chatMessages))
+    return chatMessages
   }
   
   const getCredentials = async () => {
 
-    type TRes = {
-      id: string,
-      authenticated:boolean,
-      role: string
-    }
+    
 
     const res = await authStatus({}) as TRes
 
     if (res.authenticated) {
       const user = await getUserById(res.id)        
-      setCurrentUser(user)   
+      setCurrentUser(user)
     }
     
   }
 
-  const getRooms = async () => {
-    const chatRooms = await getChats()
+  const getRooms = async () => {    
+
+    const authInfo = await authStatus({})
+    const user = await getUserById(authInfo.id)
+    const chatRooms = await getChats()    
+    const storedMessages = await retrieveMessages()
+
     setRooms(chatRooms)
+
+    const roomMessages = storedMessages.filter(
+      (m : TMessage) => (m.chatId == chatRooms[0].id && m.senderId == authInfo.id)
+    )
+
+    roomMessages.map((m : TMessage) => {      
+
+      const lastUpdated = new Date(m.updated_at).getTime()
+
+      const roomMessage = {
+        user : user.name, 
+        content : m.content,
+        when : lastUpdated,
+        room : m.chatId
+      }
+    
+      setMessages((rest) => ([
+        roomMessage,
+        ...rest,
+      ]))
+      
+    })   
+    
+    
+    
+  }  
+
+  const setScroll = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }
+
+  // Deps : current user, rooms, messages
 
   useEffect(() => {
     getCredentials()
-    getRooms()
-  }, [rooms])
-  
+    getRooms()    
+  }, [memoizedRooms])
+
+  useEffect(() => {
+    setScroll()
+  }, [memoizedMessages])
+
   return (    
     
     <section className='flex flex-col gap-3 bg-transparent justify-center items-center text-center'>
 
       <div className='flex justify-between bg-gray-700 rounded w-80'>
-
         <h3 className='bg-transparent justify-start m-2'>
             {currentUser?.name ? `Logged in as ${currentUser.name}` : `Chatting as Guest`}
         </h3>
-
         <span className=' bg-transparent m-2 cursor-pointer'>X</span>
-
       </div>
 
-      <div className='flex flex-col gap-1 bg-gray-500 rounded w-80 h-80 overflow-y-scroll'> 
-
+      <div className='flex flex-col gap-1 bg-gray-500 rounded w-80 h-80 overflow-y-scroll' ref={chatContainerRef}> 
         {messages?.map(message => 
           <>
             <span className={`${currentUser.name == message.user ? 'self-end' : 'self-start'} mx-3 p-2 justify-end bg-transparent`}>
@@ -123,7 +155,6 @@ const Chat = () => {
             </span>
           </>
         )}
-
       </div>
 
       <div className='flex bg-gray-700 rounded w-80 h-15 gap-2 p-1'>
