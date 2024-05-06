@@ -7,10 +7,14 @@ import { getTime } from '../../utils/useful-functions'
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
 
+import { io } from 'socket.io-client'
+
+const socket = io('http://localhost:4000')
+
 const Chat = () => {
 
   const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
-  const [room, setRoom] = useState<{id : string} | null>(null)
+  const [roomIndex, setRoomIndex] = useState(0)
   const [rooms, setRooms] = useState<{id : string}[] | null>(null)
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder) 
   const [messages, setMessages] = useState<TChatMessage[]>([])   
@@ -60,7 +64,7 @@ const Chat = () => {
       user : currentUser?.name ? currentUser?.name : 'Guest',
       content : e.target.value, 
       when : Date.now(),
-      room : rooms ? rooms[0].id : 'none'
+      room : rooms ? rooms[roomIndex].id : 'none'
     })
   }
 
@@ -69,25 +73,23 @@ const Chat = () => {
     const authInfo = await authStatus({})
     const user = await getUserById(authInfo.id)
     const chatRooms = await getChats()    
-    const storedMessages = await retrieveMessages()        
+    const storedMessages = await retrieveMessages()    
 
     authInfo.authenticated ? setCurrentUser(user) : ''
     
     if(chatRooms?.length == 0) {
       await createChat()
-    }    
+    }
     
-    setRoom(chatRooms[0])
-    setRooms(chatRooms)    
+    setRooms(chatRooms)
 
     const roomMessages = storedMessages.filter(
-      (m : TMessage) => {
-        const roomId = room?.id ? room.id : 0
-        if (m.chatId == chatRooms[roomId].id && m.senderId == authInfo.id) {          
+      (m : TMessage) => {        
+        if (m.chatId == chatRooms[roomIndex].id) {          
           return m
         }
       }
-    )   
+    )
     
     const messageArray : TChatMessage[] = []
 
@@ -96,26 +98,28 @@ const Chat = () => {
       const lastUpdated = new Date(m.updated_at).getTime()
 
       const roomMessage = {
-        user : user.name, 
+        user : m.senderId == authInfo.id ? user.name : 'Other Person',
         content : m.content,
         when : lastUpdated,
         room : m.chatId
-      }  
+      }
 
       messageArray.push(roomMessage)
 
     })
 
-    setMessages(messageArray)
+    messageArray.sort((a, b) => a.when - b.when)
 
+    setMessages(messageArray)
+    
   }  
 
   // Deps : current user, rooms, messages | auth, room?.id, messages.length
 
   useEffect(() => {  
       setPrep()
-      scrollToLatest()
-  }, [])
+      scrollToLatest()      
+  }, [roomIndex, messages.length])
 
   return (
 
@@ -166,7 +170,7 @@ const Chat = () => {
 
       </div>
       
-      {rooms ? <CustomSelect name='Chat Rooms' onChange={(e) => (setRoom({id : e.target.value}))} values={
+      {rooms ? <CustomSelect name='Chat Rooms' onChange={(e) => (setRoomIndex(e.target.selectedIndex))} values={
         rooms.map((room) => {
           return {name : room.id}
         })
