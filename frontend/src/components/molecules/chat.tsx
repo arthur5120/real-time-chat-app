@@ -1,15 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { authStatus, createChat, createMessage, getChats, getMessages, getUserById, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { getTime } from '../../utils/useful-functions'
+import { socketContext } from '../../utils/socket-provider'
 
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
-
-import { io } from 'socket.io-client'
-
-const socket = io('http://localhost:4000')
 
 const Chat = () => {
 
@@ -17,9 +14,11 @@ const Chat = () => {
   const [roomIndex, setRoomIndex] = useState(0)
   const [rooms, setRooms] = useState<{id : string}[] | null>(null)
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder) 
-  const [messages, setMessages] = useState<TChatMessage[]>([])   
+  const [messages, setMessages] = useState<TChatMessage[]>([])
+  const [reload, setReload] = useState(true)
 
-  const chatContainerRef = useRef<HTMLDivElement>(null)
+  const chatContainerRef = useRef<HTMLDivElement>(null) 
+  const socket = useContext(socketContext) 
 
   const scrollToLatest = () => {
     if (chatContainerRef.current) {
@@ -28,23 +27,34 @@ const Chat = () => {
   }
 
   const retrieveMessages = async () => {
-    const chatMessages = await getMessages()
+    const chatMessages = await getMessages()       
     return chatMessages
   }
   
-  const sendMessage = async() => {    
+  const sendMessage = async() => {  
 
-    if (currentUser) {
-
-      const user = await authStatus({})
-
-      await createMessage(
-        user.id, 
-        message.room, 
-        message.content
-      )
-
+    const newMessage = {
+        user: currentUser.name,
+        content: message.content,
+        when: Date.now(),
+        room:  message.room,
     }
+    
+    socket?.connect()
+    socket?.emit('room', newMessage)
+    scrollToLatest()    
+
+     if (currentUser) {
+
+       const user = await authStatus({})
+
+       await createMessage(
+         user.id, 
+         message.room, 
+         message.content
+       )
+
+     }
 
     setMessages((values) => ([
       ...values,
@@ -53,7 +63,7 @@ const Chat = () => {
     
     setMessage({
       ...message, content : ''
-    })
+    })    
 
     scrollToLatest()
 
@@ -107,19 +117,38 @@ const Chat = () => {
       messageArray.push(roomMessage)
 
     })
-
+    
     messageArray.sort((a, b) => a.when - b.when)
 
-    setMessages(messageArray)
+    socket?.emit('room', messageArray)        
+
+    //setMessages(messageArray)
     
   }  
 
   // Deps : current user, rooms, messages | auth, room?.id, messages.length
 
-  useEffect(() => {  
-      setPrep()
-      scrollToLatest()      
-  }, [roomIndex, messages.length])
+  useEffect(() => {
+
+    socket?.connect()
+
+    if (reload) {
+      setPrep()   
+      
+    }
+
+    socket?.on('room', (socketMessages) => {
+      setMessages(socketMessages)
+    })
+
+    scrollToLatest()   
+
+    return () => {
+      socket?.disconnect()
+      setReload(false)
+    }
+    
+  }, [roomIndex, messages.length, reload, socket?.connected])
 
   return (
 
@@ -175,6 +204,21 @@ const Chat = () => {
           return {name : room.id}
         })
       }/> : ''}     
+
+      <CustomButton 
+        value={'Force Reload'} 
+        className='bg-yellow-600' 
+        onClick={() => {
+
+          setReload(!reload)
+          socket?.connect()
+          
+          return () => {
+            socket?.disconnect()
+          }
+
+        }}
+      />
 
     </section>    
     

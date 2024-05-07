@@ -7,11 +7,19 @@ const io = new Server({
 let messages = []
 
 io.on('connection', (socket) => {
-    socket.on('room', (receivedMessages) => { // Listening to Room
-        messages = receivedMessages
-        console.log(`Messages received : ${messages.length}`)
+
+    socket.on('room', (receivedMessages) => { // Listening to Room 
+
+        if(receivedMessages[0] != undefined) { 
+            messages = receivedMessages
+        } else {
+            messages.push(receivedMessages)
+        }
+        
+        console.log(`Messages received : ${messages?.length}`)
         //io.to(socket.id).emit('room', messages) // Sends String, Objects etc...
         io.emit('room', messages)
+        
     })
 })
 
