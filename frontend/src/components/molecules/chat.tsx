@@ -12,7 +12,7 @@ const Chat = () => {
 
   const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
   const [roomIndex, setRoomIndex] = useState(0)
-  const [rooms, setRooms] = useState<{id : string}[] | null>(null)
+  const [rooms, setRooms] = useState<{id : string}[]>([{id : '0'}])
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder) 
   const [messages, setMessages] = useState<TChatMessage[]>([])
   const [reload, setReload] = useState(true)
@@ -32,17 +32,21 @@ const Chat = () => {
   }
   
   const sendMessage = async() => {  
+    
+    console.log(`sending message ${rooms[roomIndex].id}`)
 
     const newMessage = {
         user: currentUser.name,
         content: message.content,
         when: Date.now(),
         room:  message.room,
-    }
+    }    
+
+    const roomString = rooms[roomIndex].id
     
     socket?.connect()
-    socket?.emit('room', newMessage)
-    scrollToLatest()    
+    socket?.emit('room', {room : roomString, messages : newMessage})
+    scrollToLatest()
 
      if (currentUser) {
 
@@ -56,10 +60,10 @@ const Chat = () => {
 
      }
 
-    setMessages((values) => ([
-      ...values,
-      message,
-    ]))
+    // setMessages((values) => ([
+    //   ...values,
+    //   message,
+    // ]))
     
     setMessage({
       ...message, content : ''
@@ -67,23 +71,29 @@ const Chat = () => {
 
     scrollToLatest()
 
+    setReload(true)
+
   }
 
   const updateMessage = (e : React.ChangeEvent<HTMLTextAreaElement>) => {
+
     setMessage({
       user : currentUser?.name ? currentUser?.name : 'Guest',
-      content : e.target.value, 
+      content : e.target.value,
       when : Date.now(),
-      room : rooms ? rooms[roomIndex].id : 'none'
+      room : rooms[roomIndex].id
     })
+
   }
 
-  const setPrep = async () => {    
+  const setPrep = async () => {   
+    
+    //alert("setting prep")
 
     const authInfo = await authStatus({})
     const user = await getUserById(authInfo.id)
-    const chatRooms = await getChats()    
-    const storedMessages = await retrieveMessages()    
+    const chatRooms = await getChats()
+    const storedMessages = await retrieveMessages()
 
     authInfo.authenticated ? setCurrentUser(user) : ''
     
@@ -94,8 +104,8 @@ const Chat = () => {
     setRooms(chatRooms)
 
     const roomMessages = storedMessages.filter(
-      (m : TMessage) => {        
-        if (m.chatId == chatRooms[roomIndex].id) {          
+      (m : TMessage) => {
+        if (m.chatId == chatRooms[roomIndex].id) {
           return m
         }
       }
@@ -120,9 +130,13 @@ const Chat = () => {
     
     messageArray.sort((a, b) => a.when - b.when)
 
-    socket?.emit('room', messageArray)        
+    console.log(`set prep ${rooms[roomIndex].id}`)
 
-    //setMessages(messageArray)
+    const roomString = rooms[roomIndex].id
+
+    socket?.emit('room', {room : roomString, messages : messageArray})
+
+    setMessages(messageArray)
     
   }  
 
@@ -133,15 +147,21 @@ const Chat = () => {
     socket?.connect()
 
     if (reload) {
-      setPrep()   
-      
+      setPrep()
     }
 
-    socket?.on('room', (socketMessages) => {
-      setMessages(socketMessages)
+    console.log(`use effect ${rooms[roomIndex].id}`)    
+
+    const roomString = rooms[roomIndex].id    
+
+    socket?.on(roomString, (socketMessages) => {
+      const {room, messages} = socketMessages
+      if (rooms[roomIndex].id == room) {
+        setMessages(messages)
+      }     
     })
 
-    scrollToLatest()   
+    scrollToLatest()
 
     return () => {
       socket?.disconnect()
@@ -149,6 +169,11 @@ const Chat = () => {
     }
     
   }, [roomIndex, messages.length, reload, socket?.connected])
+
+  const changeRoom = (e : React.ChangeEvent<HTMLSelectElement>) => {
+    setRoomIndex(e.target.selectedIndex)
+    setReload(true)
+  }
 
   return (
 
@@ -199,15 +224,15 @@ const Chat = () => {
 
       </div>
       
-      {rooms ? <CustomSelect name='Chat Rooms' onChange={(e) => (setRoomIndex(e.target.selectedIndex))} values={
+      {rooms ? <CustomSelect name='Chat Rooms' onChange={(e) => changeRoom(e)} values={
         rooms.map((room) => {
           return {name : room.id}
         })
-      }/> : ''}     
+      }/> : ''}
 
-      <CustomButton 
-        value={'Force Reload'} 
-        className='bg-yellow-600' 
+      <CustomButton
+        value={'Force Reload'}
+        className='bg-yellow-600'
         onClick={() => {
 
           setReload(!reload)

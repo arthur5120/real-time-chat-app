@@ -4,21 +4,25 @@ const io = new Server({
     cors : {origin : 'http://localhost:5173'}
 })
 
-let messages = []
+let savedMessages = []
 
 io.on('connection', (socket) => {
 
     socket.on('room', (receivedMessages) => { // Listening to Room 
 
-        if(receivedMessages[0] != undefined) { 
-            messages = receivedMessages
+        const {room, messages} = receivedMessages  
+
+        if(messages[0] != undefined) { 
+            savedMessages = messages
         } else {
-            messages.push(receivedMessages)
-        }
+            savedMessages.push(messages)
+        }        
         
-        console.log(`Messages received : ${messages?.length}`)
-        //io.to(socket.id).emit('room', messages) // Sends String, Objects etc...
-        io.emit('room', messages)
+        console.log(`Messages received : ${savedMessages?.length} emitting to ${room}`)
+
+        //io.to(socket.id).emit('room', messages) // Sends String, Objects etc...       
+
+        io.emit(room, {room : room, messages : savedMessages})
         
     })
 })
