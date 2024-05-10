@@ -43,9 +43,9 @@ model Message {
  content String
  created_at DateTime @default(now())
  updated_at DateTime @default(now())
- chat Chat @relation(fields: [chatId], references: [id])
+ chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
  chatId String @default(uuid())
- user User @relation(fields : [senderId], references: [id])
+ user User @relation(fields : [senderId], references: [id], onDelete: Cascade)
  senderId String @default(uuid())
 }
 

@@ -66,6 +66,8 @@ export const modDeleteChat = async (req : Request, res : Response) => {
 
     const chatId = req.params.id
 
+    console.log(`Trying to delete : ${chatId}`)
+
     try {
         await prisma.chat.delete({
             where : {

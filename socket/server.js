@@ -8,21 +8,21 @@ let savedMessages = []
 
 io.on('connection', (socket) => {
 
-    socket.on('room', (receivedMessages) => { // Listening to Room 
+    socket.on('room', ({room, messages}) => { // Listening to Room         
 
-        const {room, messages} = receivedMessages  
-
-        if(messages[0] != undefined) { 
-            savedMessages = messages
-        } else {
+        if(messages != '' && room != '0') {
             savedMessages.push(messages)
-        }        
+        } else {
+            return
+        }    
         
         console.log(`Messages received : ${savedMessages?.length} emitting to ${room}`)
 
+        const filteredMessages = savedMessages.filter(message => message.room == room)
+
         //io.to(socket.id).emit('room', messages) // Sends String, Objects etc...       
 
-        io.emit(room, {room : room, messages : savedMessages})
+        io.emit(room, {room : room, messages : filteredMessages})        
         
     })
 })
