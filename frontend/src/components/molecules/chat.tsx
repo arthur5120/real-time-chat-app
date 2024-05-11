@@ -17,6 +17,7 @@ const Chat = () => {
   const [messages, setMessages] = useState<TChatMessage[]>([])
   const [reload, setReload] = useState(true)
   const chatContainerRef = useRef<HTMLDivElement>(null) 
+  const [reloadCount, setReloadCount] = useState(0)
 
   const socket = useContext(socketContext)
 
@@ -73,12 +74,18 @@ const Chat = () => {
 
   }
 
-  const addMessage = async (msg : string) => {
-    setMessages((rest) => ({
-      ...rest,
+  const addMessage = async (msg : TChatMessage) => {
+    setMessages((rest) => ([
+      ...rest, 
       msg
+    ]))
+  }
+
+  const resetMessageContent = () => {
+    setMessage((rest) => ({
+      ...rest,
+      content : ''
     }))
-    alert(JSON.stringify(messages[messages.length - 1]))
   }
 
   const sendMessage = async () => {    
@@ -91,10 +98,11 @@ const Chat = () => {
       userInfo.id,
       currentRoom.id,
       message.content,
-    )    
+    )
     
-    socket?.emit('room', message)
-    setReload(true)
+    socket?.emit('room', message)   
+    addMessage(message)
+    resetMessageContent()
   }
 
   const createRoom = async () => {
@@ -115,13 +123,6 @@ const Chat = () => {
     }
   }
 
-  const resetMessageContent = () => {
-    setMessage((rest) => ({
-      ...rest,
-      content : ''
-    }))
-  }
-
   const onSelectChange = (e : React.ChangeEvent<HTMLSelectElement>) => {
     const roomId = e.target.value
     const selectId = e.target.selectedIndex
@@ -133,17 +134,18 @@ const Chat = () => {
     setMessage((rest) => ({
       ...rest,
       content : e.target.value,
-      room : rooms[0].id,
+      room : currentRoom.id,
       when : Date.now(),
     }))
   }
 
   const initialSetup = async () => {
+    setReloadCount(reloadCount + 1)
     retrieveCurrentUser()
     retrieveRooms()
     resetCurrentRoom()
     retrieveMessages()
-    resetMessageContent()    
+    resetMessageContent()
   }
 
   useEffect(() => {
@@ -154,8 +156,11 @@ const Chat = () => {
 
     socket?.connect()
 
-    socket?.on('room', (msg) => {      
-      setReload(true)
+    socket?.on('room', (msg : TChatMessage) => {
+      const {room} = msg       
+       if (room === currentRoom.id) {
+         addMessage(msg)
+       }
      })    
 
      return () => {
@@ -179,7 +184,8 @@ const Chat = () => {
 
       <div className='flex justify-center items-center gap-3'>
         <span>RELOAD VARIABLE {reload ? <h5 className='text-green-500'>yay</h5>: <h5 className='text-red-500'>nay</h5>}</span>
-        <span>ROOM LENGTH <h5>{rooms.length}</h5></span>
+        <span>CURRENT ROOM ID <h5>{currentRoom.id}</h5></span>
+        <span>RELOAD COUNT <h5>{reloadCount}</h5></span>      
       </div>      
 
       <div className='flex justify-between bg-gray-700 rounded w-80'>
