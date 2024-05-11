@@ -1,12 +1,15 @@
-import { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { authStatus, createChat, createMessage, deleteChat, getChats, getMessages, getUserById, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { convertDatetimeToMilliseconds, getTime, sortByMilliseconds } from '../../utils/useful-functions'
 import { socketContext } from '../../utils/socket-provider'
+import { ToastContainer, toast } from 'react-toastify'
 
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
+
+import "react-toastify/ReactToastify.css"
 
 const Chat = () => {
 
@@ -16,16 +19,27 @@ const Chat = () => {
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder) 
   const [messages, setMessages] = useState<TChatMessage[]>([])
   const [reload, setReload] = useState(true)
-  const chatContainerRef = useRef<HTMLDivElement>(null) 
   const [reloadCount, setReloadCount] = useState(0)
-
+  
+  const chatContainerRef = useRef<HTMLDivElement>(null)
   const socket = useContext(socketContext)
+
+  const notifyUser = (notification : string) => toast.success(notification, { // Export this to a reusable component later
+    position: "top-right",
+    autoClose: 5000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+    theme: "dark",
+  })
 
   const scrollToLatest = () => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }    
+  }
 
   const retrieveCurrentUser = async () => {
 
@@ -107,13 +121,15 @@ const Chat = () => {
 
   const createRoom = async () => {
     createChat()
+    notifyUser('New Room Created!')    
   }
 
   const deleteRooms = async () => {
     let i
     for (i=0 ; i < rooms.length ; i++) {
       await deleteChat(rooms[i].id)
-    }    
+    }        
+    notifyUser('All rooms Deleted')
     setReload(true)
   }
   
@@ -169,7 +185,7 @@ const Chat = () => {
         socket?.off()
 
         if (currentRoom.id != '0' && currentRoom.id != '-1') {
-          setReload(false)          
+          setReload(false)       
         }
 
         scrollToLatest()
@@ -180,13 +196,7 @@ const Chat = () => {
 
   return (
     
-    <section className='flex flex-col gap-3 bg-transparent justify-center items-center text-center'>     
-
-      <div className='flex justify-center items-center gap-3'>
-        <span>RELOAD VARIABLE {reload ? <h5 className='text-green-500'>yay</h5>: <h5 className='text-red-500'>nay</h5>}</span>
-        <span>CURRENT ROOM ID <h5>{currentRoom.id}</h5></span>
-        <span>RELOAD COUNT <h5>{reloadCount}</h5></span>      
-      </div>      
+    <section className='flex flex-col gap-3 bg-transparent justify-center items-center text-center'>        
 
       <div className='flex justify-between bg-gray-700 rounded w-80'>
         <h3 className='bg-transparent justify-start m-2'>
@@ -252,6 +262,24 @@ const Chat = () => {
         className='bg-green-500' 
         onClick={() => createRoom()}
       />
+
+      <ToastContainer      
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
+
+      <div className='flex justify-center items-center gap-3'>
+        <span>RELOAD VARIABLE {reload ? <h5 className='text-green-500'>yay</h5>: <h5 className='text-red-500'>nay</h5>}</span>
+        <span>RELOAD COUNT <h5>{reloadCount}</h5></span>      
+      </div>      
 
      </div>
 
