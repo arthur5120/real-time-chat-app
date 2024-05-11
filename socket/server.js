@@ -4,25 +4,28 @@ const io = new Server({
     cors : {origin : 'http://localhost:5173'}
 })
 
-let savedMessages = []
+let onlineUsers = []
+
+const connectUser = (user) => {
+    const onlineUser = onlineUsers.find(user.id)
+    if (!onlineUser) {
+        onlineUser.push(user)
+    }
+}
+
+const disconnectUser = (user) => {
+    const onlineUserId = onlineuser.indexOf(user)
+    user.splice(onlineUserId, 1)
+}
 
 io.on('connection', (socket) => {
 
-    socket.on('room', ({room, messages}) => { // Listening to Room         
+    socket.on('room', (message) => { // Listening to Room
 
-        if(messages != '' && room != '0') {
-            savedMessages.push(messages)
-        } else {
-            return
-        }    
-        
-        console.log(`Messages received : ${savedMessages?.length} emitting to ${room}`)
+        console.log(JSON.stringify(message))
+        io.emit('room', message)
 
-        const filteredMessages = savedMessages.filter(message => message.room == room)
-
-        //io.to(socket.id).emit('room', messages) // Sends String, Objects etc...       
-
-        io.emit(room, {room : room, messages : filteredMessages})        
+        //io.to(socket.id).emit('room', messages) // Sends String, Objects etc...
         
     })
 })

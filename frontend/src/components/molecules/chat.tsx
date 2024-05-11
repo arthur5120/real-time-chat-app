@@ -11,15 +11,14 @@ import CustomButton from '../atoms/button'
 const Chat = () => {
 
   const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
-  const [rooms, setRooms] = useState<{id : string}[]>([{id : '0'}])
+  const [rooms, setRooms] = useState<{id : string}[]>([{id : '-1'}])
   const [currentRoom, setCurrentRoom] = useState<{id : string, selectId : number}>({id : '-1', selectId : 0})  
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder) 
   const [messages, setMessages] = useState<TChatMessage[]>([])
   const [reload, setReload] = useState(true)
-
   const chatContainerRef = useRef<HTMLDivElement>(null) 
 
-  const socket = useContext(socketContext) 
+  const socket = useContext(socketContext)
 
   const scrollToLatest = () => {
     if (chatContainerRef.current) {
@@ -74,23 +73,53 @@ const Chat = () => {
 
   }
 
-  const sendMessage = async () => {   
+  const addMessage = async (msg : string) => {
+    setMessages((rest) => ({
+      ...rest,
+      msg
+    }))
+    alert(JSON.stringify(messages[messages.length - 1]))
+  }
 
-    const userInfo = await authStatus({})    
+  const sendMessage = async () => {    
+
+    socket?.connect()    
+
+    const userInfo = await authStatus({})
 
     await createMessage(
       userInfo.id,
       currentRoom.id,
       message.content,
     )    
+    
+    socket?.emit('room', message)
+    setReload(true)
+  }
 
-    setReload(true)    
+  const createRoom = async () => {
+    createChat()
+  }
+
+  const deleteRooms = async () => {
+    let i
+    for (i=0 ; i < rooms.length ; i++) {
+      await deleteChat(rooms[i].id)
+    }    
+    setReload(true)
   }
   
   const resetCurrentRoom = async () => {
     if (currentRoom.id == '-1' || currentRoom.id == '0') {
       setCurrentRoom({id : rooms[0].id, selectId : 0})
     }
+  }
+
+  const resetMessageContent = () => {
+    setMessage((rest) => ({
+      ...rest,
+      content : ''
+    }))
   }
 
   const onSelectChange = (e : React.ChangeEvent<HTMLSelectElement>) => {
@@ -114,20 +143,44 @@ const Chat = () => {
     retrieveRooms()
     resetCurrentRoom()
     retrieveMessages()
-    scrollToLatest()    
+    resetMessageContent()    
   }
 
   useEffect(() => {
-    initialSetup()
-    setReload(false)
-  }, [rooms?.length, messages?.length, currentRoom.id, reload])
+
+    if(reload) {        
+      initialSetup()      
+    }
+
+    socket?.connect()
+
+    socket?.on('room', (msg) => {      
+      setReload(true)
+     })    
+
+     return () => {
+
+        socket?.disconnect()
+        socket?.off()
+
+        if (currentRoom.id != '0' && currentRoom.id != '-1') {
+          setReload(false)          
+        }
+
+        scrollToLatest()
+
+     }
+
+  }, [rooms, messages, currentRoom, reload])
 
   return (
     
     <section className='flex flex-col gap-3 bg-transparent justify-center items-center text-center'>     
 
-      <div>{JSON.stringify(currentRoom)}</div>
-      <div>{JSON.stringify(currentUser)}</div>
+      <div className='flex justify-center items-center gap-3'>
+        <span>RELOAD VARIABLE {reload ? <h5 className='text-green-500'>yay</h5>: <h5 className='text-red-500'>nay</h5>}</span>
+        <span>ROOM LENGTH <h5>{rooms.length}</h5></span>
+      </div>      
 
       <div className='flex justify-between bg-gray-700 rounded w-80'>
         <h3 className='bg-transparent justify-start m-2'>
@@ -157,7 +210,7 @@ const Chat = () => {
         <textarea 
           name=''
           id=''
-          className='items-start bg-gray-500 text-white rounded-lg resize-none p-1 m-1'
+          className='items-start bg-gray-500 text-white rounded-lg resize-none p-1 m-1 h-full w-full'
           cols={41}
           rows={3}
           onChange={(e) => {onTextareaChange(e)}}
@@ -173,7 +226,7 @@ const Chat = () => {
 
       </div>
       
-      {rooms ? <CustomSelect name='Chat Rooms' onChange={(e) => onSelectChange(e)} values={
+      {rooms ? <CustomSelect name='Current Chat Room' onChange={(e) => onSelectChange(e)} values={
         rooms.map((room) => {
           return {name : room.id}
         })
@@ -182,15 +235,16 @@ const Chat = () => {
      <div>
 
       <CustomButton 
-        value={'Reset Chats'} 
+        value={'Reset Chat Rooms'} 
         className='bg-purple-500' 
-        onClick={() => alert()}
+        onClick={() => deleteRooms()}
       />
 
+      
       <CustomButton 
-        value={'Test Stuff'} 
-        className='bg-red-500' 
-        onClick={() => alert()}
+        value={'Create Chat'} 
+        className='bg-green-500' 
+        onClick={() => createRoom()}
       />
 
      </div>
