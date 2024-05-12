@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-    background: #000;
+body {
+    background:rgb(37, 37, 60);
     color: #fff;
 }
 

@@ -1,10 +1,11 @@
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { authStatus, createChat, createMessage, deleteChat, getChats, getMessages, getUserById, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { convertDatetimeToMilliseconds, getTime, sortByMilliseconds } from '../../utils/useful-functions'
 import { socketContext } from '../../utils/socket-provider'
 import { ToastContainer, toast } from 'react-toastify'
+import { TypeOptions } from 'react-toastify'
 
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
@@ -18,13 +19,13 @@ const Chat = () => {
   const [currentRoom, setCurrentRoom] = useState<{id : string, selectId : number}>({id : '-1', selectId : 0})  
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder) 
   const [messages, setMessages] = useState<TChatMessage[]>([])
-  const [reload, setReload] = useState(true)
+  const [reload, setReload] = useState(0)
   const [reloadCount, setReloadCount] = useState(0)
   
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const socket = useContext(socketContext)
 
-  const notifyUser = (notification : string) => toast.success(notification, { // Export this to a reusable component later
+  const notifyUser = (notification : string, type : TypeOptions = 'info') => toast.info(notification, { // Export this to a reusable component later
     position: "top-right",
     autoClose: 5000,
     hideProgressBar: false,
@@ -33,6 +34,8 @@ const Chat = () => {
     draggable: true,
     progress: undefined,
     theme: "dark",
+    className : 'bg-slate-800',
+    type : type,
   })
 
   const scrollToLatest = () => {
@@ -49,7 +52,7 @@ const Chat = () => {
     setCurrentUser({
       name : user.name,
       username : user.username,
-      email : user.email,      
+      email : user.email,
       role : authInfo.role,
     })
 
@@ -82,7 +85,7 @@ const Chat = () => {
       room: m.chatId,     
     }))   
         
-    const sortedMessages = sortByMilliseconds(convertedMessages)    
+    const sortedMessages = sortByMilliseconds(convertedMessages)
 
     setMessages(sortedMessages)
 
@@ -102,9 +105,14 @@ const Chat = () => {
     }))
   }
 
-  const sendMessage = async () => {    
+  const sendMessage = async () => {
 
-    socket?.connect()    
+    if(message.content.trim() == "") {
+      notifyUser('Write something first!')
+      return
+    }
+
+    socket?.connect()
 
     const userInfo = await authStatus({})
 
@@ -117,20 +125,23 @@ const Chat = () => {
     socket?.emit('room', message)   
     addMessage(message)
     resetMessageContent()
+
   }
 
   const createRoom = async () => {
     createChat()
-    notifyUser('New Room Created!')    
+    notifyUser('New Room Created!', 'success')
+    setReload(reload + 1)
   }
 
-  const deleteRooms = async () => {
+  const deleteAllRooms = async () => {
     let i
     for (i=0 ; i < rooms.length ; i++) {
       await deleteChat(rooms[i].id)
-    }        
-    notifyUser('All rooms Deleted')
-    setReload(true)
+    }    
+    await retrieveRooms()
+    notifyUser('All rooms deleted, a fresh one was created', 'success')
+    setReload(reload + 1)
   }
   
   const resetCurrentRoom = async () => {
@@ -143,7 +154,7 @@ const Chat = () => {
     const roomId = e.target.value
     const selectId = e.target.selectedIndex
     setCurrentRoom({id : roomId, selectId : selectId})
-    setReload(true)
+    setReload(reload + 1)
   }
 
   const onTextareaChange = (e : React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -156,19 +167,21 @@ const Chat = () => {
   }
 
   const initialSetup = async () => {
-    setReloadCount(reloadCount + 1)
-    retrieveCurrentUser()
-    retrieveRooms()
-    resetCurrentRoom()
-    retrieveMessages()
-    resetMessageContent()
+    if(reload > 0) {   
+      setReloadCount(reloadCount + 1)
+      retrieveCurrentUser()
+      retrieveRooms()
+      resetCurrentRoom()
+      retrieveMessages()
+      resetMessageContent()
+    }
   }
+
+  // rooms, messages, currentRoom, reload
 
   useEffect(() => {
 
-    if(reload) {        
-      initialSetup()      
-    }
+    initialSetup()
 
     socket?.connect()
 
@@ -176,23 +189,27 @@ const Chat = () => {
       const {room} = msg       
        if (room === currentRoom.id) {
          addMessage(msg)
+       } else {
+        notifyUser(`A new message in ${room}!`)
        }
-     })    
+     })
 
      return () => {
 
         socket?.disconnect()
         socket?.off()
-
-        if (currentRoom.id != '0' && currentRoom.id != '-1') {
-          setReload(false)       
+        
+        if (currentRoom.id == '0' || currentRoom.id == '-1') {
+          setReload(reload + 1)
+        } else {
+          setReload(0)
         }
 
         scrollToLatest()
 
      }
 
-  }, [rooms, messages, currentRoom, reload])
+  }, [rooms.length, messages.length, currentRoom.id, reload])
 
   return (
     
@@ -251,9 +268,9 @@ const Chat = () => {
      <div>
 
       <CustomButton 
-        value={'Reset Chat Rooms'} 
+        value={'Reset Chat Rooms'}
         className='bg-purple-500' 
-        onClick={() => deleteRooms()}
+        onClick={() => deleteAllRooms()}
       />
 
       
@@ -277,8 +294,9 @@ const Chat = () => {
       />
 
       <div className='flex justify-center items-center gap-3'>
-        <span>RELOAD VARIABLE {reload ? <h5 className='text-green-500'>yay</h5>: <h5 className='text-red-500'>nay</h5>}</span>
-        <span>RELOAD COUNT <h5>{reloadCount}</h5></span>      
+        <span>RELOAD VARIABLE {reload > 0 ? <h5 className='text-green-500'>yay</h5>: <h5 className='text-red-500'>nay</h5>}</span>
+        <span>RELOAD COUNT <h5>{reloadCount}</h5></span>
+        <span>RELOAD VALUE <h5>{reload}</h5></span>
       </div>      
 
      </div>
