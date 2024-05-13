@@ -19,7 +19,7 @@ const Chat = () => {
   const [currentRoom, setCurrentRoom] = useState<{id : string, selectId : number}>({id : '-1', selectId : 0})  
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder) 
   const [messages, setMessages] = useState<TChatMessage[]>([])
-  const [reload, setReload] = useState(0)
+  const [reload, setReload] = useState(1)
   const [reloadCount, setReloadCount] = useState(0)
   
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -60,13 +60,17 @@ const Chat = () => {
 
   const retrieveRooms = async () => {
 
-    const rooms = await getChats()  
+    const localRooms = await getChats()  
     
-    if(rooms.length <= 0) {
+    if(localRooms.length <= 0) {
       await createChat()
     }
+
+    if (currentRoom.id == '-1' || currentRoom.id == '0') {
+      setCurrentRoom({id : localRooms[0].id, selectId : 0})
+    }
     
-    setRooms(rooms)
+    setRooms(localRooms) // Only loads on next rendering
 
   }
 
@@ -91,10 +95,10 @@ const Chat = () => {
 
   }
 
-  const addMessage = async (msg : TChatMessage) => {
+  const addMessage = async (newMessage : TChatMessage) => {
     setMessages((rest) => ([
       ...rest, 
-      msg
+      newMessage
     ]))
   }
 
@@ -105,9 +109,16 @@ const Chat = () => {
     }))
   }
 
-  const sendMessage = async () => {
+  const sendMessage = async () => {  
+    
+    const localMessage : TChatMessage = {      
+      user : currentUser?.name ? currentUser.name : '',
+      content : message.content,
+      when : Date.now(),
+      room : currentRoom.id,
+    }
 
-    if(message.content.trim() == "") {
+    if(localMessage.content.trim() == "") {
       notifyUser('Write something first!')
       return
     }
@@ -119,11 +130,11 @@ const Chat = () => {
     await createMessage(
       userInfo.id,
       currentRoom.id,
-      message.content,
-    )
+      localMessage.content,
+    )  
     
-    socket?.emit('room', message)   
-    addMessage(message)
+    socket?.emit('room', localMessage)   
+    addMessage(localMessage)
     resetMessageContent()
 
   }
@@ -143,12 +154,6 @@ const Chat = () => {
     notifyUser('All rooms deleted, a fresh one was created', 'success')
     setReload(reload + 1)
   }
-  
-  const resetCurrentRoom = async () => {
-    if (currentRoom.id == '-1' || currentRoom.id == '0') {
-      setCurrentRoom({id : rooms[0].id, selectId : 0})
-    }
-  }
 
   const onSelectChange = (e : React.ChangeEvent<HTMLSelectElement>) => {
     const roomId = e.target.value
@@ -157,31 +162,28 @@ const Chat = () => {
     setReload(reload + 1)
   }
 
-  const onTextareaChange = (e : React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage((rest) => ({
-      ...rest,
-      content : e.target.value,
-      room : currentRoom.id,
-      when : Date.now(),
+  const onTextareaChange = (e : React.ChangeEvent<HTMLTextAreaElement>) => {    
+    setMessage((rest : TChatMessage) => ({
+      ...rest,      
+      content : e.target.value,     
     }))
   }
 
-  const initialSetup = async () => {
-    if(reload > 0) {   
+  const initialSetup = async () => {                 
       setReloadCount(reloadCount + 1)
-      retrieveCurrentUser()
-      retrieveRooms()
-      resetCurrentRoom()
-      retrieveMessages()
-      resetMessageContent()
-    }
+      await retrieveCurrentUser()
+      await retrieveRooms()         
+      await retrieveMessages()
+      await resetMessageContent()
   }
 
   // rooms, messages, currentRoom, reload
 
   useEffect(() => {
 
-    initialSetup()
+    if(reload > 0) {
+      initialSetup()
+    }
 
     socket?.connect()
 
@@ -197,7 +199,7 @@ const Chat = () => {
      return () => {
 
         socket?.disconnect()
-        socket?.off()
+        socket?.off()      
         
         if (currentRoom.id == '0' || currentRoom.id == '-1') {
           setReload(reload + 1)
@@ -210,6 +212,8 @@ const Chat = () => {
      }
 
   }, [rooms.length, messages.length, currentRoom.id, reload])
+
+  
 
   return (
     
@@ -293,11 +297,11 @@ const Chat = () => {
         theme="dark"
       />
 
-      <div className='flex justify-center items-center gap-3'>
+      {/* <div className='flex justify-center items-center gap-3'>
         <span>RELOAD VARIABLE {reload > 0 ? <h5 className='text-green-500'>yay</h5>: <h5 className='text-red-500'>nay</h5>}</span>
         <span>RELOAD COUNT <h5>{reloadCount}</h5></span>
         <span>RELOAD VALUE <h5>{reload}</h5></span>
-      </div>      
+      </div>       */}
 
      </div>
 
