@@ -12,11 +12,13 @@ import CustomButton from '../atoms/button'
 
 import "react-toastify/ReactToastify.css"
 
+type TRoom = {id : string, selectId : number}
+
 const Chat = () => {
 
   const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
   const [rooms, setRooms] = useState<{id : string}[]>([{id : '-1'}])
-  const [currentRoom, setCurrentRoom] = useState<{id : string, selectId : number}>({id : '-1', selectId : 0})  
+  const [currentRoom, setCurrentRoom] = useState<TRoom>({id : '-1', selectId : 0})  
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder) 
   const [messages, setMessages] = useState<TChatMessage[]>([])
   const [reload, setReload] = useState(1)
@@ -60,13 +62,18 @@ const Chat = () => {
 
   const retrieveRooms = async () => {
 
-    const localRooms = await getChats()  
+    const localRooms = await getChats()
+    const isRoomIdEmpty = currentRoom.id == '-1' || currentRoom.id == '0'
+    const hasRooms = localRooms?.length <= 0
+    const isFirstRoomValid = localRooms[0]
     
-    if(localRooms.length <= 0) {
+    if(hasRooms) {
       await createChat()
-    }
+    }    
 
-    if (currentRoom.id == '-1' || currentRoom.id == '0') {
+    const isRoomIdValid = !isRoomIdEmpty ? localRooms.find((room : TRoom) => room.id == currentRoom.id) : false
+    
+    if (isRoomIdEmpty || !isRoomIdValid && isFirstRoomValid) {
       setCurrentRoom({id : localRooms[0].id, selectId : 0})
     }
     
@@ -140,18 +147,27 @@ const Chat = () => {
   }
 
   const createRoom = async () => {
+    const creationMessage = `New Room Created!`
     createChat()
-    notifyUser('New Room Created!', 'success')
+    notifyUser(creationMessage, 'success')
+    socket?.emit('change', creationMessage)
     setReload(reload + 1)
   }
 
   const deleteAllRooms = async () => {
+
     let i
+    const deletionMessage = `All rooms deleted, a fresh one was created`
+
     for (i=0 ; i < rooms.length ; i++) {
       await deleteChat(rooms[i].id)
     }    
+    
     await retrieveRooms()
-    notifyUser('All rooms deleted, a fresh one was created', 'success')
+    
+    socket?.emit('change', deletionMessage)
+
+    notifyUser(deletionMessage, 'success')    
     setReload(reload + 1)
   }
 
@@ -169,15 +185,13 @@ const Chat = () => {
     }))
   }
 
-  const initialSetup = async () => {                 
-      setReloadCount(reloadCount + 1)
-      await retrieveCurrentUser()
-      await retrieveRooms()         
-      await retrieveMessages()
-      await resetMessageContent()
-  }
-
-  // rooms, messages, currentRoom, reload
+  const initialSetup = async () => {    
+    setReloadCount(reloadCount + 1)
+    await retrieveCurrentUser()
+    await retrieveRooms()         
+    await retrieveMessages()
+    await resetMessageContent()
+  }  
 
   useEffect(() => {
 
@@ -194,6 +208,13 @@ const Chat = () => {
        } else {
         notifyUser(`A new message in ${room}!`)
        }
+     })
+
+     socket?.on('change', (msg : string) => {
+      if(msg) {                
+        notifyUser(msg, 'info')
+        setReload(reload + 1)
+      }
      })
 
      return () => {
@@ -274,14 +295,22 @@ const Chat = () => {
       <CustomButton 
         value={'Reset Chat Rooms'}
         className='bg-purple-500' 
-        onClick={() => deleteAllRooms()}
+        onClick={() => {
+          setCurrentRoom({ id: '-1', selectId: 0})
+          deleteAllRooms()
+        }}
       />
 
-      
       <CustomButton 
         value={'Create Chat'} 
         className='bg-green-500' 
         onClick={() => createRoom()}
+      />
+
+      <CustomButton 
+        value={'Get Bug'} 
+        className='bg-yellow-500' 
+        onClick={() => alert(`Resetting rooms, sending a message and creating a new room results in the chat messages being deleted.`)}
       />
 
       <ToastContainer      
@@ -297,11 +326,11 @@ const Chat = () => {
         theme="dark"
       />
 
-      {/* <div className='flex justify-center items-center gap-3'>
-        <span>RELOAD VARIABLE {reload > 0 ? <h5 className='text-green-500'>yay</h5>: <h5 className='text-red-500'>nay</h5>}</span>
-        <span>RELOAD COUNT <h5>{reloadCount}</h5></span>
-        <span>RELOAD VALUE <h5>{reload}</h5></span>
-      </div>       */}
+      <div className='flex justify-center items-center gap-3'>
+        <span>RELOAD REQUIRED {reload > 0 ? <h5 className='text-green-500'>Yep</h5>: <h5 className='text-red-500'>Nah</h5>}</span>
+        <span>RELOAD COUNT <h5>{reloadCount}</h5></span>          
+        <span>CURRENT ROOM<h5>{currentRoom.id}</h5></span>
+      </div>
 
      </div>
 
