@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { authStatus, createChat, createMessage, deleteChat, getChats, getMessages, getUserById, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
@@ -64,14 +64,14 @@ const Chat = () => {
 
     const localRooms = await getChats()
     const isRoomIdEmpty = currentRoom.id == '-1' || currentRoom.id == '0'
-    const hasRooms = localRooms?.length <= 0
+    const hasNoRooms = localRooms?.length <= 0
     const isFirstRoomValid = localRooms[0]
     
-    if(hasRooms) {
+    if(hasNoRooms) {
       await createChat()
-    }    
+    }
 
-    const isRoomIdValid = !isRoomIdEmpty ? localRooms.find((room : TRoom) => room.id == currentRoom.id) : false
+    const isRoomIdValid = !isRoomIdEmpty ? localRooms.some((room : TRoom) => room.id == currentRoom.id) : false    
     
     if (isRoomIdEmpty || !isRoomIdValid && isFirstRoomValid) {
       setCurrentRoom({id : localRooms[0].id, selectId : 0})
@@ -305,13 +305,7 @@ const Chat = () => {
         value={'Create Chat'} 
         className='bg-green-500' 
         onClick={() => createRoom()}
-      />
-
-      <CustomButton 
-        value={'Get Bug'} 
-        className='bg-yellow-500' 
-        onClick={() => alert(`Resetting rooms, sending a message and creating a new room results in the chat messages being deleted.`)}
-      />
+      />      
 
       <ToastContainer      
         position="top-center"
@@ -328,8 +322,7 @@ const Chat = () => {
 
       <div className='flex justify-center items-center gap-3'>
         <span>RELOAD REQUIRED {reload > 0 ? <h5 className='text-green-500'>Yep</h5>: <h5 className='text-red-500'>Nah</h5>}</span>
-        <span>RELOAD COUNT <h5>{reloadCount}</h5></span>          
-        <span>CURRENT ROOM<h5>{currentRoom.id}</h5></span>
+        <span>RELOAD COUNT <h5>{reloadCount}</h5></span>                  
       </div>
 
      </div>
