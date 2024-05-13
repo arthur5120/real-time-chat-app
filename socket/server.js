@@ -28,6 +28,12 @@ io.on('connection', (socket) => {
         //io.to(socket.id).emit('room', messages) // Sends String, Objects etc...
         
     })
+
+    socket.on('change', (message) => {
+        console.log(JSON.stringify(message))
+        io.emit('change', message)
+    })
+
 })
 
 io.listen(4000, () => {
