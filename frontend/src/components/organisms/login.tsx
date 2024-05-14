@@ -5,10 +5,11 @@ import { FormEvent, useContext, useState } from "react"
 import { TUser, TFieldKeys } from "../../utils/types"
 import { userPlaceholder } from "../../utils/placeholders"
 import { authLogin } from "../../hooks/useAxios"
-import { authContext } from "../../utils/auth-provider"
+import { authContext } from "../../utils/contexts/auth-provider"
+import { toastContext } from "../../utils/contexts/toast-provider"
 import { useNavigate } from "react-router-dom"
 
-const Login = () => {
+const Login = () => {  
 
   const [data, setData] = useState<TUser>({...userPlaceholder, email : 'mockuser@hotmail.com', password : 'Password@123'})
   const [message, setMessage] = useState('')
@@ -21,6 +22,7 @@ const Login = () => {
   ]
 
   const {setAuth} = useContext(authContext)
+  const {notifyUser} = useContext(toastContext)
   
   const onSubmit = async (e : FormEvent<HTMLFormElement>) => { 
     e.preventDefault()    
@@ -65,7 +67,7 @@ const Login = () => {
         <CustomTitle value={message} variationName="varthree"/>
           
         {loading ? <CustomTitle value={'please wait...'} variationName="varthree"/> : ''}
-      
+
     </>
 
   )

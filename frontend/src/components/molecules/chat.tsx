@@ -3,14 +3,11 @@ import { authStatus, createChat, createMessage, deleteChat, getChats, getMessage
 import { TUser, TMessage, TChatMessage } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { convertDatetimeToMilliseconds, getTime, sortByMilliseconds } from '../../utils/useful-functions'
-import { socketContext } from '../../utils/socket-provider'
-import { ToastContainer, toast } from 'react-toastify'
-import { TypeOptions } from 'react-toastify'
+import { socketContext } from '../../utils/contexts/socket-provider'
+import { toastContext } from '../../utils/contexts/toast-provider'
 
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
-
-import "react-toastify/ReactToastify.css"
 
 type TRoom = {id : string, selectId : number}
 
@@ -25,20 +22,9 @@ const Chat = () => {
   const [reloadCount, setReloadCount] = useState(0)
   
   const chatContainerRef = useRef<HTMLDivElement>(null)
-  const socket = useContext(socketContext)
 
-  const notifyUser = (notification : string, type : TypeOptions = 'info') => toast.info(notification, { // Export this to a reusable component later
-    position: "top-right",
-    autoClose: 5000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    progress: undefined,
-    theme: "dark",
-    className : 'bg-slate-800',
-    type : type,
-  })
+  const socket = useContext(socketContext)
+  const {notifyUser} = useContext(toastContext)
 
   const scrollToLatest = () => {
     if (chatContainerRef.current) {
@@ -307,22 +293,10 @@ const Chat = () => {
         onClick={() => createRoom()}
       />      
 
-      <ToastContainer      
-        position="top-center"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-      />
-
       <div className='flex justify-center items-center gap-3'>
         <span>RELOAD REQUIRED {reload > 0 ? <h5 className='text-green-500'>Yep</h5>: <h5 className='text-red-500'>Nah</h5>}</span>
-        <span>RELOAD COUNT <h5>{reloadCount}</h5></span>                  
+        <span>RELOAD COUNT <h5>{reloadCount}</h5></span>
+        <span>ROOM ID <h5>{currentRoom.id}</h5></span>
       </div>
 
      </div>

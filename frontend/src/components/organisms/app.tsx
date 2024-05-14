@@ -1,7 +1,7 @@
 import Navbar from "../molecules/navbar"
 import { Outlet } from "react-router-dom"
 import { useContext } from "react"
-import { authContext } from "../../utils/auth-provider"
+import { authContext } from "../../utils/contexts/auth-provider"
 import CustomTitle from "../atoms/title"
 
 const App = () => {

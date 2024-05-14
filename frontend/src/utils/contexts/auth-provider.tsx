@@ -8,7 +8,7 @@ import {
   useEffect
 } from 'react';
 
-import { authStatus, authLogout } from '../hooks/useAxios';
+import { authStatus, authLogout } from '../../hooks/useAxios';
 
 type TAuth = {
   auth ? : boolean,

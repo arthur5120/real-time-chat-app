@@ -1,6 +1,6 @@
 import { useContext } from "react"
 import { Link } from "react-router-dom"
-import { authContext, removeToken } from "../../utils/auth-provider"
+import { authContext, removeToken } from "../../utils/contexts/auth-provider"
 
 const LinkStyle = `bg-pink-500 rounded p-2`
 
