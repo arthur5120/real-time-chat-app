@@ -51,15 +51,16 @@ const Chat = () => {
     const localRooms = await getChats()
     const isRoomIdEmpty = currentRoom.id == '-1' || currentRoom.id == '0'
     const hasNoRooms = localRooms?.length <= 0
-    const isFirstRoomValid = localRooms[0]
+    const isFirstRoomValid = !! localRooms[0]
     
     if(hasNoRooms) {
       await createChat()
     }
 
-    const isRoomIdValid = !isRoomIdEmpty ? localRooms.some((room : TRoom) => room.id == currentRoom.id) : false    
+    const isRoomIdValid = !isRoomIdEmpty ? localRooms.some((room : TRoom) => room.id.trim() == currentRoom.id.trim()) : false    
     
     if (isRoomIdEmpty || !isRoomIdValid && isFirstRoomValid) {
+      console.log(`isRoomIdEmpty : ${isRoomIdEmpty} isRoomIdValid : ${isRoomIdValid} isFirstRoomValid : ${isFirstRoomValid}`)
       setCurrentRoom({id : localRooms[0].id, selectId : 0})
     }
     
@@ -157,7 +158,7 @@ const Chat = () => {
     setReload(reload + 1)
   }
 
-  const onSelectChange = (e : React.ChangeEvent<HTMLSelectElement>) => {
+  const onSelectChange = (e : React.ChangeEvent<HTMLSelectElement>) => {        
     const roomId = e.target.value
     const selectId = e.target.selectedIndex
     setCurrentRoom({id : roomId, selectId : selectId})
@@ -274,7 +275,7 @@ const Chat = () => {
         rooms.map((room) => {
           return {name : room.id}
         })
-      }/> : ''}
+      } value={currentRoom.id}/> : ''}
 
      <div>
 
@@ -290,7 +291,9 @@ const Chat = () => {
       <CustomButton 
         value={'Create Chat'} 
         className='bg-green-500' 
-        onClick={() => createRoom()}
+        onClick={() => {          
+          createRoom()
+        }}
       />      
 
       <div className='flex justify-center items-center gap-3'>
