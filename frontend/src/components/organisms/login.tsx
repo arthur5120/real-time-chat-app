@@ -6,8 +6,8 @@ import { TUser, TFieldKeys } from "../../utils/types"
 import { userPlaceholder } from "../../utils/placeholders"
 import { authLogin } from "../../hooks/useAxios"
 import { authContext } from "../../utils/contexts/auth-provider"
-import { toastContext } from "../../utils/contexts/toast-provider"
 import { useNavigate } from "react-router-dom"
+import { primaryDefault, secondaryDefault } from "../../utils/tailwindVariations"
 
 const Login = () => {  
 
@@ -21,25 +21,25 @@ const Login = () => {
     'password',
   ]
 
-  const {setAuth} = useContext(authContext)
-  const {notifyUser} = useContext(toastContext)
+  const {setAuth} = useContext(authContext)  
   
   const onSubmit = async (e : FormEvent<HTMLFormElement>) => { 
-    e.preventDefault()    
+    e.preventDefault()  
     setLoading(true)
 
     if (setAuth != null) {
       try {
         const serverResponse = await authLogin(data)
-        setMessage(`${serverResponse.success ? 'Authenticated' : 'Invalid Credentials'}`)
+        setMessage(`${serverResponse.success ? 'Authenticated' : 'Invalid Credentials'}`)        
         setAuth(true)        
+        navigate('/profile')
+        setLoading(false)
       } catch (e) {
-        setMessage('Invalid Credentials')
+        setMessage(`Invalid Credentials`)
+        setLoading(false)
       }
     }
-
-    setLoading(false)
-    navigate('/profile')
+    
   }
 
   const onSignup = () => {
@@ -57,11 +57,15 @@ const Login = () => {
           setData={setData}
           onSubmit={onSubmit}
           fields={fieldList} 
+          formClassName={primaryDefault} 
+          inputClassName={secondaryDefault}
         >
-          <div className='flex flex-row justify-center items-center bg-transparent'>
-            <CustomButton value='Sign Up' type="reset" className='bg-orange-500 p-5 my-5' variationName="varthree" onClick={() => onSignup()}/>
-            <CustomButton value='Sign In' className='bg-purple-500 p-5 my-5' variationName="varthree"/>              
+
+          <div className='flex flex-row justify-center items-center bg-transparent my-3'>            
+            <CustomButton value='Sign Up' type="reset" className='p-5 my-5' variationName="vartwo" onClick={() => onSignup()}/>
+            <CustomButton value='Sign In' className='p-5 my-5' variationName="varthree"/>              
           </div>
+
         </CustomForm>
 
         <CustomTitle value={message} variationName="varthree"/>

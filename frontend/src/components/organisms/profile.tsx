@@ -1,7 +1,7 @@
 import { useContext } from "react"
+import { authContext } from "../../utils/contexts/auth-provider"
 import CustomTitle from "../atoms/title"
 import Chat from "../molecules/chat"
-import { authContext } from "../../utils/contexts/auth-provider"
 
 
 const Profile = () => {

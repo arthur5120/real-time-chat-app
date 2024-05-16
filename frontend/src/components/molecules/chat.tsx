@@ -5,21 +5,25 @@ import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { convertDatetimeToMilliseconds, getTime, sortByMilliseconds } from '../../utils/useful-functions'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
+import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
 
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
 
-type TRoom = {id : string, selectId : number}
+const roomsPlaceholder = [{id : '-1', name : ''}]
+const currentRoomPlaceHolder = {id : '-1', selectId : 0, name : ''}
+
+type TCurrentRoom = {id : string, selectId : number, name : string}
+type TRooms = {id : string, name : string}[]
 
 const Chat = () => {
 
   const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
-  const [rooms, setRooms] = useState<{id : string}[]>([{id : '-1'}])
-  const [currentRoom, setCurrentRoom] = useState<TRoom>({id : '-1', selectId : 0})  
+  const [rooms, setRooms] = useState<TRooms>(roomsPlaceholder)
+  const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder) 
   const [messages, setMessages] = useState<TChatMessage[]>([])
-  const [reload, setReload] = useState(1)
-  const [reloadCount, setReloadCount] = useState(0)
+  const [reload, setReload] = useState(1)  
   
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
@@ -57,22 +61,21 @@ const Chat = () => {
       await createChat()
     }
 
-    const isRoomIdValid = !isRoomIdEmpty ? localRooms.some((room : TRoom) => room.id.trim() == currentRoom.id.trim()) : false    
+    const isRoomIdValid = !isRoomIdEmpty ? localRooms.some((room : TCurrentRoom) => room.id.trim() == currentRoom.id.trim()) : false    
     
-    if (isRoomIdEmpty || !isRoomIdValid && isFirstRoomValid) {
-      console.log(`isRoomIdEmpty : ${isRoomIdEmpty} isRoomIdValid : ${isRoomIdValid} isFirstRoomValid : ${isFirstRoomValid}`)
-      setCurrentRoom({id : localRooms[0].id, selectId : 0})
+    if (isRoomIdEmpty || !isRoomIdValid && isFirstRoomValid) {      
+      setCurrentRoom({id : localRooms[0].id, selectId : 0, name : ''})
     }
     
     setRooms(localRooms) // Only loads on next rendering
-
+    
   }
 
   const retrieveMessages = async () => {  
     
     const authInfo = await authStatus({})
 
-    const rawMessages = await getMessages()       
+    const rawMessages = await getMessages()         
     
     const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)
 
@@ -105,7 +108,7 @@ const Chat = () => {
 
   const sendMessage = async () => {  
     
-    const localMessage : TChatMessage = {      
+    const localMessage : TChatMessage = {
       user : currentUser?.name ? currentUser.name : '',
       content : message.content,
       when : Date.now(),
@@ -161,7 +164,7 @@ const Chat = () => {
   const onSelectChange = (e : React.ChangeEvent<HTMLSelectElement>) => {        
     const roomId = e.target.value
     const selectId = e.target.selectedIndex
-    setCurrentRoom({id : roomId, selectId : selectId})
+    setCurrentRoom({id : roomId, selectId : selectId, name : ''}) // FUNNY
     setReload(reload + 1)
   }
 
@@ -172,15 +175,14 @@ const Chat = () => {
     }))
   }
 
-  const initialSetup = async () => {    
-    setReloadCount(reloadCount + 1)
+  const initialSetup = async () => {        
     await retrieveCurrentUser()
     await retrieveRooms()         
     await retrieveMessages()
     await resetMessageContent()
   }  
 
-  useEffect(() => {
+  useEffect(() => {    
 
     if(reload > 0) {
       initialSetup()
@@ -221,26 +223,24 @@ const Chat = () => {
 
   }, [rooms.length, messages.length, currentRoom.id, reload])
 
-  
-
   return (
     
     <section className='flex flex-col gap-3 bg-transparent justify-center items-center text-center'>        
 
-      <div className='flex justify-between bg-gray-700 rounded w-80'>
+      <div className={`flex justify-between ${primaryDefault} rounded-lg w-80`}>
         <h3 className='bg-transparent justify-start m-2'>
             {currentUser?.name ? `Logged in as ${currentUser.name}` : `Chatting as Guest`}
         </h3>
         <span className=' bg-transparent m-2 cursor-pointer'>X</span>
       </div>
 
-      <div className='flex flex-col gap-1 bg-gray-500 rounded w-80 h-80 overflow-y-scroll' ref={chatContainerRef}> 
+      <div className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll`} ref={chatContainerRef}> 
         {messages?.map(message => 
           <>
             <span className={`${currentUser.name == message.user ? 'self-end' : 'self-start'} mx-3 p-2 justify-end bg-transparent`}>
               <h4 className='bg-transparent text'>{currentUser.name == message.user ? 'You' : message.user}</h4>
             </span>
-            <span className={`${currentUser.name == message.user ? 'self-end' : 'self-start'} mx-3 p-2 bg-gray-700 rounded max-w-48 h-fit break-words`}>
+            <span className={`${currentUser.name == message.user ? 'self-end' : 'self-start'} mx-3 p-2 ${primaryDefault} rounded max-w-48 h-fit break-words`}>
               <h5 className='bg-transparent'>{message.content}</h5>
             </span>
             <span className={`${currentUser.name == message.user ? 'self-end' : 'self-start'} mx-3 p-2 justify-end bg-transparent`}>
@@ -250,12 +250,12 @@ const Chat = () => {
         )}
       </div>
 
-      <div className='flex bg-gray-700 rounded w-80 h-15 gap-2 p-1'>                
+      <div className={`flex ${primaryDefault} rounded-lg w-80 h-15 gap-2 p-1`}>                
 
         <textarea 
           name=''
           id=''
-          className='items-start bg-gray-500 text-white rounded-lg resize-none p-1 m-1 h-full w-full'
+          className={`items-start ${secondaryDefault} text-white rounded-lg resize-none p-1 m-1 h-full w-full`}
           cols={41}
           rows={3}
           onChange={(e) => {onTextareaChange(e)}}
@@ -264,14 +264,14 @@ const Chat = () => {
         />
 
         <CustomButton
-          className='p-2 bg-orange-500 rounded-lg m-1'
+          className='p-2 bg-orange-600 rounded-lg m-1'
           onClick={() => sendMessage()}
           value={'Send'}
         />
 
       </div>
       
-      {rooms ? <CustomSelect name='Current Chat Room' onChange={(e) => onSelectChange(e)} values={
+      {rooms ? <CustomSelect name='Current Chat Room' onChange={(e) => onSelectChange(e)} className='bg-slate-900' values={
         rooms.map((room) => {
           return {name : room.id}
         })
@@ -280,27 +280,26 @@ const Chat = () => {
      <div>
 
       <CustomButton 
-        value={'Reset Chat Rooms'}
-        className='bg-purple-500' 
+        value={'Reset Rooms'}
+        variationName='vartwo'
         onClick={() => {
-          setCurrentRoom({ id: '-1', selectId: 0})
+          setCurrentRoom({ id: '-1', selectId: 0, name : ''})
           deleteAllRooms()
         }}
       />
 
       <CustomButton 
-        value={'Create Chat'} 
-        className='bg-green-500' 
+        value={'New Room'}
+        variationName='varthree'
         onClick={() => {          
           createRoom()
         }}
       />      
 
-      <div className='flex justify-center items-center gap-3'>
-        <span>RELOAD REQUIRED {reload > 0 ? <h5 className='text-green-500'>Yep</h5>: <h5 className='text-red-500'>Nah</h5>}</span>
-        <span>RELOAD COUNT <h5>{reloadCount}</h5></span>
+      {/* <div className='flex justify-center items-center gap-3'>
+        <span>RELOAD REQUIRED {reload > 0 ? <h5 className='text-green-500'>Yep</h5>: <h5 className='text-red-500'>Nah</h5>}</span>        
         <span>ROOM ID <h5>{currentRoom.id}</h5></span>
-      </div>
+      </div> */}
 
      </div>
 

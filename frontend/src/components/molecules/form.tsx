@@ -2,6 +2,7 @@ import { FC, ChangeEvent, Dispatch, SetStateAction, ReactElement } from "react"
 import { TUser, TFieldKeys } from "../../utils/types"
 import CustomInput from "../atoms/input"
 import CustomSelect from "../atoms/select"
+import { twMerge } from "tailwind-merge"
 
 type TFormProps = {
   data : TUser,
@@ -10,10 +11,15 @@ type TFormProps = {
   fields : TFieldKeys[]
   role ? : boolean
   dataCollection ? : Object[]
-  children ? : ReactElement
+  children ? : ReactElement,
+  formClassName ? : string,
+  inputClassName ? : string,
 }
 
-const CustomForm : FC<TFormProps> = ({data, setData, onSubmit, fields, role=false, dataCollection=null, children}) => {
+const CustomForm : FC<TFormProps> = ({
+  data, setData, onSubmit, fields, role=false, dataCollection=null, children,
+  formClassName, inputClassName  
+}) => {
   
   const handleChange = (e : ChangeEvent<HTMLInputElement | HTMLSelectElement>) => { 
     setData((values) => ({
@@ -22,11 +28,13 @@ const CustomForm : FC<TFormProps> = ({data, setData, onSubmit, fields, role=fals
     }))
   }
 
+  const mergedFormClassName = twMerge(`flex flex-col items-center justify-center bg-slate-700 rounded-lg p-5`, formClassName)
+
   return (
 
     <form className="flex flex-col items-center justify-center" onSubmit={(e) => onSubmit(e)}>
         
-        <fieldset className="flex flex-col items-center justify-center  bg-gray-700 rounded-lg p-5">
+        <fieldset className={mergedFormClassName}>
 
           {fields != null ? fields.map(
             (field, index) => 
@@ -37,13 +45,13 @@ const CustomForm : FC<TFormProps> = ({data, setData, onSubmit, fields, role=fals
                 type={field} 
                 onChange={(e) => handleChange(e)}
                 value={data[field]}
-                className='bg-gray-500'
+                className={inputClassName}
               />
 
           ) : ''}
           
           {role ? <>
-            <CustomSelect name='role' values={[{name : 'User'}, {name : 'Admin'}]} onChange={(e) => handleChange(e)} className='bg-gray-500'/>
+            <CustomSelect name='role' values={[{name : 'User'}, {name : 'Admin'}]} onChange={(e) => handleChange(e)} className='bg-slate-500'/>
           </> : ''}
           
           {dataCollection != null ? <CustomSelect values={dataCollection} className='bg-blue-700'/> : ''}

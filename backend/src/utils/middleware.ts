@@ -37,3 +37,8 @@ export const midGenerateToken = (payload : Object) => {
     const Token = jwt.sign(payload, secretKey)
     return Token
 }
+
+export const getRandomName = () => {
+    const name = Math.floor(Math.random() * 1000)
+    return `Room Number ${JSON.stringify(name)}`
+}

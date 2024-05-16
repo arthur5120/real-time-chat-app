@@ -99,7 +99,7 @@ export const updateMessage = async(messageId : string, content : string) => {
 
 export const deleteMessage = async(messageId : string) => {    
     const res = await baseURL.delete(`/delete-message/${messageId}`)
-    return res.data 
+    return res.data
 }
 
 export const getMessages = async() => {

@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
+import { getRandomName } from "../utils/middleware";
 
 const prisma = new PrismaClient()
 
@@ -9,7 +10,7 @@ export const modCreateChat = async (req : Request, res : Response) => {
 
     try {
         await prisma.chat.create({
-            data : newChat
+            data : {...newChat, name : getRandomName()}
         })
     } catch (e) {
         return e
@@ -29,7 +30,7 @@ export const modAddUserToChat = async (req : Request, res : Response) => {
         await prisma.userChat.create({
             data : {
                 userId : userId,
-                chatId : chatId,
+                chatId : chatId,                
             } 
         })
 

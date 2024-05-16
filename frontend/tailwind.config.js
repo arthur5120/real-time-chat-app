@@ -7,7 +7,12 @@ export default {
     "./*/*/*/*.{ts,tsx,js,tsx,html}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors : {
+        'primary-color' : '#000',
+        'secondary-color' : '#000'
+      }
+    },
   },
   plugins: [],
 }
