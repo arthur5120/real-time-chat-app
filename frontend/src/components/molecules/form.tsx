@@ -51,10 +51,10 @@ const CustomForm : FC<TFormProps> = ({
           ) : ''}
           
           {role ? <>
-            <CustomSelect name='role' values={[{name : 'User'}, {name : 'Admin'}]} onChange={(e) => handleChange(e)} className='bg-slate-500'/>
+            <CustomSelect name='role' values={[{name : 'User'}, {name : 'Admin'}]} onChange={(e) => handleChange(e)} className={inputClassName}/>
           </> : ''}
           
-          {dataCollection != null ? <CustomSelect values={dataCollection} className='bg-blue-700'/> : ''}
+          {dataCollection != null ? <CustomSelect values={dataCollection} className={inputClassName}/> : ''}
 
         </fieldset>        
 

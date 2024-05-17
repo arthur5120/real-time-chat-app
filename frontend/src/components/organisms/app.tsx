@@ -29,8 +29,8 @@ const App = () => {
         <Outlet/> 
       </main> 
 
-      <footer className='absolute bottom-3.5 w-full'>
-        <h3 className='flex item-center justify-center'>MIT License - Copyright (c) 2024 Arthur Silva dos Santos</h3>
+      <footer className='flex items-center justify-center mt-auto my-3'>        
+        <h3>MIT License - Copyright (c) 2024 Arthur Silva dos Santos</h3>
       </footer>
 
     </>
