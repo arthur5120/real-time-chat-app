@@ -38,7 +38,19 @@ export const midGenerateToken = (payload : Object) => {
     return Token
 }
 
-export const getRandomName = () => {
+export const midGetRandomName = () => {
     const name = Math.floor(Math.random() * 1000)
     return `Room Number ${JSON.stringify(name)}`
+}
+
+export const midCheckAuth = async (req : Request, res : Response, next : NextFunction) => {               
+    try {
+        const {auth} = req.cookies
+        const verifiedUser = jwt.verify(auth, secretKey) as {id : string, role : string} | null
+        console.log(`Verified, Permission Granted for ${verifiedUser?.id}`)            
+        next()        
+    } catch (e) {     
+        console.log(`Not Authenticated/Authorized : ${e}`)        
+        return res.status(403).json({message : 'Not Authenticated/Authorized'})
+    }
 }

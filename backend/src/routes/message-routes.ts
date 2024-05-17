@@ -8,13 +8,13 @@ import {
     conGetMessageById, 
 } from '../controllers/message-controllers'
 
-import { midBodyParsers } from '../utils/middleware'
+import { midBodyParsers, midCheckAuth } from '../utils/middleware'
 
 const messageRouter = express.Router()
-
-    messageRouter.post ('/create-message', midBodyParsers, conCreateMessage)
-    messageRouter.put ('/update-message', midBodyParsers, conUpdateMessage)
-    messageRouter.delete ('/delete-message', conDeleteMessage)
+    
+    messageRouter.post ('/create-message', midBodyParsers, midCheckAuth, conCreateMessage)
+    messageRouter.put ('/update-message', midBodyParsers, midCheckAuth, conUpdateMessage)
+    messageRouter.delete ('/delete-message', midBodyParsers, midCheckAuth, conDeleteMessage)
     messageRouter.get ('/messages', conGetMessages)
     messageRouter.get ('/message/:id', conGetMessageById)
 

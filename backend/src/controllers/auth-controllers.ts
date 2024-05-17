@@ -28,11 +28,11 @@ export const conAuth = async (req : Request, res : Response) => {
     
 }
 
-export const conGetAuth = async (req : Request, res : Response) => {   
-
-    const {auth} = req.cookies         
+export const conGetAuth = async (req : Request, res : Response) => {               
 
     try {
+
+        const {auth} = req.cookies
 
         const verifiedUser = jwt.verify(auth, secretKey) as {id : string, role : string} | null 
         res.json({
@@ -45,7 +45,7 @@ export const conGetAuth = async (req : Request, res : Response) => {
 
         res.json({
             id : 'none',
-            authenticated:false, 
+            authenticated:false,
             role:'none'
         })
 

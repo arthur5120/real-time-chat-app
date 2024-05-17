@@ -14,7 +14,9 @@ const Profile = () => {
 
       <CustomTitle value='Profile Page' className='text-blue-500 my-3'/>
 
-      {auth ? <Chat/> : <CustomTitle value='Not Authenticated/Authorized' className='m-5'/>}
+      {/* {auth ? <Chat/> : <CustomTitle value='Not Authenticated/Authorized' className='m-5'/>} */}
+      
+      <Chat/>
       
     </>
 
