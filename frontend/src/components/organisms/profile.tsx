@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react"
+import { useContext, useEffect, useRef } from "react"
 import { authContext } from "../../utils/contexts/auth-provider"
 import { toastContext } from "../../utils/contexts/toast-provider"
 import CustomTitle from "../atoms/title"

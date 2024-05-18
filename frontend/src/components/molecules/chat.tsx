@@ -24,6 +24,7 @@ const Chat = () => {
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder) 
   const [messages, setMessages] = useState<TChatMessage[]>([])
   const [reload, setReload] = useState(1)  
+  const [chatHidden, setChatHidden] = useState(false)
   
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
@@ -272,10 +273,12 @@ const Chat = () => {
         <h3 className='bg-transparent justify-start m-2'>
             {currentUser?.name ? `Logged in as ${currentUser.name}` : `Chatting as Guest`}
         </h3>
-        <span className=' bg-transparent m-2 cursor-pointer'>X</span>
+        <span className=' bg-transparent m-2 cursor-pointer'>
+          <button title={`Toggle Hide/Show Chat`} onClick={() => setChatHidden(!chatHidden)}>&#128065;</button>
+        </span>
       </div>
 
-      <div className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll`} ref={chatContainerRef}> 
+      <div className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll ${chatHidden ? 'hidden' : ''}`} ref={chatContainerRef}> 
         {messages?.map(message => 
           <>
             <span className={`${currentUser.name == message.user ? 'self-end' : 'self-start'} mx-3 p-2 justify-end bg-transparent`}>
@@ -300,7 +303,7 @@ const Chat = () => {
           cols={41}
           rows={3}
           onChange={(e) => {onTextareaChange(e)}}
-          placeholder='Say something...'
+          placeholder={`Say something...`}
           value={message.content}
         />
 
@@ -312,7 +315,7 @@ const Chat = () => {
 
       </div>
       
-      {rooms ? <CustomSelect name='Current Chat Room' onChange={(e) => onSelectChange(e)} className='bg-slate-900' values={
+      {rooms ? <CustomSelect name='Current Chat Room' onChange={(e) => onSelectChange(e)} className={`bg-slate-900`} values={
         rooms.map((room) => {
           return {name : room.id}
         })
