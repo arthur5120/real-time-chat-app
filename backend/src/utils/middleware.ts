@@ -46,11 +46,9 @@ export const midGetRandomName = () => {
 export const midCheckAuth = async (req : Request, res : Response, next : NextFunction) => {               
     try {
         const {auth} = req.cookies
-        const verifiedUser = jwt.verify(auth, secretKey) as {id : string, role : string} | null
-        console.log(`Verified, Permission Granted for ${verifiedUser?.id}`)            
+        jwt.verify(auth, secretKey)      
         next()        
-    } catch (e) {     
-        console.log(`Not Authenticated/Authorized : ${e}`)        
+    } catch (e) {             
         return res.status(403).json({message : 'Not Authenticated/Authorized'})
     }
 }

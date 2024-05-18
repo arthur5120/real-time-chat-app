@@ -108,57 +108,98 @@ const Chat = () => {
 
   const sendMessage = async () => {  
     
-    const localMessage : TChatMessage = {
-      user : currentUser?.name ? currentUser.name : '',
-      content : message.content,
-      when : Date.now(),
-      room : currentRoom.id,
+    try {
+
+      const localMessage : TChatMessage = {
+        user : currentUser?.name ? currentUser.name : '',
+        content : message.content,
+        when : Date.now(),
+        room : currentRoom.id,
+      }
+  
+      if(localMessage.content.trim() == "") {
+        notifyUser('Write something first!')
+        return
+      }
+  
+      socket?.connect()
+  
+      const userInfo = await authStatus({})
+
+      if (!userInfo.authenticated) {
+        notifyUser('Not Allowed!', 'error')        
+        resetMessageContent()
+        return
+      }      
+  
+      await createMessage(
+        userInfo.id,
+        currentRoom.id,
+        localMessage.content,
+      )        
+      
+      socket?.emit('room', localMessage)   
+      addMessage(localMessage)
+      resetMessageContent()
+
+    } catch (e) {
+      notifyUser(`Something went wrong`, `warning`)
     }
-
-    if(localMessage.content.trim() == "") {
-      notifyUser('Write something first!')
-      return
-    }
-
-    socket?.connect()
-
-    const userInfo = await authStatus({})
-
-    await createMessage(
-      userInfo.id,
-      currentRoom.id,
-      localMessage.content,
-    )  
-    
-    socket?.emit('room', localMessage)   
-    addMessage(localMessage)
-    resetMessageContent()
 
   }
 
   const createRoom = async () => {
-    const creationMessage = `New Room Created!`
-    createChat()
-    notifyUser(creationMessage, 'success')
-    socket?.emit('change', creationMessage)
-    setReload(reload + 1)
+
+    try {
+
+      const creationMessage = `New Room Created!`
+      const userInfo = await authStatus({})
+
+      if (!userInfo.authenticated) {
+        notifyUser('Not Allowed!', 'error')
+        return
+      } 
+
+      createChat()
+      notifyUser(creationMessage, 'success')
+      socket?.emit('change', creationMessage)
+      setReload(reload + 1)
+
+    } catch (e) {
+      notifyUser(`Something went wrong`, `warning`)
+    }
+
   }
 
   const deleteAllRooms = async () => {
 
-    let i
-    const deletionMessage = `All rooms deleted, a fresh one was created`
+    try {
 
-    for (i=0 ; i < rooms.length ; i++) {
-      await deleteChat(rooms[i].id)
-    }    
+      let i
+      const deletionMessage = `All rooms deleted, a fresh one was created`
+  
+      const userInfo = await authStatus({})
+  
+      if (!userInfo.authenticated) {
+        notifyUser('Not Allowed!', 'error')
+        return
+      } 
     
-    await retrieveRooms()
+      for (i=0 ; i < rooms.length ; i++) {
+        await deleteChat(rooms[i].id)
+      }    
+      
+      await retrieveRooms()
+      
+      socket?.emit('change', deletionMessage)
     
-    socket?.emit('change', deletionMessage)
+      notifyUser(deletionMessage, 'success')    
+      setReload(reload + 1)
 
-    notifyUser(deletionMessage, 'success')    
-    setReload(reload + 1)
+    } catch (e) {
+      notifyUser(`Something went wrong`, `warning`)
+    }
+
   }
 
   const onSelectChange = (e : React.ChangeEvent<HTMLSelectElement>) => {        
