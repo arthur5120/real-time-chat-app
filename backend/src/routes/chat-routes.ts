@@ -12,9 +12,9 @@ import express from "express";
 
 const chatRouter = express.Router()
 
-chatRouter.post('/create-chat', midBodyParsers, midCheckAuth, conCreateChat) // Check Credentials
-chatRouter.post('/add-user-to-chat/:id', midBodyParsers, midCheckAuth, conAddUserToChat) // Get User id on the body
-chatRouter.delete('/remove-user-from-chat/:id', midBodyParsers, midCheckAuth, conRemoveUserFromChat) // Get User Id on the body
+chatRouter.post('/create-chat', midBodyParsers, midCheckAuth, conCreateChat)
+chatRouter.post('/add-user-to-chat/:id', midBodyParsers, midCheckAuth, conAddUserToChat)
+chatRouter.delete('/remove-user-from-chat/:id', midBodyParsers, midCheckAuth, conRemoveUserFromChat)
 chatRouter.delete('/delete-chat/:id', midBodyParsers, midCheckAuth, conDeleteChat)
 chatRouter.get('/chats', conGetChats)
 chatRouter.get('/chat/:id', conGetChatById)
