@@ -81,7 +81,7 @@ const Chat = () => {
     const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)
 
     const convertedMessages = filteredMessages.map((m : TMessage) => ({
-      user: m.senderId == authInfo.id ? currentUser.name : `Unknown`,
+      user: m.senderId == authInfo.id ? currentUser.name : m.senderName,
       content: m.content,
       when: convertDatetimeToMilliseconds(m.updated_at),
       room: m.chatId,     
@@ -118,7 +118,7 @@ const Chat = () => {
         room : currentRoom.id,
       }
   
-      if(localMessage.content.trim() == "") {
+      if(localMessage.content.trim() == '') {
         notifyUser('Write something first!')
         return
       }
@@ -136,7 +136,8 @@ const Chat = () => {
       await createMessage(
         userInfo.id,
         currentRoom.id,
-        localMessage.content,
+        localMessage.content,    
+        localMessage.user
       )        
       
       socket?.emit('room', localMessage)   

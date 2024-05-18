@@ -73,12 +73,13 @@ export const getChatById = async(id : string) => {
     return res.data
 }
 
-export const createMessage = async(senderId : string, chatId : string, content : string) => {
+export const createMessage = async(senderId : string, chatId : string, content : string, senderName : string = 'Unknown') => {
 
     const data = {
         chatId : chatId,
         content : content,
-        senderId : senderId
+        senderId : senderId,
+        senderName : senderName
     }
 
     const res = await baseURL.post(`/create-message`, data)

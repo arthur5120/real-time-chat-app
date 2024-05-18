@@ -48,6 +48,7 @@ model Message {
  chatId String @default(uuid())
  user User @relation(fields : [senderId], references: [id], onDelete: Cascade)
  senderId String @default(uuid())
+ senderName String
 }
 
 enum Role {

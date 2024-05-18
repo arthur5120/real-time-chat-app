@@ -24,12 +24,13 @@ export type TResponse = {
 }
 
 export type TMessage = {
-    id: string;
-    content: string;
-    created_at: string;
-    updated_at: string;
-    chatId: string;
-    senderId: string;
+    id: string
+    content: string
+    created_at: string
+    updated_at: string
+    chatId: string
+    senderId: string
+    senderName : string
 }
   
 export type TChatMessage = {
