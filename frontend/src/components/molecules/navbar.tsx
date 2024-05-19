@@ -22,26 +22,33 @@ const Navbar = () => {
 
       <ul className='flex gap-4 items-center justify-center'>
 
-          <li><Link className={LinkStyle} to='/profile'>
+          <li><Link className={LinkStyle} to='/chat-rooms'>
             <FontAwesomeIcon icon={faComment} />
-            Chat
-          </Link></li>
-
-          <li><Link className={LinkStyle} to='/create-account'>
-            <FontAwesomeIcon icon={faUser} />
-            Sign Up
+            Chats
           </Link></li>
 
           {
             auth ? 
-            <li><Link className={LinkStyle} to='/login' onClick={() => logout()}>              
+              <li><Link className={LinkStyle} to='/profile'>
+                <FontAwesomeIcon icon={faUser} />
+                Profile
+              </Link></li> : 
+              <li><Link className={LinkStyle} to='/create-account'>
+                <FontAwesomeIcon icon={faUser} />
+                Sign Up
+              </Link></li>
+          }
+
+          {
+            auth ? 
+              <li><Link className={LinkStyle} to='/login' onClick={() => logout()}>              
                 <FontAwesomeIcon icon={faSignOut} />              
-                Logout
-            </Link></li> : 
-            <li><Link className={LinkStyle} to='/login'>              
+                Sign out
+              </Link></li> : 
+              <li><Link className={LinkStyle} to='/login'>              
                 <FontAwesomeIcon icon={faSignIn} />              
-                Login
-            </Link></li> 
+                Sign in
+              </Link></li> 
           }
 
       </ul>

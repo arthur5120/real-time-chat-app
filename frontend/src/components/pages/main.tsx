@@ -1,13 +1,14 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from '../organisms/app'
-import Profile from '../organisms/profile'
+import ChatRooms from '../organisms/chat-rooms'
 import Login from '../organisms/login'
 import CreateAccount from '../organisms/create-account'
+import Profile from '../organisms/profile'
 import AuthProvider from '../../utils/contexts/auth-provider'
 import SocketProvider from '../../utils/contexts/socket-provider'
 import ToastProvider from '../../utils/contexts/toast-provider'
-import Error from '../atoms/Error'
+import Error from '../atoms/error'
 import '../../styles/global.css'
 
 import { createBrowserRouter } from 'react-router-dom'
@@ -15,9 +16,10 @@ import { RouterProvider } from 'react-router-dom'
 
 const Router = createBrowserRouter([{
   path : '/', element : <AuthProvider><SocketProvider><ToastProvider><App/></ToastProvider></SocketProvider></AuthProvider>,  errorElement : <Error />, children : [
-    {path : '/profile', element : <Profile/>, errorElement : <Error />},
+    {path : '/chat-rooms', element : <ChatRooms/>, errorElement : <Error />},
     {path : '/login', element : <Login/>,  errorElement : <Error />},
     {path : '/create-account', element : <CreateAccount/>,  errorElement : <Error />},    
+    {path : '/profile', element : <Profile/>,  errorElement : <Error />},
   ]
 }])
 
