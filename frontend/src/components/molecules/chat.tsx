@@ -6,6 +6,8 @@ import { convertDatetimeToMilliseconds, getTime, sortByMilliseconds } from '../.
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
 import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
@@ -274,8 +276,10 @@ const Chat = () => {
         <h3 className='bg-transparent justify-start m-2'>
             {currentUser?.name ? `Logged in as ${currentUser.name}` : `Chatting as Guest`}
         </h3>
-        <span className=' bg-transparent m-2 cursor-pointer'>
-          <button title={`Toggle Hide/Show Chat`} onClick={() => setChatHidden(!chatHidden)}>&#128065;</button>
+        <span className=' bg-transparent m-2 cursor-pointer mx-4'>
+          <button title={`Toggle Hide/Show Chat`} onClick={() => setChatHidden(!chatHidden)}>
+            {chatHidden ? <FontAwesomeIcon icon={faEyeSlash}/> : <FontAwesomeIcon icon={faEye}/>}
+          </button>
         </span>
       </div>
 

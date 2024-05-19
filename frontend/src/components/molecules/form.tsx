@@ -16,6 +16,14 @@ type TFormProps = {
   inputClassName ? : string,
 }
 
+const formPlaceHolders = {
+  role : '',
+  name : 'Your first name here',
+  username : 'Pick a username',
+  email : 'Provide a valid email',
+  password : 'Enter a strong password',
+}
+
 const CustomForm : FC<TFormProps> = ({
   data, setData, onSubmit, fields, role=false, dataCollection=null, children,
   formClassName, inputClassName  
@@ -41,9 +49,10 @@ const CustomForm : FC<TFormProps> = ({
 
               <CustomInput 
                 key={`${field}${index}`}
-                name={field} 
-                type={field} 
+                name={field}
+                type={field}
                 onChange={(e) => handleChange(e)}
+                placeholder={formPlaceHolders[field]}
                 value={data[field]}
                 className={inputClassName}
               />

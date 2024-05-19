@@ -8,7 +8,7 @@ const App = () => {
 
   const {auth, role} = useContext(authContext)    
 
-  const authStatus = auth ? { value : `Authenticated as ${role}`, className : 'bg-green-600 text-white rounded-xl m-2 p-2'} : 
+  const authStatus = auth ? { value : `Authenticated with ${role == 'Admin' ? 'Administrator' : 'User'} Privileges`, className : 'bg-green-600 text-white rounded-xl m-2 p-2'} : 
   {value : 'Not Authenticated', className : 'bg-red-500 text-white rounded-xl m-2 p-2'}
 
   return (
@@ -17,9 +17,9 @@ const App = () => {
 
       <header>
 
-        <section className={`flex items-center justify-center ${auth ? 'bg-emerald-600' : 'bg-red-600'} p-5 my-3`}>
+        <section className={`flex items-center justify-center ${auth ? 'bg-emerald-600' : 'bg-red-600'} p-5 my-4`}>
           <CustomTitle {...authStatus} className='bg-transparent text-white'/>      
-        </section>
+        </section>        
 
         <Navbar />
 

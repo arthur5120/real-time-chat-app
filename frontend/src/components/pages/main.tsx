@@ -7,16 +7,17 @@ import CreateAccount from '../organisms/create-account'
 import AuthProvider from '../../utils/contexts/auth-provider'
 import SocketProvider from '../../utils/contexts/socket-provider'
 import ToastProvider from '../../utils/contexts/toast-provider'
+import Error from '../atoms/Error'
 import '../../styles/global.css'
 
 import { createBrowserRouter } from 'react-router-dom'
 import { RouterProvider } from 'react-router-dom'
 
 const Router = createBrowserRouter([{
-  path : '/', element : <AuthProvider><SocketProvider><ToastProvider><App/></ToastProvider></SocketProvider></AuthProvider>,  errorElement : <h3>Oopsie</h3>, children : [
-    {path : '/profile', element : <Profile/>, errorElement : <h3>Oopsie</h3>},
-    {path : '/login', element : <Login/>,  errorElement : <h3>Oopsie</h3>},
-    {path : '/create-account', element : <CreateAccount/>,  errorElement : <h3>Oopsie</h3>}
+  path : '/', element : <AuthProvider><SocketProvider><ToastProvider><App/></ToastProvider></SocketProvider></AuthProvider>,  errorElement : <Error />, children : [
+    {path : '/profile', element : <Profile/>, errorElement : <Error />},
+    {path : '/login', element : <Login/>,  errorElement : <Error />},
+    {path : '/create-account', element : <CreateAccount/>,  errorElement : <Error />},    
   ]
 }])
 
