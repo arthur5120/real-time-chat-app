@@ -41,61 +41,79 @@ const Chat = () => {
 
   const retrieveCurrentUser = async () => {
 
-    const authInfo = await authStatus({})
-    const user = await getUserById(authInfo.id)
+    try {
 
-    setCurrentUser({
-      name : user.name,
-      username : user.username,
-      email : user.email,
-      role : authInfo.role,
-    })
+      const authInfo = await authStatus({})
+      const user = await getUserById(authInfo.id)
+  
+      setCurrentUser({
+        name : user.name,
+        username : user.username,
+        email : user.email,
+        role : authInfo.role,
+      })
+
+    } catch(e) {
+      notifyUser(`Something Went Wrong`, `error`)
+    }
 
   }
 
   const retrieveRooms = async () => {
 
-    const localRooms = await getChats()
-    const isRoomIdEmpty = currentRoom.id == '-1' || currentRoom.id == '0'
-    const hasNoRooms = localRooms?.length <= 0
-    const isFirstRoomValid = !! localRooms[0]
-    
-    if(hasNoRooms) {
-      await createChat()
-    }
+    try {
 
-    const isRoomIdValid = !isRoomIdEmpty ? localRooms.some((room : TCurrentRoom) => room.id.trim() == currentRoom.id.trim()) : false    
-    
-    if (isRoomIdEmpty || !isRoomIdValid && isFirstRoomValid) {      
-      setCurrentRoom({id : localRooms[0].id, selectId : 0, name : ''})
+      const localRooms = await getChats()
+      const isRoomIdEmpty = currentRoom.id == '-1' || currentRoom.id == '0'
+      const hasNoRooms = localRooms?.length <= 0
+      const isFirstRoomValid = !! localRooms[0]
+      
+      if(hasNoRooms) {
+        await createChat()
+      }
+
+      const isRoomIdValid = !isRoomIdEmpty ? localRooms.some((room : TCurrentRoom) => room.id.trim() == currentRoom.id.trim()) : false    
+
+      if (isRoomIdEmpty || !isRoomIdValid && isFirstRoomValid) {      
+        setCurrentRoom({id : localRooms[0].id, selectId : 0, name : ''})
+      }
+
+      setRooms(localRooms) // Only loads on next rendering
+
+    } catch (e) {
+      notifyUser(`Something Went Wrong`, `error`)
     }
-    
-    setRooms(localRooms) // Only loads on next rendering
     
   }
 
   const retrieveMessages = async () => {  
     
-    const authInfo = await authStatus({})
+      try {
 
-    const rawMessages = await getMessages()         
-    
-    const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)
+        const authInfo = await authStatus({})
 
-    const convertedMessages = filteredMessages.map((m : TMessage) => ({
-      user: m.senderId == authInfo.id ? currentUser.name : m.senderName,
-      content: m.content,
-      when: convertDatetimeToMilliseconds(m.updated_at),
-      room: m.chatId,     
-    }))   
+        const rawMessages = await getMessages()         
         
-    const sortedMessages = sortByMilliseconds(convertedMessages)
+        const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)
+    
+        const convertedMessages = filteredMessages.map((m : TMessage) => ({
+          user: m.senderId == authInfo.id ? currentUser.name : m.senderName,
+          content: m.content,
+          when: convertDatetimeToMilliseconds(m.updated_at),
+          room: m.chatId,     
+        }))   
+            
+        const sortedMessages = sortByMilliseconds(convertedMessages)
+    
+        setMessages(sortedMessages)
 
-    setMessages(sortedMessages)
+      } catch (e) {
+        notifyUser(`Something Went Wrong`,`error`)
+      }
 
   }
 
-  const addMessage = async (newMessage : TChatMessage) => {
+  const addMessage = async (newMessage : TChatMessage) => { // Removed Async
     setMessages((rest) => ([
       ...rest, 
       newMessage
@@ -187,11 +205,11 @@ const Chat = () => {
       if (!userInfo.authenticated) {
         notifyUser('Not Allowed!', 'error')
         return
-      } 
+      }
     
       for (i=0 ; i < rooms.length ; i++) {
         await deleteChat(rooms[i].id)
-      }    
+      }
       
       await retrieveRooms()
       
@@ -201,6 +219,7 @@ const Chat = () => {
       setReload(reload + 1)
 
     } catch (e) {
+      console.log(e)
       notifyUser(`Something went wrong`, `warning`)
     }
 
@@ -209,7 +228,7 @@ const Chat = () => {
   const onSelectChange = (e : React.ChangeEvent<HTMLSelectElement>) => {        
     const roomId = e.target.value
     const selectId = e.target.selectedIndex
-    setCurrentRoom({id : roomId, selectId : selectId, name : ''}) // FUNNY
+    setCurrentRoom({id : roomId, selectId : selectId, name : ''}) // Try room names here
     setReload(reload + 1)
   }
 
@@ -220,12 +239,17 @@ const Chat = () => {
     }))
   }
 
+  const onResetRoomsClick = async () => {    
+    setCurrentRoom({ id: '-1', selectId: 0, name : ''})
+    await deleteAllRooms()
+  }
+
   const initialSetup = async () => {        
     await retrieveCurrentUser()
     await retrieveRooms()         
     await retrieveMessages()
-    await resetMessageContent()
-  }  
+    resetMessageContent()
+  }
 
   useEffect(() => {    
 
@@ -237,12 +261,14 @@ const Chat = () => {
 
     socket?.on('room', (msg : TChatMessage) => {
       const {room} = msg       
-       if (room === currentRoom.id) {
-         addMessage(msg)
-       } else {
+      if (room === currentRoom.id) {
+        console.log(`Room from server : ${room}, Local Room ${currentRoom.id}`)
+        addMessage(msg)
+      } else {
+        console.log(`Room from server : ${room}, Local Room ${currentRoom.id}`)
         notifyUser(`A new message in ${room}!`)
-       }
-     })
+      }
+    })
 
      socket?.on('change', (msg : string) => {
       if(msg) {                
@@ -331,10 +357,7 @@ const Chat = () => {
       <CustomButton 
         value={'Reset Rooms'}
         variationName='vartwo'
-        onClick={() => {
-          setCurrentRoom({ id: '-1', selectId: 0, name : ''})
-          deleteAllRooms()
-        }}
+        onClick={() => onResetRoomsClick()}
       />
 
       <CustomButton 

@@ -18,8 +18,8 @@ const CustomSelect = ({name, values, className, variationName='varone', ...props
     <label htmlFor={name} className="bg-transparent">{capitilizeFirst(`${name}`)}</label>
     
       <select name={name} {...props} className={mergedClasses}>{
-        values? 
-          values.map((value, index) => 
+        values?
+          values.map((value, index) =>
 
             <option key={`${value}-${index}`}>
               {value.name ? value.name : '...'}

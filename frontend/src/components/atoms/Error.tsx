@@ -1,7 +1,4 @@
-
-const Error = () => {
-
-  console.log('Rendering Error')
+const Error = () => {  
     
   return (    
     
