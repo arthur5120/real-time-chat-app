@@ -1,4 +1,4 @@
-import { authStatus, getUserById } from "../../hooks/useAxios"
+import { authStatus, getChats, getUserById } from "../../hooks/useAxios"
 import { authContext } from "../../utils/contexts/auth-provider"
 import CustomTitle from "../atoms/title"
 import { useContext, useEffect, useState } from "react"
@@ -22,14 +22,14 @@ const Profile = () => {
     }
     
     useEffect(() => {
-        getUserInfo()
+        getUserInfo()        
     }, [])
 
     return (
 
       <section className='flex flex-col justify-center items-center text-center my-auto'>
         
-        <CustomTitle value='Current Profile' className='text-blue-500 my-3'/>
+        <CustomTitle value='Current Profile' className='text-green-500 my-3'/>
 
         {
             auth ? 
@@ -37,7 +37,10 @@ const Profile = () => {
                   Name : {user.name} <br/>
                   Email : {user.email} <br/>
                   Username : {user.username} <br/>
-                  Role : {user.role} <br/>        
+                  Role : {user.role} <br/>  
+                  Active Chats : 0 <br/>        
+                  Messages Sent : 0 <br/>  
+                  Account Creation Date : 0 <br/> 
                 </h3> : 
                 <h3>
                     Not Authenticated/Authorized

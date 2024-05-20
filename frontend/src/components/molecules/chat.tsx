@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState, Fragment } from 'react'
 import { authStatus, createChat, createMessage, deleteChat, getChats, getMessages, getUserById, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
@@ -284,18 +284,18 @@ const Chat = () => {
       </div>
 
       <div className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll ${chatHidden ? 'hidden' : ''}`} ref={chatContainerRef}> 
-        {messages?.map(message => 
-          <>
+        {messages?.map((message, id) => 
+          <Fragment key={`msg-${id}`}>
             <span className={`${currentUser.name == message.user ? 'self-end' : 'self-start'} mx-3 p-2 justify-end bg-transparent`}>
-              <h4 className='bg-transparent text'>{currentUser.name == message.user ? 'You' : message.user}</h4>
+              <h4 key={`msg-user-${id}`} className='bg-transparent text'>{currentUser.name == message.user ? 'You' : message.user}</h4>
             </span>
             <span className={`${currentUser.name == message.user ? 'self-end' : 'self-start'} mx-3 p-2 ${primaryDefault} rounded max-w-48 h-fit break-words`}>
-              <h5 className='bg-transparent'>{message.content}</h5>
+              <h5 key={`msg-content-${id}`}  className='bg-transparent'>{message.content}</h5>
             </span>
             <span className={`${currentUser.name == message.user ? 'self-end' : 'self-start'} mx-3 p-2 justify-end bg-transparent`}>
-              <h5 className='bg-transparent text-sm'>{getTime(message.when)}</h5>
+              <h5 key={`msg-when-${id}`}  className='bg-transparent text-sm'>{getTime(message.when)}</h5>
             </span>
-          </>
+          </Fragment>
         )}
       </div>
 

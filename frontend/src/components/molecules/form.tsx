@@ -50,6 +50,7 @@ const CustomForm : FC<TFormProps> = ({
               <CustomInput 
                 key={`${field}${index}`}
                 name={field}
+                autoComplete={`${field}`}
                 type={field}
                 onChange={(e) => handleChange(e)}
                 placeholder={formPlaceHolders[field]}
@@ -60,7 +61,7 @@ const CustomForm : FC<TFormProps> = ({
           ) : ''}
           
           {role ? <>
-            <CustomSelect name='role' values={[{name : 'User'}, {name : 'Admin'}]} onChange={(e) => handleChange(e)} className={inputClassName}/>
+            <CustomSelect id='role' name='role' values={[{name : 'User'}, {name : 'Admin'}]} onChange={(e) => handleChange(e)} className={inputClassName}/>
           </> : ''}
           
           {dataCollection != null ? <CustomSelect values={dataCollection} className={inputClassName}/> : ''}

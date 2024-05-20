@@ -21,7 +21,7 @@ const CustomSelect = ({name, values, className, variationName='varone', ...props
         values? 
           values.map((value, index) => 
 
-            <option key={`${value}${index}`}>
+            <option key={`${value}-${index}`}>
               {value.name ? value.name : '...'}
             </option>  
 
