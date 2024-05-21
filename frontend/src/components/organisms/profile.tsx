@@ -1,4 +1,4 @@
-import { authStatus, getChats, getUserById } from "../../hooks/useAxios"
+import { authStatus, getUserById, getChatsByUserId, getMessageByUserId } from "../../hooks/useAxios"
 import { authContext } from "../../utils/contexts/auth-provider"
 import CustomTitle from "../atoms/title"
 import { useContext, useEffect, useState } from "react"
@@ -10,11 +10,17 @@ const Profile = () => {
     const {auth} = useContext(authContext)
     const {notifyUser} = useContext(toastContext)
     const [user, setUser] = useState<TUser>({})
+    const [chatsCounter, setChatsCounter] = useState(0)
+    const [messagesCounter, setMessagesCounter] = useState(0)
 
     const getUserInfo = async () => {
         try {
             const userAuthInfo = await authStatus({}) as {id : string}
-            const currentUser = await getUserById(userAuthInfo.id)          
+            const currentUser = await getUserById(userAuthInfo.id)     
+            const chats = await getChatsByUserId(userAuthInfo.id)
+            const messages = await getMessageByUserId(userAuthInfo.id)
+            setChatsCounter(chats.length)
+            setMessagesCounter(messages.length)
             setUser(currentUser)
         } catch (e) {           
             notifyUser(`Something Went Wrong`,`error`)
@@ -38,9 +44,9 @@ const Profile = () => {
                   Email : {user.email} <br/>
                   Username : {user.username} <br/>
                   Role : {user.role} <br/>  
-                  Active Chats : 0 <br/>        
-                  Messages Sent : 0 <br/>  
-                  Account Creation Date : 0 <br/> 
+                  Active Chats : {chatsCounter} <br/>        
+                  Messages Sent : {messagesCounter} <br/>  
+                  Account Creation Date : {user.created_at} <br/> 
                 </h3> : 
                 <h3>
                     Not Authenticated/Authorized

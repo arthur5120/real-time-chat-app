@@ -5,7 +5,8 @@ import {
     modUpdateMessage,
     modDeleteMessage, 
     modGetMessages,
-    modGetMessageById, 
+    modGetMessageById,
+    modGetMessagesByUserId, 
 } from "../models/message-model";
 
 export const conCreateMessage = async (req : Request, res : Response) => {
@@ -60,6 +61,18 @@ export const conGetMessageById = async (req : Request, res : Response) => {
 
     try {
         const msg = await modGetMessageById(req, res)
+        return res.status(200).send(msg)
+    } catch (e) {
+        console.log(e)
+        return res.status(500).json({message : 'Internal Error'})
+    }
+
+}
+
+export const conGetMessagesByUserId = async (req : Request, res : Response) => {
+
+    try {
+        const msg = await modGetMessagesByUserId(req, res)
         return res.status(200).send(msg)
     } catch (e) {
         console.log(e)

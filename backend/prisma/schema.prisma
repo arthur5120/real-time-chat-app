@@ -22,6 +22,7 @@ model User {
   role Role @default(User)
   chats UserChat[]
   messages Message[]
+  created_at DateTime @default(now())
 }
 
 model Chat {

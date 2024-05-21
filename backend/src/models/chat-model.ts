@@ -111,3 +111,23 @@ export const modGetChatById = async (req : Request, res : Response) => {
     }
 
 }
+
+export const getChatsByUserId = async (req : Request, res : Response) => {
+
+    const userId = req.params.id    
+
+    try {
+
+        const chats = await prisma.userChat.findMany({
+            where : {
+                userId : userId
+            }
+        })        
+        
+        return chats
+
+    } catch (e) {
+        return e
+    }
+
+}

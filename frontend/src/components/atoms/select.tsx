@@ -1,6 +1,6 @@
 import { twMerge } from "tailwind-merge";
 import { inputVariations } from "../../utils/tailwindVariations";
-import { capitilizeFirst } from "../../utils/useful-functions";
+import { capitalizeFirst } from "../../utils/useful-functions";
 
 type SelectProps = Partial<{
     values : Partial<{name : string}>[],
@@ -15,7 +15,7 @@ const CustomSelect = ({name, values, className, variationName='varone', ...props
 
     <>    
 
-    <label htmlFor={name} className="bg-transparent">{capitilizeFirst(`${name}`)}</label>
+    <label htmlFor={name} className="bg-transparent">{capitalizeFirst(`${name}`)}</label>
     
       <select name={name} {...props} className={mergedClasses}>{
         values?

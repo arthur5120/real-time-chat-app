@@ -31,7 +31,7 @@ const Login = () => {
       try {
         const serverResponse = await authLogin(data)
         setMessage(`${serverResponse.success ? 'Authenticated' : 'Invalid Credentials'}`)        
-        setAuth(true)        
+        setAuth(true)
         navigate('/chat-rooms')
         setLoading(false)
       } catch (e) {

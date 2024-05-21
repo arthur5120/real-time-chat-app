@@ -5,6 +5,7 @@ import {
     conRemoveUserFromChat,
     conGetChatById,
     conGetChats,
+    conGetChatsByUserId,
 } from "../controllers/chat-controllers";
 
 import { midBodyParsers, midCheckAuth } from "../utils/middleware";
@@ -17,6 +18,7 @@ chatRouter.post('/add-user-to-chat/:id', midBodyParsers, midCheckAuth, conAddUse
 chatRouter.delete('/remove-user-from-chat/:id', midBodyParsers, midCheckAuth, conRemoveUserFromChat)
 chatRouter.delete('/delete-chat/:id', midBodyParsers, midCheckAuth, conDeleteChat)
 chatRouter.get('/chats', conGetChats)
-chatRouter.get('/chat/:id', conGetChatById)
+chatRouter.get('/chats/:id', conGetChatById)
+chatRouter.get('/users/:id/chats', midBodyParsers, midCheckAuth, conGetChatsByUserId)
 
 export default chatRouter

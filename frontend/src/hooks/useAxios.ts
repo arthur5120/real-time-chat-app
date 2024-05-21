@@ -22,7 +22,7 @@ export const getUsers = async() => {
 }
 
 export const getUserById = async(id : string) => {
-    const res = await baseURL.get(`/user/${id}`)
+    const res = await baseURL.get(`/users/${id}`)
     return res.data
 }
 
@@ -69,7 +69,12 @@ export const getChats = async() => {
 }
 
 export const getChatById = async(id : string) => {
-    const res = await baseURL.get(`/chat/${id}`)
+    const res = await baseURL.get(`/chats/${id}`)
+    return res.data
+}
+
+export const getChatsByUserId = async (userId : string) => {
+    const res = await baseURL.get(`users/${userId}/chats`)
     return res.data
 }
 
@@ -109,6 +114,11 @@ export const getMessages = async() => {
 }
 
 export const getMessageById = async (messageId : string) => {
-    const res = await baseURL.get(`message/${messageId}`)
+    const res = await baseURL.get(`messages/${messageId}`)
+    return res.data
+}
+
+export const getMessageByUserId = async (userId : string) => {
+    const res = await baseURL.get(`users/${userId}/messages`)
     return res.data
 }

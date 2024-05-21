@@ -1,7 +1,7 @@
 import { twMerge } from "tailwind-merge";
 import { inputVariations } from "../../utils/tailwindVariations";
 import { TElementProps } from "../../utils/types";
-import { capitilizeFirst } from "../../utils/useful-functions";
+import { capitalizeFirst } from "../../utils/useful-functions";
 
 type TInputProps = TElementProps & React.InputHTMLAttributes<HTMLInputElement>
 
@@ -12,7 +12,7 @@ const CustomInput = ({name, className, variationName='varone', ...props} : TInpu
   return (    
 
     <>    
-      <label htmlFor={name} className="bg-transparent">{capitilizeFirst(`${name}`)}</label>
+      <label htmlFor={name} className="bg-transparent">{capitalizeFirst(`${name}`)}</label>
       <input {...props} name={name} id={name} className={mergedClasses} />
     </>
 

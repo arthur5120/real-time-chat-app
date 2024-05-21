@@ -7,6 +7,7 @@ import {
     modRemoveUserFromChat,
     modGetChatById,
     modGetChats,
+    getChatsByUserId,
 } from "../models/chat-model"
 
 export const conCreateChat = async (req : Request, res : Response) => {
@@ -68,6 +69,19 @@ export const conGetChatById = async (req : Request, res : Response) => {
         return res.status(500).json({message : 'Internal Error'})
     }
 
+}
+
+export const conGetChatsByUserId = async (req : Request, res : Response) => {
+
+    try {
+
+        const chats = await getChatsByUserId(req, res)
+        return res.status(200).send(chats)
+        
+    } catch (e) {
+        return res.status(500).json({message : 'Internal Error'})
+    }
+    
 }
 
 export const conGetChats = async (req : Request, res : Response) => {

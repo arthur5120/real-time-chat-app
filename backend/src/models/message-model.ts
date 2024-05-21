@@ -66,3 +66,25 @@ export const modGetMessageById = async (req : Request, res : Response) => {
     }
     
 }
+
+export const modGetMessagesByUserId = async (req : Request, res : Response) => {
+
+    const userId = req.params.id
+
+    console.log('trying to get messages')
+    
+    try {
+
+        const messages = await prisma.message.findMany({
+            where : {
+                senderId : userId
+            }
+        })
+
+        return messages
+        
+    } catch (e) {
+        return e
+    }
+    
+}

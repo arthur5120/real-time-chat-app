@@ -57,7 +57,8 @@ export const modGetUsers = async (req : Request, res : Response) => {
                 name : true,
                 username : true,
                 email : true,
-                role : true
+                role : true,
+                created_at : true,                
             }          
         })
         return await users
@@ -78,7 +79,8 @@ export const modGetUserById = async (req : Request, res : Response) => {
                 name : true,
                 username : true,
                 email : true,
-                role : true
+                role : true,
+                created_at : true,
             }  
         })
         return await user

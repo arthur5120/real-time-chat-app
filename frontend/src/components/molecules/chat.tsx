@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
-import { authStatus, createChat, createMessage, deleteChat, getChats, getMessages, getUserById, } from '../../hooks/useAxios'
+import { addUserToChat, authStatus, createChat, createMessage, deleteChat, getChats, getMessages, getUserById, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { convertDatetimeToMilliseconds, getTime, sortByMilliseconds } from '../../utils/useful-functions'
@@ -159,6 +159,8 @@ const Chat = () => {
         localMessage.content,    
         localMessage.user
       )        
+
+      await addUserToChat(userInfo.id, currentRoom.id) // Adding user to chat without checking.
       
       socket?.emit('room', localMessage)   
       addMessage(localMessage)
@@ -185,7 +187,7 @@ const Chat = () => {
       createChat()
       notifyUser(creationMessage, 'success')
       socket?.emit('change', creationMessage)
-      setReload(reload + 1)
+      setReload(reload + 1)      
 
     } catch (e) {
       notifyUser(`Something went wrong`, `warning`)

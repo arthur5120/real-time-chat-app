@@ -12,7 +12,7 @@ const Navbar = () => {
 
   const logout = () => {
     if (setAuth) {
-      removeToken(setAuth)      
+      removeToken(setAuth)
     }
   }
 
