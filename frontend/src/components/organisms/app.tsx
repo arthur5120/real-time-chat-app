@@ -9,7 +9,7 @@ const App = () => {
   const {auth, role} = useContext(authContext)  
 
   const authColor = auth ? 'bg-emerald-600' : 'bg-red-600'
-  const authText = auth ? `Authenticated with ${role == 'Admin' ? 'Administrator' : role} Privileges` : 'Not Authenticated'    
+  const authText = auth ? `Authenticated with ${role == 'Admin' ? 'Administrator' : role} Privileges` : 'Not Authenticated'
 
   return (
 

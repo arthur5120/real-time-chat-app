@@ -21,9 +21,7 @@ export const modCreateChat = async (req : Request, res : Response) => {
 export const modAddUserToChat = async (req : Request, res : Response) => {    
 
     const chatId = req.params.id
-    const userId = req.body.userId
-
-    console.log(`Adding user id ${userId} to chat ${chatId}`)
+    const userId = req.body.userId    
 
     try {
 
@@ -42,9 +40,7 @@ export const modAddUserToChat = async (req : Request, res : Response) => {
 export const modRemoveUserFromChat = async (req : Request, res : Response) => {
 
     const chatId = req.params.id
-    const userId = req.body.userId
-
-    console.log(`Removing user id ${userId} to chat ${chatId}`)
+    const userId = req.body.userId    
 
     try {
         

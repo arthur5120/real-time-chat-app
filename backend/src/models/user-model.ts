@@ -23,8 +23,6 @@ export const modUpdateUser = async (req : Request, res : Response) => {
 
     const userId = req.params.id
 
-    console.log(`Trying to update user with id ${userId} and info ${JSON.stringify(req.body)}`)
-
     try {        
         await prisma.user.update({
             where : {id : userId},

@@ -17,7 +17,7 @@ const CustomSelect = ({name, values, className, variationName='varone', ...props
 
     <label htmlFor={name} className="bg-transparent">{capitalizeFirst(`${name}`)}</label>
     
-      <select name={name} {...props} className={mergedClasses}>{
+      <select name={name} id={name} {...props} className={mergedClasses}>{
         values?
           values.map((value, index) =>
 

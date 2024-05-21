@@ -341,7 +341,7 @@ const Chat = () => {
         />
 
         <CustomButton
-          className='p-2 bg-orange-600 rounded-lg m-1'
+          className='p-2 bg-[#aa5a95] text-white rounded-lg m-1'
           onClick={() => sendMessage()}
           value={'Send'}
         />
