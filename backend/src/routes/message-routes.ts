@@ -9,7 +9,11 @@ import {
     conGetMessagesByUserId, 
 } from '../controllers/message-controllers'
 
-import { midBodyParsers, midCheckAuth } from '../utils/middleware'
+import { 
+    midBodyParsers, 
+    midCheckAuth,
+    midCheckAllowed,
+} from '../utils/middleware'
 
 const messageRouter = express.Router()
     

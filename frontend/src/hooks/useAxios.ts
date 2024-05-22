@@ -1,7 +1,8 @@
 import { baseURL } from "../utils/axios-instance";
 import { TUser } from "../utils/types";
+import { v4 as uuidv4 } from 'uuid'
 
-export const createUser = async(data : TUser) => {
+export const createUser = async(data : TUser) => { // Idempotency
     const res = await baseURL.post(`/create-user`, data)
     return res.data
 }
@@ -41,8 +42,10 @@ export const authStatus = async(data : any) => {
     return res.data
 }
 
-export const createChat = async () => {
-    const res = await baseURL.post(`create-chat`)
+export const createChat = async () => { // Idempotency
+    const optimisticId = uuidv4()
+    console.log(optimisticId)
+    const res = await baseURL.post(`create-chat`)    
     return res.data
 }
 
@@ -78,7 +81,7 @@ export const getChatsByUserId = async (userId : string) => {
     return res.data
 }
 
-export const createMessage = async(senderId : string, chatId : string, content : string, senderName : string = 'Unknown') => {
+export const createMessage = async(senderId : string, chatId : string, content : string, senderName : string = 'Unknown') => { // Idempotency
 
     const data = {
         chatId : chatId,

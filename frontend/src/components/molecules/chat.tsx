@@ -151,14 +151,14 @@ const Chat = () => {
         notifyUser('Not Allowed!', 'error')        
         resetMessageContent()
         return
-      }      
+      }
   
       await createMessage(
         userInfo.id,
         currentRoom.id,
         localMessage.content,    
         localMessage.user
-      )        
+      )
 
       await addUserToChat(userInfo.id, currentRoom.id) // Adding user to chat without checking.
       
@@ -204,7 +204,7 @@ const Chat = () => {
   
       const userInfo = await authStatus({})
   
-      if (!userInfo.authenticated) {
+      if (!userInfo.authenticated || userInfo.role != 'Admin') {
         notifyUser('Not Allowed!', 'error')
         return
       }

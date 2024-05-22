@@ -47,7 +47,24 @@ export const midCheckAuth = async (req : Request, res : Response, next : NextFun
     try {
         const {auth} = req.cookies
         jwt.verify(auth, secretKey)      
-        next()        
+        next()
+    } catch (e) {             
+        return res.status(403).json({message : 'Not Authenticated/Authorized'})
+    }
+}
+
+export const midCheckAllowed = async (req : Request, res : Response, next : NextFunction) => {               
+    try {
+
+        const {auth} = req.cookies
+        const authInfo = jwt.verify(auth, secretKey) as {role : 'User' | 'Admin'}
+
+        if(authInfo.role == 'User') {
+            return res.status(403).json({message : 'Not Authenticated/Authorized'})
+        } else {
+            next()
+        }
+        
     } catch (e) {             
         return res.status(403).json({message : 'Not Authenticated/Authorized'})
     }

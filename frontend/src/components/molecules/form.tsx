@@ -22,6 +22,7 @@ const formPlaceHolders = {
   username : 'Pick a username',
   email : 'Provide a valid email',
   password : 'Enter a strong password',
+  created_at : ''
 }
 
 const CustomForm : FC<TFormProps> = ({
