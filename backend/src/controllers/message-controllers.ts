@@ -9,7 +9,18 @@ import {
     modGetMessagesByUserId, 
 } from "../models/message-model";
 
-export const conCreateMessage = async (req : Request, res : Response) => {
+const requestKeys : string[] = []
+
+export const conCreateMessage = async (req : Request, res : Response) => {    
+
+    const idempotencyKey = req.headers['idempotency-key'] as string
+    const isDuplicated = requestKeys.find(key => key == idempotencyKey)
+
+    if(isDuplicated) {        
+        return res.send('Duplicated Request.')
+    }
+
+    requestKeys.push(idempotencyKey)
 
     try {
         await modCreateMessage(req, res)

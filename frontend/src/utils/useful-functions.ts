@@ -1,5 +1,7 @@
 import { TChatMessage } from "./types";
 
+import { v4 as uuidv4 } from "uuid";
+
 export const capitalizeFirst = (string : string) : string => {
     const newString = string.charAt(0).toUpperCase() + string.slice(1);
     return newString
@@ -33,4 +35,13 @@ export const convertDatetimeToMilliseconds = (dateString : string) => { // Datet
 export const sortByMilliseconds = (unsorted : TChatMessage[]) => {
     const sorted = unsorted.sort((a, b) => a.when - b.when)
     return sorted
+}
+
+export const generateUniqueId = () => {
+    const optimisticId = uuidv4()
+    return optimisticId
+}
+
+export const getConfig = (uuid : string) => {
+    return {headers: {'Idempotency-Key': uuid}}
 }

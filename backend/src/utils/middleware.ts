@@ -11,10 +11,10 @@ const secretKey = process.env.SECRET_KEY as string
 const secretSalt = parseInt(process.env.SECRET_SALT as string)
 
 export const midSetCors = Cors({
-    origin : 'http://localhost:5173',
+    origin : ['http://localhost:5173', 'http://localhost:3000'],
     credentials : true,
-    methods : 'POST, PUT, DELETE, UPDATE', 
-    allowedHeaders : 'Content-Type',  
+    methods : ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
+    allowedHeaders : ['Content-Type', 'Authorization', 'Idempotency-Key']
 })
 
 export const midBodyParsers = [    
@@ -64,7 +64,7 @@ export const midCheckAllowed = async (req : Request, res : Response, next : Next
         } else {
             next()
         }
-        
+
     } catch (e) {             
         return res.status(403).json({message : 'Not Authenticated/Authorized'})
     }
