@@ -15,5 +15,13 @@ export default {
     },
   },
   plugins: [],
+  variants : {
+    extend: {
+      backgroundColor: ['disabled'],
+      textColor: ['disabled'],
+      opacity: ['disabled'],
+      cursor: ['disabled'],
+    },
+  }
 }
 

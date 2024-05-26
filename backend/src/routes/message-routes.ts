@@ -11,8 +11,7 @@ import {
 
 import { 
     midBodyParsers, 
-    midCheckAuth,
-    midCheckAllowed,
+    midCheckAuth,    
 } from '../utils/middleware'
 
 const messageRouter = express.Router()

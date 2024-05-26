@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
-import { addUserToChat, authStatus, createChat, createMessage, deleteChat, getChats, getMessages, getUserById, } from '../../hooks/useAxios'
+import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, getChats, getMessageById, getMessages, getUserById, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { convertDatetimeToMilliseconds, getTime, sortByMilliseconds } from '../../utils/useful-functions'
@@ -12,6 +12,8 @@ import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
 
+
+
 const roomsPlaceholder = [{id : '-1', name : ''}]
 const currentRoomPlaceHolder = {id : '-1', selectId : 0, name : ''}
 
@@ -20,22 +22,26 @@ type TRooms = {id : string, name : string}[]
 
 const Chat = () => {
 
-  const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
   const [rooms, setRooms] = useState<TRooms>(roomsPlaceholder)
+  const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
   const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder) 
   const [messages, setMessages] = useState<TChatMessage[]>([])
+  const [hasErrors, setHasErrors] = useState(false)
+  const [chatHidden, setChatHidden] = useState(false)  
   const [reload, setReload] = useState(1)  
-  const [chatHidden, setChatHidden] = useState(false)
+  const [delay, setDelay] = useState(0)
+
+  const isCurrentRoomIdValid = currentRoom.id == '0' || currentRoom.id == '-1'  
   
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
   const socket = useContext(socketContext)
-  const {notifyUser} = useContext(toastContext)
+  const {notifyUser} = useContext(toastContext)    
 
   const scrollToLatest = () => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
     }
   }
 
@@ -54,7 +60,25 @@ const Chat = () => {
       })
 
     } catch(e) {
-      notifyUser(`Something Went Wrong`, `error`)
+      setHasErrors(true)
+    }
+
+  }
+
+  const createRoomIfNoneAreFound = async () => {          
+
+    try {
+
+      const localRooms = await getChats()
+      const hasValidRooms = !!localRooms[0]
+
+      if(!hasValidRooms) {
+        await createChat()
+        setReload(reload + 1)
+      }
+
+    } catch (e) {
+      setHasErrors(true)
     }
 
   }
@@ -63,52 +87,56 @@ const Chat = () => {
 
     try {
 
-      const localRooms = await getChats()
-      const isRoomIdEmpty = currentRoom.id == '-1' || currentRoom.id == '0'
-      const hasNoRooms = localRooms?.length <= 0
-      const isFirstRoomValid = !! localRooms[0]
-      
-      if(hasNoRooms) {
-        await createChat()
+      const localRooms = await getChats() 
+      const hasValidRooms = !!localRooms[0]      
+
+      if(!hasValidRooms) {        
+        return
+      }      
+
+      const isRoomIdEmpty = parseInt(currentRoom.id) <= 0      
+      const isRoomIdValid = !isRoomIdEmpty ? localRooms.some((room : TCurrentRoom) => room.id.trim() == currentRoom.id.trim()) : false
+
+      if (isRoomIdEmpty || !isRoomIdValid) {
+        setCurrentRoom({
+          id : localRooms[0].id,
+          selectId : 0, name : ''
+        })
       }
 
-      const isRoomIdValid = !isRoomIdEmpty ? localRooms.some((room : TCurrentRoom) => room.id.trim() == currentRoom.id.trim()) : false    
+      setRooms(localRooms)
 
-      if (isRoomIdEmpty || !isRoomIdValid && isFirstRoomValid) {      
-        setCurrentRoom({id : localRooms[0].id, selectId : 0, name : ''})
-      }
-
-      setRooms(localRooms) // Only loads on next rendering
-
-    } catch (e) {
-      notifyUser(`Something Went Wrong`, `error`)
+    } catch (e) {      
+      setHasErrors(true)
     }
     
   }
 
-  const retrieveMessages = async () => {  
+  const retrieveMessages = async () => {      
     
-      try {
+      try {        
+
+        if (!isCurrentRoomIdValid) {          
+          return
+        }
 
         const authInfo = await authStatus({})
-
-        const rawMessages = await getMessages()         
-        
+        const rawMessages = await getMessages()
         const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)
     
         const convertedMessages = filteredMessages.map((m : TMessage) => ({
           user: m.senderId == authInfo.id ? currentUser.name : m.senderName,
           content: m.content,
           when: convertDatetimeToMilliseconds(m.updated_at),
-          room: m.chatId,     
-        }))   
+          room: m.chatId,
+        }))
             
         const sortedMessages = sortByMilliseconds(convertedMessages)
     
         setMessages(sortedMessages)
 
       } catch (e) {
-        notifyUser(`Something Went Wrong`,`error`)
+        setHasErrors(true)
       }
 
   }
@@ -147,7 +175,7 @@ const Chat = () => {
   
       const userInfo = await authStatus({})
 
-      if (!userInfo.authenticated) {
+      if (!userInfo.authenticated) {              
         notifyUser('Not Allowed!', 'error')        
         resetMessageContent()
         return
@@ -167,7 +195,7 @@ const Chat = () => {
       resetMessageContent()
 
     } catch (e) {
-      notifyUser(`Something went wrong`, `warning`)
+      setHasErrors(true)
     }
 
   }
@@ -179,51 +207,35 @@ const Chat = () => {
       const creationMessage = `New Room Created!`
       const userInfo = await authStatus({})
 
-      if (!userInfo.authenticated) {
+      if (!userInfo.authenticated) {        
         notifyUser('Not Allowed!', 'error')
         return
-      } 
+      }
 
-      createChat()
-      notifyUser(creationMessage, 'success')
+      await createChat()
+
+      delay == 0 ? notifyUser(creationMessage, 'success') : 
       socket?.emit('change', creationMessage)
-      setReload(reload + 1)      
+      setReload(reload + 1)
 
     } catch (e) {
-      notifyUser(`Something went wrong`, `warning`)
+      setHasErrors(true)
     }
 
   }
 
-  const deleteAllRooms = async () => {
+  const deleteAllRooms = async () => {       
 
-    try {
-
-      let i
+    try {      
       const deletionMessage = `All rooms deleted, a fresh one was created`
-  
-      const userInfo = await authStatus({})
-  
-      if (!userInfo.authenticated || userInfo.role != 'Admin') {
-        notifyUser('Not Allowed!', 'error')
-        return
-      }
-    
-      for (i=0 ; i < rooms.length ; i++) {
-        await deleteChat(rooms[i].id)
-      }
-      
-      await retrieveRooms()
-      
-      socket?.emit('change', deletionMessage)
-    
-      notifyUser(deletionMessage, 'success')    
+      await deleteAllChats()
+      socket?.emit('change', deletionMessage)          
       setReload(reload + 1)
-
     } catch (e) {
-      console.log(e)
-      notifyUser(`Something went wrong`, `warning`)
+      setHasErrors(true)
     }
+
+    setDelay(5000)
 
   }
 
@@ -241,33 +253,73 @@ const Chat = () => {
     }))
   }
 
-  const onResetRoomsClick = async () => {    
-    setCurrentRoom({ id: '-1', selectId: 0, name : ''})
-    await deleteAllRooms()
+  const onResetRoomsClick = async () => {         
+
+    if(!delay) {
+      
+      const userInfo = await authStatus({})
+  
+      if (!userInfo.authenticated || userInfo.role != 'Admin') {        
+        notifyUser('Not Allowed!', 'error')
+        return
+      }
+
+      setCurrentRoom({ id: '-1', selectId: 0, name : ''})
+
+      await deleteAllRooms()   
+
+      setDelay(5000)
+
+    } else {
+      notifyUser(`Please Wait a Moment`,`warning`)
+    }
+
+  }
+  
+  const onNewRoomClick = async () => {
+    if(!delay) {
+      await createRoom()
+      setDelay(5000)
+    } else {
+      notifyUser(`Please Wait a Moment`,`warning`)      
+    }
+  }
+
+  const onClickMessage = async (id : string) => {
+    const msg = getMessageById(id)
+    notifyUser(JSON.stringify(msg))
   }
 
   const initialSetup = async () => {        
     await retrieveCurrentUser()
-    await retrieveRooms()         
+    await createRoomIfNoneAreFound()
+    await retrieveRooms()
     await retrieveMessages()
     resetMessageContent()
   }
 
-  useEffect(() => {    
+  useEffect(() => {  
+    
+    setTimeout(() => {      
+      setDelay(0)
+    }, delay)
+
+    if(hasErrors) {      
+      notifyUser(`Something Went Wrong, please try again later`, `warning`)
+      setHasErrors(false)
+    }
 
     if(reload > 0) {
-      initialSetup()
+      initialSetup()      
     }
 
     socket?.connect()
 
     socket?.on('room', (msg : TChatMessage) => {
-      const {room} = msg       
-      if (room === currentRoom.id) {
-        console.log(`Room from server : ${room}, Local Room ${currentRoom.id}`)
+      const {room} = msg
+      if (room === currentRoom.id) {        
         addMessage(msg)
-      } else {
-        console.log(`Room from server : ${room}, Local Room ${currentRoom.id}`)
+      } else {        
         notifyUser(`A new message in ${room}!`)
       }
     })
@@ -277,14 +329,14 @@ const Chat = () => {
         notifyUser(msg, 'info')
         setReload(reload + 1)
       }
-     })
+     })     
 
-     return () => {
-
+     return () => {        
+              
         socket?.disconnect()
-        socket?.off()      
+        socket?.off()
         
-        if (currentRoom.id == '0' || currentRoom.id == '-1') {
+        if (isCurrentRoomIdValid) {
           setReload(reload + 1)
         } else {
           setReload(0)
@@ -341,39 +393,55 @@ const Chat = () => {
         />
 
         <CustomButton
-          className='p-2 bg-[#aa5a95] text-white rounded-lg m-1'
-          onClick={() => sendMessage()}
           value={'Send'}
+          className='p-2 bg-[#aa5a95] text-white rounded-lg m-1'
+          disabled={!!reload}
+          onClick={() => sendMessage()}
         />
 
       </div>
       
-      {rooms ? <CustomSelect name='Current Chat Room' onChange={(e) => onSelectChange(e)} className={`bg-slate-900`} values={
-        rooms.map((room) => {
-          return {name : room.id}
-        })
-      } value={currentRoom.id}/> : ''}
+      {
+        (rooms[0]?.id !== '-1') ?
+        <CustomSelect 
+          name='Current Chat Room' 
+          onChange={(e) => onSelectChange(e)} 
+          className={`bg-slate-900`} 
+          value={currentRoom.id}
+          values={
+            rooms.map((room) => {
+              return {name : room.id}
+            })} 
+          /> : 
+        <CustomSelect 
+          name='Current Chat Room' 
+          values={[{name : '...'}]}
+        />
+      }
 
      <div>
 
       <CustomButton 
         value={'Reset Rooms'}
         variationName='vartwo'
+        disabled={!!reload}
         onClick={() => onResetRoomsClick()}
       />
 
       <CustomButton 
         value={'New Room'}
         variationName='varthree'
-        onClick={() => {          
-          createRoom()
-        }}
-      />      
+        disabled={!!reload}
+        onClick={() => onNewRoomClick()}
+      />
 
-      {/* <div className='flex justify-center items-center gap-3'>
-        <span>RELOAD REQUIRED {reload > 0 ? <h5 className='text-green-500'>Yep</h5>: <h5 className='text-red-500'>Nah</h5>}</span>        
-        <span>ROOM ID <h5>{currentRoom.id}</h5></span>
-      </div> */}
+      {/* { 
+        <h3 className='m-5 bg-gray-700 rounded-xl p-2'>
+          currentRoomId: {currentRoom.id} <br/>
+          roomsLength: {rooms.length} messagesLength: {messages.length} <br/>
+          reload: {reload} | hasErrors: {JSON.stringify(hasErrors)} <br/>
+        </h3>
+      } */}
 
      </div>
 

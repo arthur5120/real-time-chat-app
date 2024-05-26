@@ -8,23 +8,22 @@ import {
     modGetMessageById,
     modGetMessagesByUserId, 
 } from "../models/message-model";
+import { midCheckDuplicated } from "../utils/middleware";
 
 const requestKeys : string[] = []
 
 export const conCreateMessage = async (req : Request, res : Response) => {    
-
-    const idempotencyKey = req.headers['idempotency-key'] as string
-    const isDuplicated = requestKeys.find(key => key == idempotencyKey)
-
-    if(isDuplicated) {        
-        return res.send('Duplicated Request.')
-    }
-
-    requestKeys.push(idempotencyKey)
-
     try {
+
+        const isDuplicated = midCheckDuplicated(req, requestKeys)
+
+        if(isDuplicated) {        
+            return res.status(400).json({message : `Duplicated Request`})
+        }
+
         await modCreateMessage(req, res)
         return res.status(200).json({message : 'Success'})
+        
     } catch (e) {
         console.log(e)
         return res.status(500).json({message : 'Internal Error'})

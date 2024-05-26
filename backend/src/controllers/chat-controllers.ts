@@ -8,13 +8,29 @@ import {
     modGetChatById,
     modGetChats,
     getChatsByUserId,
+    modDeleteAllChats,
 } from "../models/chat-model"
+
+ import { midCheckDuplicated } from "../utils/middleware"
+
+ const requestKeys : string[] = []
+ let repeatedRequests = 0
 
 export const conCreateChat = async (req : Request, res : Response) => {
 
     try {
+    
+        const isDuplicated = midCheckDuplicated(req, requestKeys)
+
+        if(isDuplicated) {
+            repeatedRequests++
+            console.log(`Caught duplicate ${repeatedRequests}`)
+            return res.status(400).json({message : `Duplicated Request`})
+        }
+    
         await modCreateChat(req, res)
         return res.status(200).json({message : 'Success'})
+
     } catch (e) {
         console.log(e)
         return res.status(500).json({message : 'Internal Error'})
@@ -38,6 +54,18 @@ export const conDeleteChat = async (req : Request, res : Response) => {
 
     try {
         await modDeleteChat(req, res)
+        return res.status(200).json({message : 'Success'})
+    } catch (e) {
+        console.log(e)
+        return res.status(500).json({message : 'Internal Error'})
+    }
+
+}
+
+export const conDeleteAllChats = async (req : Request, res : Response) => {
+
+    try {
+        await modDeleteAllChats(req, res)
         return res.status(200).json({message : 'Success'})
     } catch (e) {
         console.log(e)

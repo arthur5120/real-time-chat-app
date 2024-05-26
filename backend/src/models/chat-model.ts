@@ -75,6 +75,18 @@ export const modDeleteChat = async (req : Request, res : Response) => {
 
 }
 
+export const modDeleteAllChats = async (req : Request, res : Response) => { // For Testing Purposes
+
+    try {
+        
+        await prisma.chat.deleteMany() // For testing purposes
+
+    } catch (e) {
+        return e
+    }
+
+}
+
 export const modGetChats = async (req : Request, res : Response) => {
 
     try {

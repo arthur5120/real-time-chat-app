@@ -13,7 +13,7 @@ const secretSalt = parseInt(process.env.SECRET_SALT as string)
 export const midSetCors = Cors({
     origin : ['http://localhost:5173', 'http://localhost:3000'],
     credentials : true,
-    methods : ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
+    methods : ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders : ['Content-Type', 'Authorization', 'Idempotency-Key']
 })
 
@@ -53,7 +53,8 @@ export const midCheckAuth = async (req : Request, res : Response, next : NextFun
     }
 }
 
-export const midCheckAllowed = async (req : Request, res : Response, next : NextFunction) => {               
+export const midCheckAllowed = async (req : Request, res : Response, next : NextFunction) => { 
+
     try {
 
         const {auth} = req.cookies
@@ -68,4 +69,21 @@ export const midCheckAllowed = async (req : Request, res : Response, next : Next
     } catch (e) {             
         return res.status(403).json({message : 'Not Authenticated/Authorized'})
     }
+
+}
+
+export const midCheckDuplicated = (req : Request, requestKeys : string[]) => {  
+    
+    const {auth} = req.cookies
+    const authInfo = jwt.verify(auth, secretKey) as {id : string}
+    const receivedKey = req.headers['idempotency-key'] as string
+    const idempotencyKey = `${authInfo.id}${receivedKey}`
+    const isDuplicated = requestKeys.find(key => key == idempotencyKey)
+ 
+    if(!isDuplicated) {
+        requestKeys.push(idempotencyKey)
+    }
+    
+    return isDuplicated
+
 }

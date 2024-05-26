@@ -1,7 +1,7 @@
 import CustomTitle from "../atoms/title"
 import CustomForm from "../molecules/form"
 import CustomButton from "../atoms/button"
-import { FormEvent, useContext, useState } from "react"
+import { FormEvent, useContext, useEffect, useState } from "react"
 import { TUser, TFieldKeys } from "../../utils/types"
 import { userPlaceholder } from "../../utils/placeholders"
 import { authLogin } from "../../hooks/useAxios"
@@ -21,7 +21,7 @@ const Login = () => {
     'password',
   ]
 
-  const {setAuth} = useContext(authContext)  
+  const {auth, setAuth} = useContext(authContext)
   
   const onSubmit = async (e : FormEvent<HTMLFormElement>) => { 
     e.preventDefault()  
@@ -45,6 +45,10 @@ const Login = () => {
   const onSignup = () => {
     navigate('/create-account')
   }
+
+  useEffect(() => { // Not working, auth returning false.
+    auth ? navigate('/chat-rooms') : ''    
+  }, [])
 
   return (
 

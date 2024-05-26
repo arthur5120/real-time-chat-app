@@ -5,7 +5,6 @@ import {
   ReactElement, 
   Dispatch, 
   SetStateAction,   
-  useEffect
 } from 'react';
 
 import { authStatus, authLogout } from '../../hooks/useAxios';
@@ -15,6 +14,7 @@ type TAuth = {
   setAuth ? : Dispatch<SetStateAction<boolean>>
   role ? : string,
   setRole ? : Dispatch<SetStateAction<string>>
+  checkToken ? : Function
 }
 
 export const removeToken = async (setAuth : Dispatch<SetStateAction<boolean>>) => {  
@@ -34,21 +34,17 @@ const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
       const {authenticated, role} = await authStatus({})
       setRole(role)
       setAuth(authenticated)
+      return authenticated
     } catch(e) {
-      setRole('none')
       setAuth(false)
+      return false
     }
   }
 
-  useEffect(() => {
-    checkToken()
-  }, [auth])
-
   return (
-
-      <authContext.Provider value={{auth, setAuth, role, setRole}}>
-        {children}
-      </authContext.Provider>
+    <authContext.Provider value={{auth, setAuth, role, setRole, checkToken}}>
+      {children}
+    </authContext.Provider>
   )
 
 }
