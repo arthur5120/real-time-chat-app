@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient()
 
-export const modCreateMessage = async (req : Request, res : Response) => {
+export const modCreateMessage = async (req : Request, res : Response) => {    
 
     const newMessage = req.body
     
@@ -31,7 +31,7 @@ export const modUpdateMessage = async (req : Request, res : Response) => {
     
 }
 
-export const modDeleteMessage = async (req : Request, res : Response) => {
+export const modDeleteMessage = async (req : Request, res : Response) => {    
 
     const messageId = req.params.id
     

@@ -35,6 +35,7 @@ export type TMessage = {
 }
   
 export type TChatMessage = {
+    id ? : string
     user : string,  
     content : string
     when : number

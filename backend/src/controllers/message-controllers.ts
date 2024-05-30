@@ -43,7 +43,7 @@ export const conUpdateMessage = async (req : Request, res : Response) => {
 
 }
 
-export const conDeleteMessage = async (req : Request, res : Response) => {
+export const conDeleteMessage = async (req : Request, res : Response) => {    
 
     try {
         const msg = await modDeleteMessage(req, res)

@@ -6,7 +6,8 @@ export const userPlaceholder = {
     role : 'User',
 }
 
-export const messagePlaceholder = {
+export const messagePlaceholder = { 
+    id : '',   
     user : '', 
     content : '', 
     when : 0, 

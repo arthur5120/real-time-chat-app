@@ -13,8 +13,7 @@ import {
 
  import { midCheckDuplicated } from "../utils/middleware"
 
- const requestKeys : string[] = []
- let repeatedRequests = 0
+ const requestKeys : string[] = [] 
 
 export const conCreateChat = async (req : Request, res : Response) => {
 
@@ -22,9 +21,7 @@ export const conCreateChat = async (req : Request, res : Response) => {
     
         const isDuplicated = midCheckDuplicated(req, requestKeys)
 
-        if(isDuplicated) {
-            repeatedRequests++
-            console.log(`Caught duplicate ${repeatedRequests}`)
+        if(isDuplicated) {                        
             return res.status(400).json({message : `Duplicated Request`})
         }
     

@@ -1,8 +1,8 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
-import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, getChats, getMessageById, getMessages, getUserById, } from '../../hooks/useAxios'
+import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChats, getMessageById, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
-import { convertDatetimeToMilliseconds, getTime, sortByMilliseconds } from '../../utils/useful-functions'
+import { convertDatetimeToMilliseconds, generateUniqueId, getTime, sortByMilliseconds } from '../../utils/useful-functions'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
 import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
@@ -12,8 +12,6 @@ import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
 
-
-
 const roomsPlaceholder = [{id : '-1', name : ''}]
 const currentRoomPlaceHolder = {id : '-1', selectId : 0, name : ''}
 
@@ -21,20 +19,22 @@ type TCurrentRoom = {id : string, selectId : number, name : string}
 type TRooms = {id : string, name : string}[]
 
 const Chat = () => {
+  
+  let chatContainerRef = useRef<HTMLDivElement>(null)
+  let messageContainerRef =  useRef<HTMLSpanElement>(null)
 
   const [rooms, setRooms] = useState<TRooms>(roomsPlaceholder)
   const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
   const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder) 
   const [messages, setMessages] = useState<TChatMessage[]>([])
+  const [messageBeingEdited, setMessageBeingEdited] = useState<TChatMessage & {previous ? : string}>(messagePlaceholder)  
   const [hasErrors, setHasErrors] = useState(false)
   const [chatHidden, setChatHidden] = useState(false)  
-  const [reload, setReload] = useState(1)  
+  const [reload, setReload] = useState(1)
   const [delay, setDelay] = useState(0)
 
-  const isCurrentRoomIdValid = currentRoom.id == '0' || currentRoom.id == '-1'  
-  
-  const chatContainerRef = useRef<HTMLDivElement>(null)
+  const isCurrentRoomIdValid = currentRoom.id == '0' || currentRoom.id == '-1'
 
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)    
@@ -114,17 +114,14 @@ const Chat = () => {
 
   const retrieveMessages = async () => {      
     
-      try {        
-
-        if (!isCurrentRoomIdValid) {          
-          return
-        }
+      try {
 
         const authInfo = await authStatus({})
         const rawMessages = await getMessages()
         const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)
     
-        const convertedMessages = filteredMessages.map((m : TMessage) => ({
+        const convertedMessages = filteredMessages.map((m : TMessage) => ({      
+          id : m.id,
           user: m.senderId == authInfo.id ? currentUser.name : m.senderName,
           content: m.content,
           when: convertDatetimeToMilliseconds(m.updated_at),
@@ -160,6 +157,7 @@ const Chat = () => {
     try {
 
       const localMessage : TChatMessage = {
+        id : generateUniqueId(),
         user : currentUser?.name ? currentUser.name : '',
         content : message.content,
         when : Date.now(),
@@ -285,11 +283,6 @@ const Chat = () => {
     }
   }
 
-  const onClickMessage = async (id : string) => {
-    const msg = getMessageById(id)
-    notifyUser(JSON.stringify(msg))
-  }
-
   const initialSetup = async () => {        
     await retrieveCurrentUser()
     await createRoomIfNoneAreFound()
@@ -347,6 +340,71 @@ const Chat = () => {
      }
 
   }, [rooms.length, messages.length, currentRoom.id, reload])
+  
+  const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
+
+    const selectedMessage = e.target as HTMLSpanElement         
+    const selectedMessageId = selectedMessage.dataset.id
+    const previosMessagge = selectedMessage.textContent ? selectedMessage.textContent : ''
+
+    setMessageBeingEdited({
+      ...messageBeingEdited, 
+      id : selectedMessageId,
+      previous : previosMessagge
+    })
+
+  }
+
+  const onExitMessageEditMode = async () => {  
+    setReload(reload + 1)
+    setMessageBeingEdited({...messagePlaceholder, previous : ''})
+  }
+
+  const onInputEditableMessage = async (e : React.FormEvent<HTMLSpanElement>) => {    
+    const element = e.target as HTMLSpanElement
+    const msg = element?.textContent ? element.textContent : ''
+    setMessageBeingEdited({...messageBeingEdited, content : msg})
+  }
+
+  const onClickEditModeIcon = async (e : React.MouseEvent<HTMLHeadingElement, MouseEvent>) => {
+
+    const element = e.target as HTMLHeadingElement
+    const action = element.dataset.action        
+
+    switch(action) {
+      case 'edit' : {        
+        const selectedMessage = messageContainerRef.current as HTMLSpanElement         
+        const selectedMessageId = selectedMessage.dataset.id
+        setMessageBeingEdited({
+          ...messageBeingEdited, 
+          id : selectedMessageId
+        })                  
+        messageContainerRef.current?.focus()
+        break
+      }
+      case 'delete' : {
+        messageBeingEdited.id ? await deleteMessage(messageBeingEdited.id) : ''
+        onExitMessageEditMode()
+        break
+      }
+      case 'confirm' : {        
+        messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''        
+        messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
+        onExitMessageEditMode()
+        break
+      }            
+      case 'cancel' : {
+        if (messageBeingEdited.previous) {
+          messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.previous : ''
+        }
+        onExitMessageEditMode()        
+        break
+      }
+      default :
+      break
+    }
+    
+  }
 
   return (
     
@@ -361,22 +419,64 @@ const Chat = () => {
             {chatHidden ? <FontAwesomeIcon icon={faEyeSlash}/> : <FontAwesomeIcon icon={faEye}/>}
           </button>
         </span>
-      </div>
+      </div>      
 
       <div className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll ${chatHidden ? 'hidden' : ''}`} ref={chatContainerRef}> 
-        {messages?.map((message, id) => 
-          <Fragment key={`msg-${id}`}>
-            <span className={`${currentUser.name == message.user ? 'self-end' : 'self-start'} mx-3 p-2 justify-end bg-transparent`}>
-              <h4 key={`msg-user-${id}`} className='bg-transparent text'>{currentUser.name == message.user ? 'You' : message.user}</h4>
-            </span>
-            <span className={`${currentUser.name == message.user ? 'self-end' : 'self-start'} mx-3 p-2 ${primaryDefault} rounded max-w-48 h-fit break-words`}>
-              <h5 key={`msg-content-${id}`}  className='bg-transparent'>{message.content}</h5>
-            </span>
-            <span className={`${currentUser.name == message.user ? 'self-end' : 'self-start'} mx-3 p-2 justify-end bg-transparent`}>
-              <h5 key={`msg-when-${id}`}  className='bg-transparent text-sm'>{getTime(message.when)}</h5>
-            </span>
-          </Fragment>
-        )}
+        { messages?.map((message, id) => { 
+
+          const isUserSender = currentUser.name == message.user
+          const isMessageSelected = message.id == messageBeingEdited.id
+          const isMessageFocused = document.activeElement == messageContainerRef.current
+          
+          return (
+
+            <Fragment key={`msg-${id}`}>
+
+              <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 justify-end bg-transparent`}>
+                <h4 className='bg-transparent text'>{isUserSender ? 'You' : message.user}</h4>
+              </span>
+                          
+              <span 
+
+                data-id={message.id}
+                ref={messageBeingEdited.id == message.id ? messageContainerRef : null}
+                className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 ${primaryDefault} rounded max-w-48 h-fit break-words cursor-pointer`}
+                contentEditable={isUserSender && isMessageSelected}
+
+                onClick={(e) => onEnterMessageEditMode(e)}
+                onInput={(e) => onInputEditableMessage(e)}
+
+                onBlur={() => {                  
+                  if (!messageBeingEdited.content) {
+                    messageContainerRef.current ? messageContainerRef.current.textContent = message.content : ''
+                    onExitMessageEditMode()
+                  }
+                }}
+
+              > 
+
+                <h5 key={`msg-content-${id}`} className='bg-transparent' data-id={message.id}>
+                  {message.content}
+                </h5>
+
+              </span>
+            
+              <span className={`flex items-end justify-end cursor-pointer mx-3 px-1 gap-1 ${(isUserSender && isMessageSelected) ? '' : 'hidden'}`}>
+                { !isMessageFocused && !messageBeingEdited.content ? <h3 data-action={`edit`} onClick={(e) => onClickEditModeIcon(e)}>&#128393;</h3> : ''}
+                { isMessageFocused ? <h3 data-action={`confirm`} onClick={(e) => onClickEditModeIcon(e)}>&#10003;</h3> : ''}
+                { !isMessageFocused && !messageBeingEdited.content ? <h3 data-action={`delete`} onClick={(e) => onClickEditModeIcon(e)}>&#128465;</h3> : ''}
+                <h3 data-action={`cancel`} onClick={(e) => onClickEditModeIcon(e)}>&#10005;</h3>
+              </span>
+
+              <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-2 p-1 justify-end bg-transparent`}>
+                <h5 key={`msg-when-${id}`}  className='bg-transparent text-sm'>{getTime(message.when)}</h5>
+              </span>
+            
+            </Fragment>
+
+          )
+
+        })}        
       </div>
 
       <div className={`flex ${primaryDefault} rounded-lg w-80 h-15 gap-2 p-1`}>                
