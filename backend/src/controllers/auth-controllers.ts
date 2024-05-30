@@ -16,9 +16,9 @@ export const conAuth = async (req : Request, res : Response) => {
         const token = midGenerateToken(user)
 
         return res.status(200).cookie('auth', token, {
-                expires: new Date(Date.now() + 1000 * 60 * 5),
+                expires: new Date(Date.now() + 1000 * 60 * 15),
                 httpOnly: true,
-                maxAge: 1000 * 60 * 5,
+                maxAge: 1000 * 60 * 15,
                 sameSite: 'strict'
             }).json({success : true})
                     
@@ -37,7 +37,7 @@ export const conGetAuth = async (req : Request, res : Response) => {
         const verifiedUser = jwt.verify(auth, secretKey) as {id : string, role : string} | null 
         res.json({
             id : verifiedUser?.id,
-            authenticated:true, 
+            authenticated:true,
             role:verifiedUser?.role
         })
 

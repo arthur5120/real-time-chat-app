@@ -1,8 +1,9 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
-import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChats, getMessageById, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
+import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChats, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { convertDatetimeToMilliseconds, generateUniqueId, getTime, sortByMilliseconds } from '../../utils/useful-functions'
+import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
 import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
@@ -36,8 +37,9 @@ const Chat = () => {
 
   const isCurrentRoomIdValid = currentRoom.id == '0' || currentRoom.id == '-1'
 
+  const {auth} = useContext(authContext)
   const socket = useContext(socketContext)
-  const {notifyUser} = useContext(toastContext)    
+  const {notifyUser} = useContext(toastContext)
 
   const scrollToLatest = () => {
     if (chatContainerRef.current) {
@@ -291,9 +293,9 @@ const Chat = () => {
     resetMessageContent()
   }
 
-  useEffect(() => {  
+  useEffect(() => {     
     
-    setTimeout(() => {      
+    const timer = setTimeout(() => {      
       setDelay(0)
     }, delay)
 
@@ -335,11 +337,12 @@ const Chat = () => {
           setReload(0)
         }
 
+        clearTimeout(timer)
         scrollToLatest()
 
      }
 
-  }, [rooms.length, messages.length, currentRoom.id, reload])
+  }, [rooms.length, messages.length, currentRoom.id, reload, auth])
   
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -388,7 +391,7 @@ const Chat = () => {
         break
       }
       case 'confirm' : {        
-        messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''        
+        messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
         messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
         onExitMessageEditMode()
         break
@@ -412,7 +415,7 @@ const Chat = () => {
 
       <div className={`flex justify-between ${primaryDefault} rounded-lg w-80`}>
         <h3 className='bg-transparent justify-start m-2'>
-            {currentUser?.name ? `Logged in as ${currentUser.name}` : `Chatting as Guest`}
+            {(auth && currentUser?.name) ? `Chatting as ${currentUser.name}` : `Chatting as Guest`}
         </h3>
         <span className=' bg-transparent m-2 cursor-pointer mx-4'>
           <button title={`Toggle Hide/Show Chat`} onClick={() => setChatHidden(!chatHidden)}>
