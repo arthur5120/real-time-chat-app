@@ -21,9 +21,9 @@ const App = () => {
 
   const handleSessionExpiration = async () => {
     console.log(`Checking for Authentication Status...`)      
-    if(auth && checkToken){
-      const result = await checkToken()
-      !result ? notifyUser(`Session expired, logged out.`) : ''
+    const result = checkToken ? await checkToken() : ''
+    if(auth) {
+      !result ? notifyUser(`Logged out`) : ''
       console.log(`Authentication Status Result : ${result}`)
     }
   }

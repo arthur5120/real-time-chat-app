@@ -536,7 +536,7 @@ const Chat = () => {
         variationName='varthree'
         disabled={!!reload}
         onClick={() => onNewRoomClick()}
-      />
+      />      
 
       {/* { 
         <h3 className='m-5 bg-gray-700 rounded-xl p-2'>
