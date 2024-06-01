@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response } from "express"
 
 import { 
     modCreateMessage, 
@@ -7,8 +7,9 @@ import {
     modGetMessages,
     modGetMessageById,
     modGetMessagesByUserId, 
-} from "../models/message-model";
-import { midCheckDuplicated } from "../utils/middleware";
+} from "../models/message-model"
+
+import { midCheckDuplicated } from "../utils/middleware"
 
 const requestKeys : string[] = []
 

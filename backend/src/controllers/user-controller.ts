@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response } from "express"
 
 import { 
     modCreateUser, 
@@ -7,7 +7,8 @@ import {
     modGetUsers, 
     modUpdateUser 
 } from "../models/user-model"
-import { midCheckDuplicated } from "../utils/middleware";
+
+import { midCheckDuplicated } from "../utils/middleware"
 
 const requestKeys : string[] = []
 

@@ -1,6 +1,6 @@
-import { PrismaClient } from "@prisma/client";
-import { Request, Response } from "express";
-import { midHashPassword } from "../utils/middleware";
+import { PrismaClient } from "@prisma/client"
+import { Request, Response } from "express"
+import { midHashPassword } from "../utils/middleware"
 
 const prisma = new PrismaClient()
 

@@ -126,7 +126,8 @@ const Chat = () => {
           id : m.id,
           user: m.senderId == authInfo.id ? currentUser.name : m.senderName,
           content: m.content,
-          when: convertDatetimeToMilliseconds(m.updated_at),
+          created_at: convertDatetimeToMilliseconds(m.created_at),
+          updated_at: convertDatetimeToMilliseconds(m.updated_at),
           room: m.chatId,
         }))
             
@@ -154,7 +155,9 @@ const Chat = () => {
     }))
   }
 
-  const sendMessage = async () => {  
+  const sendMessage = async () => { 
+    
+    const dateTimeNow = Date.now()
     
     try {
 
@@ -162,7 +165,8 @@ const Chat = () => {
         id : generateUniqueId(),
         user : currentUser?.name ? currentUser.name : '',
         content : message.content,
-        when : Date.now(),
+        created_at : dateTimeNow,
+        updated_at : dateTimeNow,
         room : currentRoom.id,
       }
   
@@ -348,12 +352,12 @@ const Chat = () => {
 
     const selectedMessage = e.target as HTMLSpanElement         
     const selectedMessageId = selectedMessage.dataset.id
-    const previosMessagge = selectedMessage.textContent ? selectedMessage.textContent : ''
+    const previousMessagge = selectedMessage.textContent ? selectedMessage.textContent : ''
 
     setMessageBeingEdited({
       ...messageBeingEdited, 
       id : selectedMessageId,
-      previous : previosMessagge
+      previous : previousMessagge
     })
 
   }
@@ -372,9 +376,10 @@ const Chat = () => {
   const onClickEditModeIcon = async (e : React.MouseEvent<HTMLHeadingElement, MouseEvent>) => {
 
     const element = e.target as HTMLHeadingElement
-    const action = element.dataset.action        
+    const action = element.dataset.action
 
     switch(action) {
+
       case 'edit' : {        
         const selectedMessage = messageContainerRef.current as HTMLSpanElement         
         const selectedMessageId = selectedMessage.dataset.id
@@ -385,17 +390,20 @@ const Chat = () => {
         messageContainerRef.current?.focus()
         break
       }
+
       case 'delete' : {
         messageBeingEdited.id ? await deleteMessage(messageBeingEdited.id) : ''
         onExitMessageEditMode()
         break
       }
+
       case 'confirm' : {        
         messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
         messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
         onExitMessageEditMode()
         break
-      }            
+      }   
+
       case 'cancel' : {
         if (messageBeingEdited.previous) {
           messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.previous : ''
@@ -403,8 +411,10 @@ const Chat = () => {
         onExitMessageEditMode()        
         break
       }
+
       default :
       break
+      
     }
     
   }
@@ -429,7 +439,7 @@ const Chat = () => {
 
           const isUserSender = currentUser.name == message.user
           const isMessageSelected = message.id == messageBeingEdited.id
-          const isMessageFocused = document.activeElement == messageContainerRef.current
+          const isMessageFocused = document.activeElement == messageContainerRef.current                      
           
           return (
 
@@ -459,7 +469,7 @@ const Chat = () => {
               > 
 
                 <h5 key={`msg-content-${id}`} className='bg-transparent' data-id={message.id}>
-                  {message.content}
+                  {message.content}            
                 </h5>
 
               </span>
@@ -472,7 +482,10 @@ const Chat = () => {
               </span>
 
               <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-2 p-1 justify-end bg-transparent`}>
-                <h5 key={`msg-when-${id}`}  className='bg-transparent text-sm'>{getTime(message.when)}</h5>
+                <h5 key={`msg-created_at-${id}`}  className='bg-transparent text-sm'>
+                  <time>{`${getTime(message.created_at)}`}</time>
+                  <time className={`text-slate-300 italic`}>{message.created_at != message.updated_at ? ` 📝(${getTime(message.updated_at)})` : ``}</time>
+                </h5> 
               </span>
             
             </Fragment>

@@ -10,6 +10,7 @@ export const messagePlaceholder = {
     id : '',   
     user : '', 
     content : '', 
-    when : 0, 
+    created_at : 0,
+    updated_at : 0,
     room : ''
   }

@@ -1,6 +1,6 @@
-import { PrismaClient } from "@prisma/client";
-import { Request, Response } from "express";
-import { midGetRandomName } from "../utils/middleware";
+import { PrismaClient } from "@prisma/client"
+import { Request, Response } from "express"
+import { midGetRandomName } from "../utils/middleware"
 
 const prisma = new PrismaClient()
 
@@ -51,7 +51,7 @@ export const modRemoveUserFromChat = async (req : Request, res : Response) => {
                     chatId: chatId
                 }
             }
-        });
+        })
 
     } catch (e) {
         return e

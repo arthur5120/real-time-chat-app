@@ -7,7 +7,7 @@ import {
     conGetChats,
     conGetChatsByUserId,
     conDeleteAllChats,
-} from "../controllers/chat-controllers";
+} from "../controllers/chat-controllers"
 
 import { 
     midBodyParsers, 

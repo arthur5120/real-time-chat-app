@@ -1,5 +1,5 @@
-import express, { Response, Request, NextFunction } from "express";
-import Cors from "cors";
+import express, { Response, Request, NextFunction } from "express"
+import Cors from "cors"
 import bcrypt from 'bcrypt'
 import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'

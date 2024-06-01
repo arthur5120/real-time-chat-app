@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
+import { Request, Response } from "express"
+import { PrismaClient } from "@prisma/client"
 
 const prisma = new PrismaClient()
 
@@ -19,10 +19,12 @@ export const modUpdateMessage = async (req : Request, res : Response) => {
 
     const messageId = req.params.id
     const updatedMessage = req.body
+    const now = new Date()
+    const dateTimeNow = now.toISOString()    
     
     try {
         await prisma.message.update({
-            data : updatedMessage, 
+            data : {...updatedMessage, updated_at : dateTimeNow}, 
             where : {id : messageId}
         })
     } catch (e) {

@@ -17,13 +17,13 @@ export const getTime = (value: number) => {
     const timeHours = Math.floor((diff / 3600000) % 24)
     const timeDays = Math.floor(diff / 86400000)
 
-    return `
-    ${timeDays > 0 ? timeDays + 'd' : ''}
+    const timeString = `${timeDays > 0 ? timeDays + 'd' : ''}
     ${timeHours > 0 ? timeHours + 'h' : ''}
     ${timeMinutes > 0 ? timeMinutes + 'm' : ''}
     ${timeSeconds > 0 ? timeSeconds + 's' : ''}
-    ${diff < 1000 ? 'Now' : 'ago'}
-    `
+    ${diff < 1000 ? 'Now' : 'ago'}`
+
+    return timeString.trim()
 }
 
 export const convertDatetimeToMilliseconds = (dateString : string) => { // Datetime To Milliseconds
@@ -33,7 +33,7 @@ export const convertDatetimeToMilliseconds = (dateString : string) => { // Datet
 }
 
 export const sortByMilliseconds = (unsorted : TChatMessage[]) => {
-    const sorted = unsorted.sort((a, b) => a.when - b.when)
+    const sorted = unsorted.sort((a, b) => a.created_at - b.created_at)
     return sorted
 }
 

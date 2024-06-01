@@ -1,6 +1,6 @@
-import { modGetUserByEmail } from "../models/user-model";
-import { midGenerateToken } from "../utils/middleware";
-import { Request, Response } from "express";
+import { modGetUserByEmail } from "../models/user-model"
+import { midGenerateToken } from "../utils/middleware"
+import { Request, Response } from "express"
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
 
