@@ -1,14 +1,17 @@
 import { Request, Response } from "express"
 import { PrismaClient } from "@prisma/client"
+import { generateUniqueId } from "../utils/middleware"
 
 const prisma = new PrismaClient()
 
-export const modCreateMessage = async (req : Request, res : Response) => {    
+export const modCreateMessage = async (req : Request, res : Response) => {            
 
-    const newMessage = req.body
+    const newMessageId = generateUniqueId()
+    const newMessage = {id : newMessageId, ...req.body}
     
     try {
         await prisma.message.create({data : newMessage})
+        return newMessageId
     } catch (e) {
         return e
     }

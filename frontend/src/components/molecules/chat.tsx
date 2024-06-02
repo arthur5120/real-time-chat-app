@@ -157,12 +157,11 @@ const Chat = () => {
 
   const sendMessage = async () => { 
     
-    const dateTimeNow = Date.now()
+    const dateTimeNow = Date.now()    
     
     try {
 
-      const localMessage : TChatMessage = {
-        id : generateUniqueId(),
+      const newMessage : TChatMessage = {        
         user : currentUser?.name ? currentUser.name : '',
         content : message.content,
         created_at : dateTimeNow,
@@ -170,12 +169,10 @@ const Chat = () => {
         room : currentRoom.id,
       }
   
-      if(localMessage.content.trim() == '') {
+      if(newMessage.content.trim() == '') { // Out of place validation.
         notifyUser('Write something first!')
         return
       }
-  
-      socket?.connect()
   
       const userInfo = await authStatus({})
 
@@ -184,18 +181,25 @@ const Chat = () => {
         resetMessageContent()
         return
       }
-  
-      await createMessage(
-        userInfo.id,
-        currentRoom.id,
-        localMessage.content,    
-        localMessage.user
-      )
 
       await addUserToChat(userInfo.id, currentRoom.id) // Adding user to chat without checking.
-      
-      socket?.emit('room', localMessage)   
-      addMessage(localMessage)
+  
+      const savedMessageId = await createMessage(
+        userInfo.id,
+        currentRoom.id,
+        newMessage.content,    
+        newMessage.user
+      ) as string
+
+      const savedMessage = {
+        id : savedMessageId, 
+        ...newMessage
+      }      
+
+      socket?.connect()
+
+      socket?.emit('room', savedMessage)   
+      addMessage(savedMessage)
       resetMessageContent()
 
     } catch (e) {
@@ -397,10 +401,11 @@ const Chat = () => {
         break
       }
 
-      case 'confirm' : {        
-        messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
-        messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
-        onExitMessageEditMode()
+      case 'confirm' : {                
+          messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
+          messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
+          onExitMessageEditMode()        
+          notifyUser(e)        
         break
       }   
 
@@ -551,7 +556,15 @@ const Chat = () => {
         onClick={() => onNewRoomClick()}
       />      
 
-      {/* { 
+      <CustomButton 
+        value={`"🐜"`}
+        variationName='varthree'
+        className={`bg-green-600`}
+        disabled={!!reload}
+        onClick={() => notifyUser(`Sometimes the chat goes blank for no reason.`)}
+      /> 
+
+      {/* {
         <h3 className='m-5 bg-gray-700 rounded-xl p-2'>
           currentRoomId: {currentRoom.id} <br/>
           roomsLength: {rooms.length} messagesLength: {messages.length} <br/>

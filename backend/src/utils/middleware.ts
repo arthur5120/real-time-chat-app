@@ -1,9 +1,10 @@
-import express, { Response, Request, NextFunction } from "express"
-import Cors from "cors"
+import express, { Response, Request, NextFunction } from 'express'
+import Cors from 'cors'
 import bcrypt from 'bcrypt'
 import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
-import cookieParser from "cookie-parser"
+import cookieParser from 'cookie-parser'
+import { v4 as uuidv4 } from 'uuid'
 
 dotenv.config()
 
@@ -86,4 +87,9 @@ export const midCheckDuplicated = (req : Request, requestKeys : string[]) => {
     
     return isDuplicated
 
+}
+
+export const generateUniqueId = () => {
+    const optimisticId = uuidv4()
+    return optimisticId
 }

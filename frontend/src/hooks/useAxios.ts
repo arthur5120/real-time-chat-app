@@ -187,6 +187,7 @@ export const getChatsByUserId = async (userId : string) => {
 export const createMessage = async(senderId : string, chatId : string, content : string, senderName : string = 'Unknown') => { // Idempotency
 
     try {
+        
         const optimisticId = generateUniqueId()
         const config = getConfig(optimisticId)
 
@@ -199,6 +200,7 @@ export const createMessage = async(senderId : string, chatId : string, content :
 
         const res = await baseURL.post(`/create-message`, data, config)    
         return res.data
+        
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
             return e.response.data

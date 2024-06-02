@@ -9,11 +9,14 @@ import {
     modGetMessagesByUserId, 
 } from "../models/message-model"
 
-import { midCheckDuplicated } from "../utils/middleware"
+import { 
+    midCheckDuplicated 
+} from "../utils/middleware"
 
 const requestKeys : string[] = []
 
-export const conCreateMessage = async (req : Request, res : Response) => {    
+export const conCreateMessage = async (req : Request, res : Response) => {      
+
     try {
 
         const isDuplicated = midCheckDuplicated(req, requestKeys)
@@ -22,8 +25,8 @@ export const conCreateMessage = async (req : Request, res : Response) => {
             return res.status(400).json({message : `Duplicated Request`})
         }
 
-        await modCreateMessage(req, res)
-        return res.status(200).json({message : 'Success'})
+        const newMessageId = await modCreateMessage(req, res)
+        return res.status(200).send(newMessageId)
         
     } catch (e) {
         console.log(e)
