@@ -366,7 +366,7 @@ const Chat = () => {
 
   }
 
-  const onExitMessageEditMode = async () => {  
+  const onExitMessageEditMode = async () => {
     setReload(reload + 1)
     setMessageBeingEdited({...messagePlaceholder, previous : ''})
   }
@@ -398,14 +398,16 @@ const Chat = () => {
       case 'delete' : {
         messageBeingEdited.id ? await deleteMessage(messageBeingEdited.id) : ''
         onExitMessageEditMode()
+        socket?.emit('change', 'Chat Updated')
         break
       }
 
-      case 'confirm' : {                
+      case 'confirm' : {                        
           messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
           messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
           onExitMessageEditMode()        
-          notifyUser(e)        
+          notifyUser(e)
+          socket?.emit('change', 'Chat Updated')
         break
       }   
 
