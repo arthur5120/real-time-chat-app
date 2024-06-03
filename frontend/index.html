@@ -1,14 +1,30 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang='pt-BR'>
+  
   <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/src/assets/icons/bolt-solid.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset='UTF-8' />
+    <link rel='icon' type='image/svg+xml' href='/src/assets/icons/bolt-solid.svg' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <meta name='description' content='Experience seamless communication with our real-time chat application, featuring secure authentication for peace of mind. Connect instantly, share ideas, and collaborate effortlessly with our user-friendly platform.'>    
     <title>Real-Time Chat App</title>
   </head>
-  <body>    
-      <div id="root" class='flex flex-col min-h-screen min-w-screen'></div>    
-    <script type="module" src="/src/components/pages/main.tsx"></script>
+
+  <body>      
+
+    <img 
+      loading='lazy'
+      src='./src/assets/images/background3.png' 
+      class='w-screen h-screen opacity-5'
+      alt='background image'
+    >
+
+    <div class='absolute inset-0 '>
+      <span id='root' class='flex flex-col min-h-screen min-w-screen w-full h-full'></span>
+    </div>  
+
+    <script type='module' src='/src/components/pages/main.tsx'>
+    </script>
+
   </body>
+
 </html>
