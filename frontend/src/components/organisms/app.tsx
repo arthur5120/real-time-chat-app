@@ -40,9 +40,18 @@ const App = () => {
 
   return (
 
-    <>      
+    <>     
 
-      <header>
+      <img   
+        loading='eager'    
+        src='./src/assets/images/background3.png' 
+        className='min-h-screen min-w-screen w-screen h-screen max-h-screen max-w-screen opacity-5 aspect-auto'
+        alt='background image'
+      />
+
+      <section className='flex flex-col absolute inset-0 min-h-screen min-w-screen w-full h-full'>
+
+        <header>
 
         <section className={`flex items-center justify-center ${authColor} p-5 my-4`}>
           <CustomTitle value={authText} className='bg-transparent text-white'/>
@@ -50,15 +59,17 @@ const App = () => {
 
         <Navbar />
 
-      </header>
+        </header>
 
-      <main>
-        <Outlet/> 
-      </main> 
+        <main>
+          <Outlet/>
+        </main>
 
-      <footer className='flex items-center justify-center mt-auto my-3'>        
-        <h3>MIT License - Copyright (c) 2024 Arthur Silva dos Santos</h3>
-      </footer>
+        <footer className='flex items-center justify-center mt-auto my-3'>       
+          <h3>MIT License - Copyright (c) 2024 Arthur Silva dos Santos</h3>
+        </footer>
+
+      </section>
 
     </>
 

@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef, useState, Fragment } from 'react'
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChats, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
-import { convertDatetimeToMilliseconds, generateUniqueId, getTime, sortByMilliseconds } from '../../utils/useful-functions'
+import { convertDatetimeToMilliseconds, getTime, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
@@ -122,7 +122,7 @@ const Chat = () => {
         const rawMessages = await getMessages()
         const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)
     
-        const convertedMessages = filteredMessages.map((m : TMessage) => ({      
+        const convertedMessages = filteredMessages.map((m : TMessage) => ({
           id : m.id,
           user: m.senderId == authInfo.id ? currentUser.name : m.senderName,
           content: m.content,
@@ -215,7 +215,7 @@ const Chat = () => {
       const creationMessage = `New Room Created!`
       const userInfo = await authStatus({})
 
-      if (!userInfo.authenticated) {        
+      if (!userInfo.authenticated) {
         notifyUser('Not Allowed!', 'error')
         return
       }
