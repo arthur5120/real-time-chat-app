@@ -7,7 +7,7 @@ import {
   SetStateAction,   
 } from 'react';
 
-import { authStatus, authLogout } from '../../hooks/useAxios';
+import { authStatus } from '../../hooks/useAxios';
 
 type TAuth = {
   auth ? : boolean,
@@ -15,11 +15,6 @@ type TAuth = {
   role ? : string,
   setRole ? : Dispatch<SetStateAction<string>>
   checkToken ? : Function
-}
-
-export const removeToken = async (setAuth : Dispatch<SetStateAction<boolean>>) => {  
-  setAuth(false)
-  await authLogout({})
 }
 
 export const authContext = createContext<TAuth>({})

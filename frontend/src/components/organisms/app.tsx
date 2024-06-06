@@ -1,19 +1,16 @@
 import Navbar from "../molecules/navbar"
+import AuthBanner from "../molecules/auth-banner"
 import { Outlet, useLocation } from "react-router-dom"
 import { useContext, useEffect, useState } from "react"
 import { authContext } from "../../utils/contexts/auth-provider"
 import { toastContext } from "../../utils/contexts/toast-provider"
-import CustomTitle from "../atoms/title"
 
 const App = () => {
 
-  const {auth, role, checkToken} = useContext(authContext)  
+  const {auth, checkToken} = useContext(authContext)
   const {notifyUser} = useContext(toastContext)
   const [checkAuthStatus, setCheckAuthStatus] = useState(false)
   const location = useLocation()  
-  
-  const authColor = auth ? 'bg-emerald-600' : 'bg-red-600'
-  const authText = auth ? `Authenticated with ${role == 'Admin' ? 'Administrator' : role} Privileges` : 'Not Authenticated'  
 
   const timer = setInterval(() => {
     auth ? setCheckAuthStatus(!checkAuthStatus) : ''
@@ -45,7 +42,7 @@ const App = () => {
       <img   
         loading='eager'    
         src='./src/assets/images/background3.png' 
-        className='min-h-screen min-w-screen w-screen h-screen max-h-screen max-w-screen opacity-5 aspect-auto'
+        className='min-h-screen min-w-screen w-screen h-screen max-h-screen max-w-screen opacity-5 aspect-auto object-cover'
         alt='background image'
       />
 
@@ -53,10 +50,8 @@ const App = () => {
 
         <header>
 
-        <section className={`flex items-center justify-center ${authColor} p-5 my-4`}>
-          <CustomTitle value={authText} className='bg-transparent text-white'/>
-        </section>
-
+        <AuthBanner/>
+        
         <Navbar />
 
         </header>
@@ -64,9 +59,11 @@ const App = () => {
         <main>
           <Outlet/>
         </main>
-
-        <footer className='flex items-center justify-center mt-auto my-3'>       
-          <h3>MIT License - Copyright (c) 2024 Arthur Silva dos Santos</h3>
+        
+        <footer className='flex items-center justify-center mt-auto my-4'>
+          <h3>
+            MIT License - Copyright (c) 2024 Arthur Silva dos Santos
+          </h3>
         </footer>
 
       </section>

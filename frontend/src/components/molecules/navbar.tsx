@@ -1,18 +1,21 @@
 import { useContext } from 'react'
 import { Link } from 'react-router-dom'
-import { authContext, removeToken } from '../../utils/contexts/auth-provider'
+import { authContext } from '../../utils/contexts/auth-provider'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser, faComment, faSignIn, faSignOut } from '@fortawesome/free-solid-svg-icons'
 
-const LinkStyle = `flex flex-col gap-1 bg-slate-900 text-white rounded-xl p-3 my-3`
+import { authLogout } from '../../hooks/useAxios'
+
+const LinkStyle = `flex flex-col gap-1 bg-slate-900 text-white rounded-xl p-3 my-2`
 
 const Navbar = () => {
 
-  const {auth, setAuth} = useContext(authContext)  
+  const {auth, setAuth} = useContext(authContext)
 
-  const logout = () => {
+  const logout = async () => {    
     if (setAuth) {
-      removeToken(setAuth)
+      setAuth(false)
+      await authLogout({})
     }
   }
 
@@ -22,36 +25,41 @@ const Navbar = () => {
 
       <ul className='flex gap-4 items-center justify-center'>
 
-          <li><Link className={LinkStyle} to='/chat-rooms'>
-            <FontAwesomeIcon icon={faComment} />
-            Chats
-          </Link></li>
+          <li>
+            <Link className={LinkStyle} to='/chat-rooms'>
+              <FontAwesomeIcon icon={faComment} /> Chats
+            </Link>
+          </li>
 
           {
             auth ? 
-              <li><Link className={LinkStyle} to='/profile'>
-                <FontAwesomeIcon icon={faUser} />
-                Profile
-              </Link></li> : 
-              <li><Link className={LinkStyle} to='/create-account'>
-                <FontAwesomeIcon icon={faUser} />
-                Sign Up
-              </Link></li>
+              <li>
+                <Link className={LinkStyle} to='/profile'>
+                  <FontAwesomeIcon icon={faUser} /> Profile
+                </Link>
+              </li> : 
+              <li>
+                <Link className={LinkStyle} to='/create-account'>
+                  <FontAwesomeIcon icon={faUser} /> Sign Up
+                </Link>
+              </li>
           }
 
           {
             auth ? 
-              <li><Link className={LinkStyle} to='/login' onClick={() => logout()}>              
-                <FontAwesomeIcon icon={faSignOut} />              
-                Sign out
-              </Link></li> : 
-              <li><Link className={LinkStyle} to='/login'>              
-                <FontAwesomeIcon icon={faSignIn} />              
-                Sign in
-              </Link></li> 
+              <li>                
+                <Link className={LinkStyle} to='/login' onClick={() => logout()}>
+                  <FontAwesomeIcon icon={faSignOut} /> Sign out
+                </Link>              
+              </li> : 
+              <li>
+                <Link className={LinkStyle} to='/login'>              
+                  <FontAwesomeIcon icon={faSignIn} /> Sign in
+                </Link>
+              </li> 
           }
 
-      </ul>
+      </ul>      
       
     </nav>
 

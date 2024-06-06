@@ -27,8 +27,8 @@ const Chat = () => {
   const [rooms, setRooms] = useState<TRooms>(roomsPlaceholder)
   const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
   const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
-  const [message, setMessage] = useState<TChatMessage>(messagePlaceholder) 
-  const [messages, setMessages] = useState<TChatMessage[]>([])
+  const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
+  const [messages, setMessages] = useState<TChatMessage[]>([])  
   const [messageBeingEdited, setMessageBeingEdited] = useState<TChatMessage & {previous ? : string}>(messagePlaceholder)  
   const [hasErrors, setHasErrors] = useState(false)
   const [chatHidden, setChatHidden] = useState(false)  
@@ -254,11 +254,11 @@ const Chat = () => {
     setReload(reload + 1)
   }
 
-  const onTextareaChange = (e : React.ChangeEvent<HTMLTextAreaElement>) => {    
+  const onTextareaChange = (e : React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage((rest : TChatMessage) => ({
       ...rest,      
       content : e.target.value,     
-    }))
+    }))        
   }
 
   const onResetRoomsClick = async () => {         
@@ -325,7 +325,7 @@ const Chat = () => {
       } else {        
         notifyUser(`A new message in ${room}!`)
       }
-    })
+    })    
 
      socket?.on('change', (msg : string) => {
       if(msg) {                
@@ -398,7 +398,7 @@ const Chat = () => {
       case 'delete' : {
         messageBeingEdited.id ? await deleteMessage(messageBeingEdited.id) : ''
         onExitMessageEditMode()
-        socket?.emit('change', 'Chat Updated')
+        socket?.emit('change', 'A message was deleted')
         break
       }
 
@@ -407,7 +407,7 @@ const Chat = () => {
           messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
           onExitMessageEditMode()        
           notifyUser(e)
-          socket?.emit('change', 'Chat Updated')
+          socket?.emit('change', 'A message was edited')
         break
       }   
 
@@ -424,157 +424,167 @@ const Chat = () => {
       
     }
     
-  }
+  }  
 
   return (
     
-    <section className='flex flex-col gap-3 bg-transparent justify-center items-center text-center'>        
+    <section className={`flex flex-col bg-transparent justify-center items-center text-center`}>          
 
-      <div className={`flex justify-between ${primaryDefault} rounded-lg w-80`}>
-        <h3 className='bg-transparent justify-start m-2'>
-            {(auth && currentUser?.name) ? `Chatting as ${currentUser.name}` : `Chatting as Guest`}
-        </h3>
-        <span className=' bg-transparent m-2 cursor-pointer mx-4'>
-          <button title={`Toggle Hide/Show Chat`} onClick={() => setChatHidden(!chatHidden)}>
-            {chatHidden ? <FontAwesomeIcon icon={faEyeSlash}/> : <FontAwesomeIcon icon={faEye}/>}
-          </button>
-        </span>
-      </div>      
+      <section className={`flex flex-col justify-center items-center text-center gap-3`}>  
 
-      <div className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll ${chatHidden ? 'hidden' : ''}`} ref={chatContainerRef}> 
-        { messages?.map((message, id) => { 
+        <div className={`flex justify-between ${primaryDefault} rounded-lg w-80`}>
 
-          const isUserSender = currentUser.name == message.user
-          const isMessageSelected = message.id == messageBeingEdited.id
-          const isMessageFocused = document.activeElement == messageContainerRef.current                      
-          
-          return (
+          <h3 className='bg-transparent justify-start m-2'>
+              {(auth && currentUser?.name) ? `Chatting as ${currentUser.name}` : `Chatting as Guest`}
+          </h3>
 
-            <Fragment key={`msg-${id}`}>
-
-              <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 justify-end bg-transparent`}>
-                <h4 className='bg-transparent text'>{isUserSender ? 'You' : message.user}</h4>
-              </span>
-                          
-              <span 
-
-                data-id={message.id}
-                ref={messageBeingEdited.id == message.id ? messageContainerRef : null}
-                className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 ${primaryDefault} rounded max-w-48 h-fit break-words cursor-pointer`}
-                contentEditable={isUserSender && isMessageSelected}
-
-                onClick={(e) => onEnterMessageEditMode(e)}
-                onInput={(e) => onInputEditableMessage(e)}
-
-                onBlur={() => {                  
-                  if (!messageBeingEdited.content) {
-                    messageContainerRef.current ? messageContainerRef.current.textContent = message.content : ''
-                    onExitMessageEditMode()
-                  }
-                }}
-
-              > 
-
-                <h5 key={`msg-content-${id}`} className='bg-transparent' data-id={message.id}>
-                  {message.content}            
-                </h5>
-
-              </span>
+          <span className=' bg-transparent m-2 cursor-pointer mx-4'>
             
-              <span className={`flex items-end justify-end cursor-pointer mx-3 px-1 gap-1 ${(isUserSender && isMessageSelected) ? '' : 'hidden'}`}>
-                { !isMessageFocused && !messageBeingEdited.content ? <h3 data-action={`edit`} onClick={(e) => onClickEditModeIcon(e)}>&#128393;</h3> : ''}
-                { isMessageFocused ? <h3 data-action={`confirm`} onClick={(e) => onClickEditModeIcon(e)}>&#10003;</h3> : ''}
-                { !isMessageFocused && !messageBeingEdited.content ? <h3 data-action={`delete`} onClick={(e) => onClickEditModeIcon(e)}>&#128465;</h3> : ''}
-                <h3 data-action={`cancel`} onClick={(e) => onClickEditModeIcon(e)}>&#10005;</h3>
-              </span>
-
-              <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-2 p-1 justify-end bg-transparent`}>
-                <h5 key={`msg-created_at-${id}`}  className='bg-transparent text-sm'>
-                  <time>{`${getTime(message.created_at)}`}</time>
-                  <time className={`text-slate-300 italic`}>{message.created_at != message.updated_at ? ` 📝(${getTime(message.updated_at)})` : ``}</time>
-                </h5> 
-              </span>
+            <button title={`Toggle Hide/Show Chat`} onClick={() => setChatHidden(!chatHidden)}>
+              {chatHidden ? <FontAwesomeIcon icon={faEyeSlash}/> : <FontAwesomeIcon icon={faEye}/>}
+            </button>
             
-            </Fragment>
+          </span>
 
-          )
+        </div>
 
-        })}        
-      </div>
+        <div className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll ${chatHidden ? 'hidden' : ''}`} ref={chatContainerRef}> 
 
-      <div className={`flex ${primaryDefault} rounded-lg w-80 h-15 gap-2 p-1`}>                
+          { messages?.map((message, id) => { 
 
-        <textarea 
-          name=''
-          id=''
-          className={`items-start ${secondaryDefault} text-white rounded-lg resize-none p-1 m-1 h-full w-full`}
-          cols={41}
-          rows={3}
-          onChange={(e) => {onTextareaChange(e)}}
-          placeholder={`Say something...`}
-          value={message.content}
-        />
+            const isUserSender = currentUser.name == message.user
+            const isMessageSelected = message.id == messageBeingEdited.id
+            const isMessageFocused = document.activeElement == messageContainerRef.current                      
+            
+            return (
 
-        <CustomButton
-          value={'Send'}
-          className='p-2 bg-[#aa5a95] text-white rounded-lg m-1'
-          disabled={!!reload}
-          onClick={() => sendMessage()}
-        />
+              <Fragment key={`msg-${id}`}>
 
-      </div>
+                <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 justify-end bg-transparent`}>
+                  <h4 className='bg-transparent text'>{isUserSender ? 'You' : message.user}</h4>
+                </span>
+                            
+                <span 
+
+                  data-id={message.id}
+                  ref={messageBeingEdited.id == message.id ? messageContainerRef : null}
+                  className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 ${primaryDefault} rounded max-w-48 h-fit break-words cursor-pointer`}
+                  contentEditable={isUserSender && isMessageSelected}
+
+                  onClick={(e) => onEnterMessageEditMode(e)}
+                  onInput={(e) => onInputEditableMessage(e)}
+
+                  onBlur={() => {                  
+                    if (!messageBeingEdited.content) {
+                      messageContainerRef.current ? messageContainerRef.current.textContent = message.content : ''
+                      onExitMessageEditMode()
+                    }
+                  }}
+
+                > 
+
+                  <h5 key={`msg-content-${id}`} className='bg-transparent' data-id={message.id}>
+                    {message.content}            
+                  </h5>
+
+                </span>
+              
+                <span className={`flex items-end justify-end cursor-pointer mx-3 px-1 gap-1 ${(isUserSender && isMessageSelected) ? '' : 'hidden'}`}>
+                  { !isMessageFocused && !messageBeingEdited.content ? <h3 data-action={`edit`} onClick={(e) => onClickEditModeIcon(e)}>&#128393;</h3> : ''}
+                  { isMessageFocused ? <h3 data-action={`confirm`} onClick={(e) => onClickEditModeIcon(e)}>&#10003;</h3> : ''}
+                  { !isMessageFocused && !messageBeingEdited.content ? <h3 data-action={`delete`} onClick={(e) => onClickEditModeIcon(e)}>&#128465;</h3> : ''}
+                  <h3 data-action={`cancel`} onClick={(e) => onClickEditModeIcon(e)}>&#10005;</h3>
+                </span>
+
+                <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-2 p-1 justify-end bg-transparent`}>
+                  <h5 key={`msg-created_at-${id}`}  className='bg-transparent text-sm'>
+                    <time>{`${getTime(message.created_at)}`}</time>
+                    <time className={`text-slate-300 italic`}>{message.created_at != message.updated_at ? ` 📝(${getTime(message.updated_at)})` : ``}</time>
+                  </h5>
+                </span>
+              
+              </Fragment>
+
+            )
+
+          })}      
+            
+        </div>
+
+        <div className={`flex ${primaryDefault} rounded-lg w-80 h-15 gap-2 p-1`}>                
+
+          <textarea 
+            name=''
+            id=''
+            className={`items-start ${secondaryDefault} text-white rounded-lg resize-none p-1 m-1 h-full w-full`}
+            cols={41}
+            rows={3}
+            onChange={(e) => {onTextareaChange(e)}}
+            placeholder={`Say something...`}
+            value={message.content}
+          />
+
+          <CustomButton
+            value={'Send'}
+            className='p-2 bg-[#aa5a95] text-white rounded-lg m-1'
+            disabled={!!reload}
+            onClick={() => sendMessage()}
+          />
+
+        </div>            
       
-      {
-        (rooms[0]?.id !== '-1') ?
-        <CustomSelect 
-          name='Current Chat Room' 
-          onChange={(e) => onSelectChange(e)} 
-          className={`bg-slate-900`} 
-          value={currentRoom.id}
-          values={
-            rooms.map((room) => {
-              return {name : room.id}
-            })} 
-          /> : 
-        <CustomSelect 
-          name='Current Chat Room' 
-          values={[{name : '...'}]}
+      </section> 
+
+      <section className='flex flex-col mt-2'>
+
+        {
+          (rooms[0]?.id !== '-1') ?
+          <CustomSelect 
+            name='Current Chat Room' 
+            onChange={(e) => onSelectChange(e)} 
+            className={`bg-slate-900 w-80`} 
+            value={currentRoom.id}
+            values={
+              rooms.map((room) => {
+                return {name : room.id}
+              })} 
+            /> : 
+          <CustomSelect 
+            name='Current Chat Room' 
+            className={`bg-slate-900 w-80`} 
+            values={[{name : '...'}]}
+          />
+        }
+
+      </section>    
+
+      <section className={`flex`}>
+
+        <CustomButton 
+          value={'New Room'}
+          variationName='varthree'
+          className={`w-20 h-12 flex items-center justify-center`}
+          disabled={!!reload}
+          onClick={() => onNewRoomClick()}
+        />     
+
+        <CustomButton 
+          value={'Reset Rooms'}
+          variationName='vartwo'
+          className={`w-20 h-12 flex items-center justify-center`}
+          disabled={!!reload}
+          onClick={() => onResetRoomsClick()}
         />
-      }
 
-     <div>
+        <CustomButton 
+          value={`🐜`}
+          variationName='varthree'
+          className={`bg-green-700 w-20 h-12 flex items-center justify-center`}
+          disabled={!!reload}
+          onClick={() => notifyUser(`If the chat happens to go blank, please refresh the page.`)}
+        /> 
 
-      <CustomButton 
-        value={'Reset Rooms'}
-        variationName='vartwo'
-        disabled={!!reload}
-        onClick={() => onResetRoomsClick()}
-      />
-
-      <CustomButton 
-        value={'New Room'}
-        variationName='varthree'
-        disabled={!!reload}
-        onClick={() => onNewRoomClick()}
-      />      
-
-      <CustomButton 
-        value={`"🐜"`}
-        variationName='varthree'
-        className={`bg-green-600`}
-        disabled={!!reload}
-        onClick={() => notifyUser(`Sometimes the chat goes blank for no reason.`)}
-      /> 
-
-      {/* {
-        <h3 className='m-5 bg-gray-700 rounded-xl p-2'>
-          currentRoomId: {currentRoom.id} <br/>
-          roomsLength: {rooms.length} messagesLength: {messages.length} <br/>
-          reload: {reload} | hasErrors: {JSON.stringify(hasErrors)} <br/>
-        </h3>
-      } */}
-
-     </div>
+      </section>
 
     </section>    
     

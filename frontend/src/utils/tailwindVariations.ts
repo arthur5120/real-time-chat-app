@@ -16,6 +16,12 @@ export const inputVariations : TVariations = {
     varthree : `bg-blue-800 ${inputDefault}`,
 }
 
+export const selectVariations = {
+    varone : `bg-red-800 ${inputDefault}`,
+    vartwo : `bg-pink-800 ${inputDefault}`,
+    varthree : `bg-blue-800 ${inputDefault}`,
+}
+
 export const titleVariations = {
     varone : 'text-xl font-bold text-red-500',
     vartwo : 'text-lg font-bold text-yellow-500',

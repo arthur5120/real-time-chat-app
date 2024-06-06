@@ -1,5 +1,5 @@
 import { twMerge } from "tailwind-merge";
-import { inputVariations } from "../../utils/tailwindVariations";
+import { selectVariations } from "../../utils/tailwindVariations";
 import { capitalizeFirst } from "../../utils/useful-functions";
 
 type SelectProps = Partial<{
@@ -9,7 +9,7 @@ type SelectProps = Partial<{
 
 const CustomSelect = ({name, values, className, variationName='varone', ...props} : SelectProps) => {  
 
-  const mergedClasses = twMerge(inputVariations[variationName], className)  
+  const mergedClasses = twMerge(selectVariations[variationName], className)  
 
   return (    
 
@@ -23,7 +23,7 @@ const CustomSelect = ({name, values, className, variationName='varone', ...props
 
             <option key={`${value}-${index}`}>
               {value.name ? value.name : '...'}
-            </option>  
+            </option>
 
           ) 
         : ''
