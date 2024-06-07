@@ -3,7 +3,7 @@ import { selectVariations } from "../../utils/tailwindVariations";
 import { capitalizeFirst } from "../../utils/useful-functions";
 
 type SelectProps = Partial<{
-    values : Partial<{name : string}>[],
+    values : Partial<{id : string, name : string}>[],
     variationName : 'varone' | 'vartwo' | 'varthree'
 } & React.SelectHTMLAttributes<HTMLSelectElement>>
 
@@ -21,7 +21,7 @@ const CustomSelect = ({name, values, className, variationName='varone', ...props
         values?
           values.map((value, index) =>
 
-            <option key={`${value}-${index}`}>
+            <option key={`${value}-${index}`} id={value.id ? value.id : ''}>
               {value.name ? value.name : '...'}
             </option>
 

@@ -8,7 +8,7 @@ import {
     modGetChatById,
     modGetChats,
     getChatsByUserId,
-    modDeleteAllChats,
+    modDeleteAllChats,    
 } from "../models/chat-model"
 
  import { midCheckDuplicated } from "../utils/middleware"

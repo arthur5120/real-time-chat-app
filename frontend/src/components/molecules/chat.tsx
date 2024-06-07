@@ -8,7 +8,7 @@ import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
 import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faEyeSlash, faBars, faComment, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
@@ -28,6 +28,7 @@ const Chat = () => {
   const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
   const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
+  const [roomUsers, setRoomUsers] = useState<string[]>([])
   const [messages, setMessages] = useState<TChatMessage[]>([])  
   const [messageBeingEdited, setMessageBeingEdited] = useState<TChatMessage & {previous ? : string}>(messagePlaceholder)  
   const [hasErrors, setHasErrors] = useState(false)
@@ -99,10 +100,11 @@ const Chat = () => {
       const isRoomIdEmpty = parseInt(currentRoom.id) <= 0      
       const isRoomIdValid = !isRoomIdEmpty ? localRooms.some((room : TCurrentRoom) => room.id.trim() == currentRoom.id.trim()) : false
 
-      if (isRoomIdEmpty || !isRoomIdValid) {
+      if (isRoomIdEmpty || !isRoomIdValid) {        
         setCurrentRoom({
           id : localRooms[0].id,
-          selectId : 0, name : ''
+          selectId : 0, 
+          name : localRooms[0].name
         })
       }
 
@@ -121,19 +123,31 @@ const Chat = () => {
         const authInfo = await authStatus({})
         const rawMessages = await getMessages()
         const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)
+        const uniqueIdList = new Set<string>() 
+        const userNameList : string[] = []       
     
-        const convertedMessages = filteredMessages.map((m : TMessage) => ({
-          id : m.id,
-          user: m.senderId == authInfo.id ? currentUser.name : m.senderName,
-          content: m.content,
-          created_at: convertDatetimeToMilliseconds(m.created_at),
-          updated_at: convertDatetimeToMilliseconds(m.updated_at),
-          room: m.chatId,
-        }))
+        const convertedMessages = filteredMessages.map((m : TMessage) => {          
+
+          if(!uniqueIdList.has(m.senderId)) {
+            uniqueIdList.add(m.senderId)
+            userNameList.push(m.senderName)
+          }
+
+          return {
+            id : m.id,
+            user: m.senderId == authInfo.id ? currentUser.name : m.senderName,
+            content: m.content,
+            created_at: convertDatetimeToMilliseconds(m.created_at),
+            updated_at: convertDatetimeToMilliseconds(m.updated_at),
+            room: m.chatId,
+          }
+
+        })
             
         const sortedMessages = sortByMilliseconds(convertedMessages)
-    
-        setMessages(sortedMessages)
+
+        setRoomUsers(userNameList)
+        setMessages(sortedMessages)        
 
       } catch (e) {
         setHasErrors(true)
@@ -247,10 +261,11 @@ const Chat = () => {
 
   }
 
-  const onSelectChange = (e : React.ChangeEvent<HTMLSelectElement>) => {        
-    const roomId = e.target.value
+  const onSelectChange = (e : React.ChangeEvent<HTMLSelectElement>) => {    
     const selectId = e.target.selectedIndex
-    setCurrentRoom({id : roomId, selectId : selectId, name : ''}) // Try room names here
+    const roomId = e.target[selectId].id 
+    const roomName = e.target.value    
+    setCurrentRoom({id : roomId, selectId : selectId, name : roomName})
     setReload(reload + 1)
   }
 
@@ -435,10 +450,16 @@ const Chat = () => {
         <div className={`flex justify-between ${primaryDefault} rounded-lg w-80`}>
 
           <h3 className='bg-transparent justify-start m-2'>
-              {(auth && currentUser?.name) ? `Chatting as ${currentUser.name}` : `Chatting as Guest`}
+            {(auth && currentUser?.name) ? `Chatting as ${currentUser.name} ` : `Chatting as Guest`}              
           </h3>
+        
+          <span className='flex bg-tranparent m-2 cursor-pointer mx-4 gap-2'>
 
-          <span className=' bg-transparent m-2 cursor-pointer mx-4'>
+            <button title={`Room info`} onClick={() => notifyUser(`Messages : ${messages.length}, Users : ${roomUsers.length}`)}>
+              {/* <FontAwesomeIcon icon={faBars}/> */}
+              {/* <FontAwesomeIcon icon={faComment}/> */}
+              <FontAwesomeIcon icon={faCircleInfo}/>
+            </button>
             
             <button title={`Toggle Hide/Show Chat`} onClick={() => setChatHidden(!chatHidden)}>
               {chatHidden ? <FontAwesomeIcon icon={faEyeSlash}/> : <FontAwesomeIcon icon={faEye}/>}
@@ -490,10 +511,10 @@ const Chat = () => {
                 </span>
               
                 <span className={`flex items-end justify-end cursor-pointer mx-3 px-1 gap-1 ${(isUserSender && isMessageSelected) ? '' : 'hidden'}`}>
-                  { !isMessageFocused && !messageBeingEdited.content ? <h3 data-action={`edit`} onClick={(e) => onClickEditModeIcon(e)}>&#128393;</h3> : ''}
-                  { isMessageFocused ? <h3 data-action={`confirm`} onClick={(e) => onClickEditModeIcon(e)}>&#10003;</h3> : ''}
-                  { !isMessageFocused && !messageBeingEdited.content ? <h3 data-action={`delete`} onClick={(e) => onClickEditModeIcon(e)}>&#128465;</h3> : ''}
-                  <h3 data-action={`cancel`} onClick={(e) => onClickEditModeIcon(e)}>&#10005;</h3>
+                  { !isMessageFocused && !messageBeingEdited.content ? <h3 data-action={`edit`} title={`Edit`} onClick={(e) => onClickEditModeIcon(e)}>&#128393;</h3> : ''}
+                  { isMessageFocused ? <h3 data-action={`confirm`} title={`Confirm`} onClick={(e) => onClickEditModeIcon(e)}>&#10003;</h3> : ''}
+                  { !isMessageFocused && !messageBeingEdited.content ? <h3 data-action={`delete`} title={`Delete`} onClick={(e) => onClickEditModeIcon(e)}>&#128465;</h3> : ''}
+                  <h3 data-action={`cancel`} title={`Cancel`}  onClick={(e) => onClickEditModeIcon(e)}>&#10005;</h3>
                 </span>
 
                 <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-2 p-1 justify-end bg-transparent`}>
@@ -539,14 +560,18 @@ const Chat = () => {
 
         {
           (rooms[0]?.id !== '-1') ?
-          <CustomSelect 
-            name='Current Chat Room' 
-            onChange={(e) => onSelectChange(e)} 
-            className={`bg-slate-900 w-80`} 
-            value={currentRoom.id}
+          <CustomSelect
+            name='Current Chat Room'
+            onChange={(e) => onSelectChange(e)}
+            className={`bg-slate-900 w-80 text-center`}
+            title={`Messages : ${messages.length}, Users : ${roomUsers.length}`}
+            value={currentRoom.name}
             values={
               rooms.map((room) => {
-                return {name : room.id}
+                return {
+                  id : room.id, 
+                  name : room.name
+                }
               })} 
             /> : 
           <CustomSelect 
@@ -558,12 +583,12 @@ const Chat = () => {
 
       </section>    
 
-      <section className={`flex`}>
+      <section className={`flex justify-between w-80`}>
 
         <CustomButton 
           value={'New Room'}
           variationName='varthree'
-          className={`w-20 h-12 flex items-center justify-center`}
+          className={`w-full h-12 flex items-center justify-center`}
           disabled={!!reload}
           onClick={() => onNewRoomClick()}
         />     
@@ -571,22 +596,23 @@ const Chat = () => {
         <CustomButton 
           value={'Reset Rooms'}
           variationName='vartwo'
-          className={`w-20 h-12 flex items-center justify-center`}
+          className={`w-full h-12 flex items-center justify-center`}
           disabled={!!reload}
           onClick={() => onResetRoomsClick()}
         />
 
-        <CustomButton 
+        <CustomButton
           value={`🐜`}
           variationName='varthree'
-          className={`bg-green-700 w-20 h-12 flex items-center justify-center`}
+          className={`bg-green-700 w-full h-12 flex items-center justify-center`}
           disabled={!!reload}
           onClick={() => notifyUser(`If the chat happens to go blank, please refresh the page.`)}
-        /> 
+        />
 
-      </section>
+      </section>      
 
     </section>    
+
     
   )
   
