@@ -11,6 +11,30 @@ dotenv.config()
 const secretKey = process.env.SECRET_KEY as string
 const secretSalt = parseInt(process.env.SECRET_SALT as string)
 
+const adjectives = [
+    'Vigilant', 'Mysterious', 'Brave',
+    'Whimsical', 'Fierce', 'Ethereal',
+    'Tenacious','Luminous', 'Enigmatic', 'Dazzling',
+]
+  
+const colors = [
+    'Crimson', 'Latte', 'Mint',
+    'Indigo', 'Cobalt', 'Ambar',
+    'Plum', 'Ivory', 'Rose', 'Obsidian',
+]
+
+const creatures  = [
+    'Phoenix', 'Gryphon', 'Sphinx',
+    'Chimera', 'Harpy', 'Gorgon',
+    'Hippogriff', 'Kappa', 'Manticore', 'Cerberus',
+]
+
+const rooms = [
+    'Space','Place', 'Area',
+    'Chamber', 'Cabin', 'Cell',
+    'Alcove','Closet',
+]
+
 export const midSetCors = Cors({
     origin : ['http://localhost:5173', 'http://localhost:3000'],
     credentials : true,
@@ -40,8 +64,20 @@ export const midGenerateToken = (payload : Object) => {
 }
 
 export const midGetRandomName = () => {
-    const name = Math.floor(Math.random() * 1000)
-    return `Room Number ${JSON.stringify(name)}`
+
+    const randomNumber = Math.floor(Math.random() * 999)
+    const randomRoomNumber = Math.floor(Math.random() * (rooms.length - 1))
+    const roomName = rooms[randomRoomNumber]
+
+    console.log(`generated number ${randomNumber}`)
+    const generatedName = `
+      ${adjectives[randomNumber % 10]}
+      ${colors[Math.floor(randomNumber / 10) % 10]}  
+      ${creatures[Math.floor(randomNumber / 100) % 10]} 
+      ${roomName}
+    `
+
+    return `${generatedName}`
 }
 
 export const midCheckAuth = async (req : Request, res : Response, next : NextFunction) => {               

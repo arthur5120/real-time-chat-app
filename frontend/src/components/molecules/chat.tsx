@@ -8,7 +8,7 @@ import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
 import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faEyeSlash, faBars, faComment, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faEyeSlash, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
 
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
@@ -90,14 +90,14 @@ const Chat = () => {
 
     try {
 
-      const localRooms = await getChats() 
-      const hasValidRooms = !!localRooms[0]      
+      const localRooms = await getChats()
+      const hasValidRooms = !!localRooms[0]
 
-      if(!hasValidRooms) {        
+      if(!hasValidRooms) {
         return
-      }      
+      }
 
-      const isRoomIdEmpty = parseInt(currentRoom.id) <= 0      
+      const isRoomIdEmpty = parseInt(currentRoom.id) <= 0
       const isRoomIdValid = !isRoomIdEmpty ? localRooms.some((room : TCurrentRoom) => room.id.trim() == currentRoom.id.trim()) : false
 
       if (isRoomIdEmpty || !isRoomIdValid) {        
@@ -123,10 +123,10 @@ const Chat = () => {
         const authInfo = await authStatus({})
         const rawMessages = await getMessages()
         const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)
-        const uniqueIdList = new Set<string>() 
-        const userNameList : string[] = []       
+        const uniqueIdList = new Set<string>()
+        const userNameList : string[] = []
     
-        const convertedMessages = filteredMessages.map((m : TMessage) => {          
+        const convertedMessages = filteredMessages.map((m : TMessage) => {
 
           if(!uniqueIdList.has(m.senderId)) {
             uniqueIdList.add(m.senderId)
@@ -457,7 +457,7 @@ const Chat = () => {
 
             <button title={`Room info`} onClick={() => notifyUser(`Messages : ${messages.length}, Users : ${roomUsers.length}`)}>
               {/* <FontAwesomeIcon icon={faBars}/> */}
-              {/* <FontAwesomeIcon icon={faComment}/> */}
+               {/* <FontAwesomeIcon icon={faComment}/> */}
               <FontAwesomeIcon icon={faCircleInfo}/>
             </button>
             
@@ -574,14 +574,14 @@ const Chat = () => {
                 }
               })} 
             /> : 
-          <CustomSelect 
-            name='Current Chat Room' 
-            className={`bg-slate-900 w-80`} 
+          <CustomSelect
+            name='Current Chat Room'
+            className={`bg-slate-900 w-80`}
             values={[{name : '...'}]}
           />
         }
 
-      </section>    
+      </section>
 
       <section className={`flex justify-between w-80`}>
 
@@ -591,7 +591,7 @@ const Chat = () => {
           className={`w-full h-12 flex items-center justify-center`}
           disabled={!!reload}
           onClick={() => onNewRoomClick()}
-        />     
+        />
 
         <CustomButton 
           value={'Reset Rooms'}
