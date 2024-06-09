@@ -6,7 +6,7 @@ import { faUser, faComment, faSignIn, faSignOut } from '@fortawesome/free-solid-
 
 import { authLogout } from '../../hooks/useAxios'
 
-const LinkStyle = `flex flex-col gap-1 bg-slate-900 text-white rounded-xl p-3 my-2`
+const LinkStyle = `flex flex-col gap-1 bg-slate-900 text-white rounded-xl p-3 my-2 active:bg-black`
 
 const Navbar = () => {
 

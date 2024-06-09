@@ -236,8 +236,9 @@ const Chat = () => {
 
       await createChat()
 
-      delay == 0 ? notifyUser(creationMessage, 'success') : 
-      socket?.emit('change', creationMessage)
+      notifyUser(creationMessage, 'success')
+      socket?.emit('change', creationMessage)  
+
       setReload(reload + 1)
 
     } catch (e) {
@@ -453,16 +454,18 @@ const Chat = () => {
             {(auth && currentUser?.name) ? `Chatting as ${currentUser.name} ` : `Chatting as Guest`}              
           </h3>
         
-          <span className='flex bg-tranparent m-2 cursor-pointer mx-4 gap-2'>
+          <span className='flex bg-tranparent m-2 cursor-pointer gap-1'>
 
-            <button title={`Room info`} onClick={() => notifyUser(`Messages : ${messages.length}, Users : ${roomUsers.length}`)}>
+            <button title={`Room info`} onClick={() => notifyUser(`Messages : ${messages.length}, Users : ${roomUsers.length}`)} className='bg-[#050D20] hover:bg-black rounded-lg'>
               {/* <FontAwesomeIcon icon={faBars}/> */}
-               {/* <FontAwesomeIcon icon={faComment}/> */}
-              <FontAwesomeIcon icon={faCircleInfo}/>
+              {/* <FontAwesomeIcon icon={faComment}/> */}
+              <FontAwesomeIcon icon={faCircleInfo} width={48} height={48}/>
             </button>
             
-            <button title={`Toggle Hide/Show Chat`} onClick={() => setChatHidden(!chatHidden)}>
-              {chatHidden ? <FontAwesomeIcon icon={faEyeSlash}/> : <FontAwesomeIcon icon={faEye}/>}
+            <button title={`Toggle Hide/Show Chat`} onClick={() => setChatHidden(!chatHidden)} className='bg-[#050D20] hover:bg-black rounded-lg'>
+              {chatHidden ? 
+              <FontAwesomeIcon icon={faEyeSlash} width={48} height={48}/> : 
+              <FontAwesomeIcon icon={faEye} width={48} height={48}/>}
             </button>
             
           </span>
@@ -547,7 +550,7 @@ const Chat = () => {
 
           <CustomButton
             value={'Send'}
-            className='p-2 bg-[#aa5a95] text-white rounded-lg m-1'
+            className='p-2 bg-[#aa5a95] text-white rounded-lg m-1 active:bg-[#bd64a5]'
             disabled={!!reload}
             onClick={() => sendMessage()}
           />
@@ -604,7 +607,7 @@ const Chat = () => {
         <CustomButton
           value={`🐜`}
           variationName='varthree'
-          className={`bg-green-700 w-full h-12 flex items-center justify-center`}
+          className={`bg-green-700 active:bg-green-600 w-full h-12 flex items-center justify-center`}
           disabled={!!reload}
           onClick={() => notifyUser(`If the chat happens to go blank, please refresh the page.`)}
         />

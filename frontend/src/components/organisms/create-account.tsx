@@ -68,12 +68,12 @@ const CreateAccount = () => {
 
         <CustomTitle value='Create Account Page' className='text-green-500 my-3'/>
 
-        <CustomForm data={data} setData={setData} onSubmit={onSubmit} role={true} fields={fieldList} formClassName={primaryDefault} inputClassName={secondaryDefault}>
-            <div className='flex flex-row justify-center items-center bg-transparent my-3'>
-              <CustomButton value='Clear' onClick={() => onClear()} type="reset" className='p-5 my-5' variationName="vartwo"/>
-              <CustomButton value='Submit' className='p-5 my-5' variationName="varthree"/>
-            </div>
-        </CustomForm>        
+          <CustomForm data={data} setData={setData} onSubmit={onSubmit} role={true} fields={fieldList} formClassName={primaryDefault} inputClassName={secondaryDefault}>
+              <div className='flex flex-row justify-center items-center bg-transparent my-3'>
+                <CustomButton value='Clear' onClick={() => onClear()} type="reset" className='p-5 my-5' variationName="vartwo"/>
+                <CustomButton value='Submit' className='p-5 my-5' variationName="varthree"/>
+              </div>
+          </CustomForm>        
 
         <CustomTitle value={message} variationName="varthree"/>
         
