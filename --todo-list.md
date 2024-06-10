@@ -6,3 +6,4 @@
 # New messages not getting edited right away, refreshing necessary.
 # Show some info abount the other user's messages when clicking on it.
 # Show List of Users and number of messages within a chat room.
+# Show unread messages

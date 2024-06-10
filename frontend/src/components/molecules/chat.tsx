@@ -1,8 +1,8 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
-import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChats, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
+import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
-import { convertDatetimeToMilliseconds, getTime, sortByMilliseconds } from '../../utils/useful-functions'
+import { convertDatetimeToMilliseconds, cropMessage, getTime, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
@@ -247,6 +247,15 @@ const Chat = () => {
 
   }
 
+  const notifyMessageInRoom = async (id : string) => {
+    try {
+      const selectedRoom = await getChatById(id)
+      notifyUser(`New message in ${selectedRoom.name}`)
+    } catch (e) {
+      setHasErrors(true)    
+    }
+  }
+
   const deleteAllRooms = async () => {       
 
     try {      
@@ -338,8 +347,8 @@ const Chat = () => {
       const {room} = msg
       if (room === currentRoom.id) {        
         addMessage(msg)
-      } else {        
-        notifyUser(`A new message in ${room}!`)
+      } else {                   
+        notifyMessageInRoom(room)
       }
     })    
 
@@ -418,12 +427,13 @@ const Chat = () => {
         break
       }
 
-      case 'confirm' : {                        
-          messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
-          messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
-          onExitMessageEditMode()        
-          notifyUser(e)
-          socket?.emit('change', 'A message was edited')
+      case 'confirm' : {                   
+          messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''                    
+          messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''          
+          onExitMessageEditMode()
+          const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
+          const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
+          socket?.emit('change', `Message updated from "${previousMessage}" to "${updatedMessage}"`)
         break
       }   
 
@@ -454,11 +464,9 @@ const Chat = () => {
             {(auth && currentUser?.name) ? `Chatting as ${currentUser.name} ` : `Chatting as Guest`}              
           </h3>
         
-          <span className='flex bg-tranparent m-2 cursor-pointer gap-1'>
+          <span className='flex bg-tranparent m-2 cursor-pointer gap-1'>            
 
-            <button title={`Room info`} onClick={() => notifyUser(`Messages : ${messages.length}, Users : ${roomUsers.length}`)} className='bg-[#050D20] hover:bg-black rounded-lg'>
-              {/* <FontAwesomeIcon icon={faBars}/> */}
-              {/* <FontAwesomeIcon icon={faComment}/> */}
+            <button title={`Room info`} onClick={() => notifyUser(`Messages : ${messages.length}, Users : ${roomUsers.length}`)} className='bg-[#050D20] hover:bg-black rounded-lg'>                          
               <FontAwesomeIcon icon={faCircleInfo} width={48} height={48}/>
             </button>
             
@@ -566,7 +574,7 @@ const Chat = () => {
           <CustomSelect
             name='Current Chat Room'
             onChange={(e) => onSelectChange(e)}
-            className={`bg-slate-900 w-80 text-center`}
+            className={`bg-slate-900 w-80 text-center hover:bg-black`}
             title={`Messages : ${messages.length}, Users : ${roomUsers.length}`}
             value={currentRoom.name}
             values={

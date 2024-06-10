@@ -45,3 +45,8 @@ export const generateUniqueId = () => {
 export const getConfig = (uuid : string) => {
     return {headers: {'Idempotency-Key': uuid}}
 }
+
+export const cropMessage = (msg : string, limit : number = 20) => {
+    const croppedMessage = msg.trim().slice(0, limit)
+    return msg.length <= limit ? croppedMessage : `${croppedMessage}...`
+}
