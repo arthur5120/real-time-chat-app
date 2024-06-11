@@ -7,3 +7,4 @@
 # Show some info abount the other user's messages when clicking on it.
 # Show List of Users and number of messages within a chat room.
 # Show unread messages
+# Upon creatin a new room, the current room is not updated, showing the messages from the previous room.

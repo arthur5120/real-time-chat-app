@@ -34,6 +34,12 @@ io.on('connection', (socket) => {
         io.emit('change', message)
     })
 
+    socket.on('messageChange', (message) => {
+        console.log(JSON.stringify(message))
+        io.emit('messageChange', message)
+    })
+
+
 })
 
 io.listen(4000, () => {

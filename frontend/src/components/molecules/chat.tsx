@@ -1,8 +1,8 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
-import { TUser, TMessage, TChatMessage } from '../../utils/types'
+import { TUser, TMessage, TChatMessage, TChatRoom } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
-import { convertDatetimeToMilliseconds, cropMessage, getTime, sortByMilliseconds } from '../../utils/useful-functions'
+import { convertDatetimeToMilliseconds, cropMessage, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
@@ -32,7 +32,7 @@ const Chat = () => {
   const [messages, setMessages] = useState<TChatMessage[]>([])  
   const [messageBeingEdited, setMessageBeingEdited] = useState<TChatMessage & {previous ? : string}>(messagePlaceholder)  
   const [hasErrors, setHasErrors] = useState(false)
-  const [chatHidden, setChatHidden] = useState(false)  
+  const [showNotifications, setShowNotifications] = useState(true)  
   const [reload, setReload] = useState(1)
   const [delay, setDelay] = useState(0)
 
@@ -89,26 +89,33 @@ const Chat = () => {
   const retrieveRooms = async () => {
 
     try {
+      
+      const unsortedLocalRooms = await getChats() as TChatRoom[]
+      //const sortedLocalRooms = sortByAlphabeticalOrder(unsortedLocalRooms)
+      const sortedLocalRooms = unsortedLocalRooms
+      console.log(`${JSON.stringify(sortedLocalRooms)}`)
+      const hasValidRooms = !!sortedLocalRooms[0]
 
-      const localRooms = await getChats()
-      const hasValidRooms = !!localRooms[0]
+      console.log(currentRoom.name)
 
       if(!hasValidRooms) {
         return
       }
 
       const isRoomIdEmpty = parseInt(currentRoom.id) <= 0
-      const isRoomIdValid = !isRoomIdEmpty ? localRooms.some((room : TCurrentRoom) => room.id.trim() == currentRoom.id.trim()) : false
+      const isRoomIdValid = !isRoomIdEmpty ? sortedLocalRooms.some((room : TChatRoom) => room.id.trim() == currentRoom.id.trim()) : false
 
-      if (isRoomIdEmpty || !isRoomIdValid) {        
+      if (isRoomIdEmpty || !isRoomIdValid || currentRoom.id != sortedLocalRooms[currentRoom.selectId].id) {
         setCurrentRoom({
-          id : localRooms[0].id,
+          id : sortedLocalRooms[0].id,
           selectId : 0, 
-          name : localRooms[0].name
+          name : sortedLocalRooms[0].name
         })
-      }
+      }      
 
-      setRooms(localRooms)
+      notifyUser(`"${currentRoom.id}" == "${sortedLocalRooms[currentRoom.selectId].id.trim()}" ? ${currentRoom.id == sortedLocalRooms[currentRoom.selectId].id.trim()}`)
+
+      setRooms(sortedLocalRooms)
 
     } catch (e) {      
       setHasErrors(true)
@@ -249,7 +256,7 @@ const Chat = () => {
 
   const notifyMessageInRoom = async (id : string) => {
     try {
-      const selectedRoom = await getChatById(id)
+      const selectedRoom = await getChatById(id)      
       notifyUser(`New message in ${selectedRoom.name}`)
     } catch (e) {
       setHasErrors(true)    
@@ -273,7 +280,7 @@ const Chat = () => {
 
   const onSelectChange = (e : React.ChangeEvent<HTMLSelectElement>) => {    
     const selectId = e.target.selectedIndex
-    const roomId = e.target[selectId].id 
+    const roomId = e.target[selectId].id
     const roomName = e.target.value    
     setCurrentRoom({id : roomId, selectId : selectId, name : roomName})
     setReload(reload + 1)
@@ -346,17 +353,26 @@ const Chat = () => {
     socket?.on('room', (msg : TChatMessage) => {
       const {room} = msg
       if (room === currentRoom.id) {        
-        addMessage(msg)
-      } else {                   
-        notifyMessageInRoom(room)
+        addMessage(msg)        
+      } else {
+        if(showNotifications) {
+          notifyMessageInRoom(room)        
+        }
       }
-    })    
+    })
+    
+    socket?.on('messageChange', (msg : string) => {
+      if(msg) {
+        if(showNotifications) {
+          notifyUser(msg, 'info')        
+        }
+        setReload(reload + 1)        
+      }
+    })
 
      socket?.on('change', (msg : string) => {
-      if(msg) {                
-        notifyUser(msg, 'info')
-        setReload(reload + 1)
-      }
+        notifyUser(msg, 'info')        
+        setReload(reload + 1)              
      })     
 
      return () => {        
@@ -375,7 +391,7 @@ const Chat = () => {
 
      }
 
-  }, [rooms.length, messages.length, currentRoom.id, reload, auth])
+  }, [rooms.length, messages.length, currentRoom.id, reload, auth, showNotifications])
   
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -422,8 +438,9 @@ const Chat = () => {
 
       case 'delete' : {
         messageBeingEdited.id ? await deleteMessage(messageBeingEdited.id) : ''
+        const editedMessage = messageBeingEdited?.previous ?  messageBeingEdited.previous : ''
         onExitMessageEditMode()
-        socket?.emit('change', 'A message was deleted')
+        socket?.emit('messageChange', `The message "${cropMessage(editedMessage)}" was deleted on ${currentRoom.name}`)
         break
       }
 
@@ -433,7 +450,7 @@ const Chat = () => {
           onExitMessageEditMode()
           const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
           const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
-          socket?.emit('change', `Message updated from "${previousMessage}" to "${updatedMessage}"`)
+          socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)
         break
       }   
 
@@ -470,17 +487,17 @@ const Chat = () => {
               <FontAwesomeIcon icon={faCircleInfo} width={48} height={48}/>
             </button>
             
-            <button title={`Toggle Hide/Show Chat`} onClick={() => setChatHidden(!chatHidden)} className='bg-[#050D20] hover:bg-black rounded-lg'>
-              {chatHidden ? 
+            <button title={`Toggle hide/show message notifications from other chats`} onClick={() => setShowNotifications(!showNotifications)} className='bg-[#050D20] hover:bg-black rounded-lg'>
+              {!showNotifications ? 
               <FontAwesomeIcon icon={faEyeSlash} width={48} height={48}/> : 
               <FontAwesomeIcon icon={faEye} width={48} height={48}/>}
-            </button>
+            </button>            
             
           </span>
 
         </div>
 
-        <div className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll ${chatHidden ? 'hidden' : ''}`} ref={chatContainerRef}> 
+        <div className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll`} ref={chatContainerRef}> 
 
           { messages?.map((message, id) => { 
 
@@ -516,7 +533,7 @@ const Chat = () => {
                 > 
 
                   <h5 key={`msg-content-${id}`} className='bg-transparent' data-id={message.id}>
-                    {message.content}            
+                    {message.content}
                   </h5>
 
                 </span>
@@ -613,14 +630,29 @@ const Chat = () => {
         />
 
         <CustomButton
-          value={`🐜`}
+          value={`Get 🐜`}
           variationName='varthree'
           className={`bg-green-700 active:bg-green-600 w-full h-12 flex items-center justify-center`}
           disabled={!!reload}
           onClick={() => notifyUser(`If the chat happens to go blank, please refresh the page.`)}
         />
 
-      </section>      
+        
+        <CustomButton
+          value={`Test 🦾`}
+          variationName='varthree'
+          className={`bg-yellow-700 active:bg-yellow-600 w-full h-12 flex items-center justify-center`}
+          disabled={!!reload}
+          onClick={() => {
+            const unsortedArray = [{name : 'f'}, {name : 'a'}, {name : 'c'}]
+            const sortedArray = sortByAlphabeticalOrder(unsortedArray)
+            notifyUser(`${JSON.stringify(sortedArray)}`)
+          }}
+        />
+
+      </section>     
+
+      {currentRoom.name}
 
     </section>    
 

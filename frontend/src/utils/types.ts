@@ -24,6 +24,11 @@ export type TResponse = {
     body ? : object,
 }
 
+export type TChatRoom = {
+    id : string,
+    name : string
+}
+
 export type TMessage = {
     id: string
     content: string
