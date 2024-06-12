@@ -22,7 +22,8 @@ type TRooms = {id : string, name : string}[]
 const Chat = () => {
   
   let chatContainerRef = useRef<HTMLDivElement>(null)
-  let messageContainerRef =  useRef<HTMLSpanElement>(null)
+  let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)  
+  let messageContainerRef =  useRef<HTMLSpanElement>(null)  
 
   const [rooms, setRooms] = useState<TRooms>(roomsPlaceholder)
   const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
@@ -91,12 +92,8 @@ const Chat = () => {
     try {
       
       const unsortedLocalRooms = await getChats() as TChatRoom[]
-      //const sortedLocalRooms = sortByAlphabeticalOrder(unsortedLocalRooms)
-      const sortedLocalRooms = unsortedLocalRooms
-      console.log(`${JSON.stringify(sortedLocalRooms)}`)
-      const hasValidRooms = !!sortedLocalRooms[0]
-
-      console.log(currentRoom.name)
+      const sortedLocalRooms = sortByAlphabeticalOrder(unsortedLocalRooms)      
+      const hasValidRooms = !!sortedLocalRooms[0]      
 
       if(!hasValidRooms) {
         return
@@ -104,18 +101,25 @@ const Chat = () => {
 
       const isRoomIdEmpty = parseInt(currentRoom.id) <= 0
       const isRoomIdValid = !isRoomIdEmpty ? sortedLocalRooms.some((room : TChatRoom) => room.id.trim() == currentRoom.id.trim()) : false
+      const isNumberOfRoomsTheSame = unsortedLocalRooms.length == rooms.length
 
-      if (isRoomIdEmpty || !isRoomIdValid || currentRoom.id != sortedLocalRooms[currentRoom.selectId].id) {
+      if (isRoomIdEmpty || !isRoomIdValid) {        
         setCurrentRoom({
           id : sortedLocalRooms[0].id,
           selectId : 0, 
           name : sortedLocalRooms[0].name
-        })
-      }      
+        })        
+      } else if (!isNumberOfRoomsTheSame!) {        
+        const updatedSelectId = sortedLocalRooms.findIndex((room) => room.id.trim() == currentRoom.id.trim())      
+        setCurrentRoom({
+          id : sortedLocalRooms[updatedSelectId].id,
+          selectId : updatedSelectId, 
+          name : sortedLocalRooms[updatedSelectId].name
+        })                
+        setReload(reload + 1)
+      }
 
-      notifyUser(`"${currentRoom.id}" == "${sortedLocalRooms[currentRoom.selectId].id.trim()}" ? ${currentRoom.id == sortedLocalRooms[currentRoom.selectId].id.trim()}`)
-
-      setRooms(sortedLocalRooms)
+      setRooms(sortedLocalRooms)      
 
     } catch (e) {      
       setHasErrors(true)
@@ -491,7 +495,7 @@ const Chat = () => {
               {!showNotifications ? 
               <FontAwesomeIcon icon={faEyeSlash} width={48} height={48}/> : 
               <FontAwesomeIcon icon={faEye} width={48} height={48}/>}
-            </button>            
+            </button>
             
           </span>
 
@@ -584,30 +588,31 @@ const Chat = () => {
       
       </section> 
 
-      <section className='flex flex-col mt-2'>
+      <section className='flex flex-col mt-2'>        
 
         {
           (rooms[0]?.id !== '-1') ?
-          <CustomSelect
-            name='Current Chat Room'
+          <CustomSelect    
+            name='Current Chat Room' 
+            ref={chatRoomContainerRef}
             onChange={(e) => onSelectChange(e)}
             className={`bg-slate-900 w-80 text-center hover:bg-black`}
             title={`Messages : ${messages.length}, Users : ${roomUsers.length}`}
-            value={currentRoom.name}
             values={
               rooms.map((room) => {
                 return {
                   id : room.id, 
                   name : room.name
                 }
-              })} 
+              })}                          
+              value={currentRoom.id}
             /> : 
           <CustomSelect
-            name='Current Chat Room'
+            name='Current Chat Room'            
             className={`bg-slate-900 w-80`}
             values={[{name : '...'}]}
           />
-        }
+        }        
 
       </section>
 
@@ -644,15 +649,14 @@ const Chat = () => {
           className={`bg-yellow-700 active:bg-yellow-600 w-full h-12 flex items-center justify-center`}
           disabled={!!reload}
           onClick={() => {
-            const unsortedArray = [{name : 'f'}, {name : 'a'}, {name : 'c'}]
-            const sortedArray = sortByAlphabeticalOrder(unsortedArray)
-            notifyUser(`${JSON.stringify(sortedArray)}`)
+            const selectId = chatRoomContainerRef.current?.selectedIndex
+            const selectValue = chatRoomContainerRef.current?.value
+            const selectOptionContent = chatRoomContainerRef.current?.options[selectId ? selectId : 0].text
+            notifyUser(`SelectId ${selectId} value ${selectValue} name ${selectOptionContent}`)            
           }}
         />
 
-      </section>     
-
-      {currentRoom.name}
+      </section>      
 
     </section>    
 
