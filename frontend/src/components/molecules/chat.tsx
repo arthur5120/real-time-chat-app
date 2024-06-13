@@ -30,12 +30,13 @@ const Chat = () => {
   const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
   const [roomUsers, setRoomUsers] = useState<string[]>([])
-  const [messages, setMessages] = useState<TChatMessage[]>([])  
-  const [messageBeingEdited, setMessageBeingEdited] = useState<TChatMessage & {previous ? : string}>(messagePlaceholder)  
+  const [messages, setMessages] = useState<TChatMessage[]>([])
+  const [messageBeingEdited, setMessageBeingEdited] = useState<TChatMessage & {previous ? : string}>(messagePlaceholder)
   const [hasErrors, setHasErrors] = useState(false)
-  const [showNotifications, setShowNotifications] = useState(true)  
+  const [showNotifications, setShowNotifications] = useState(true)
   const [reload, setReload] = useState(1)
   const [delay, setDelay] = useState(0)
+  const [verticalView, setVerticalView] = useState(false)
 
   const isCurrentRoomIdValid = currentRoom.id == '0' || currentRoom.id == '-1'
 
@@ -473,11 +474,46 @@ const Chat = () => {
     
   }  
 
-  return (
-    
-    <section className={`flex flex-col bg-transparent justify-center items-center text-center`}>          
+  const mainSectionStyle = verticalView ? 
+  `flex flex-col justify-center items-center text-center` : 
+  `flex justify-center items-center text-center`
 
-      <section className={`flex flex-col justify-center items-center text-center gap-3`}>  
+  const usersOnlineSection = verticalView ? 
+  `flex hidden` : 
+  `flex flex-col mb-auto w-1/3 justify-end items-end text-end`
+
+  const chatSectionStyle = verticalView ? 
+  `flex flex-col justify-center items-center text-center gap-3`   : 
+  `flex flex-col w-fit justify-center items-center text-center gap-3`
+
+  const buttonSectionStyle = verticalView ? 
+  `flex justify-between w-80` : 
+  `flex flex-col mb-auto w-1/3 justify-start items-start text-start`
+
+  const buttonDivStyle = verticalView ? 
+  `flex justify-between w-80 gap-3 my-2` : 
+  `flex flex-col justify-between h-80 gap-3 mx-2`  
+
+  return (    
+
+    <section className={mainSectionStyle}>
+
+      <section className={usersOnlineSection}>
+
+        <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2`} bg-slate-900 rounded-lg p-2 text-center items-center items`}>
+          <h3 className={`bg-white text-black rounded p-1`}>Users in Room</h3>
+          {
+            roomUsers.length > 0 ? 
+              roomUsers.map((user) => {
+                return <p className=''>{user}</p>
+              }) : 
+            <p>...</p>
+          }
+        </div>
+
+      </section> 
+
+      <section className={chatSectionStyle}>  
 
         <div className={`flex justify-between ${primaryDefault} rounded-lg w-80`}>
 
@@ -555,7 +591,7 @@ const Chat = () => {
                     <time className={`text-slate-300 italic`}>{message.created_at != message.updated_at ? ` 📝(${getTime(message.updated_at)})` : ``}</time>
                   </h5>
                 </span>
-              
+
               </Fragment>
 
             )
@@ -584,82 +620,81 @@ const Chat = () => {
             onClick={() => sendMessage()}
           />
 
-        </div>            
+        </div> 
+
+        <div className={`flex flex-col items-center justify-center`}>
+
+          {
+            (rooms[0]?.id !== '-1') ?
+            <CustomSelect    
+              name='Current Chat Room' 
+              ref={chatRoomContainerRef}
+              onChange={(e) => onSelectChange(e)}
+              className={`bg-slate-900 w-80 text-center hover:bg-black`}
+              title={`Messages : ${messages.length}, Users : ${roomUsers.length}`}
+              values={
+                rooms.map((room) => {
+                  return {
+                    id : room.id,
+                    name : room.name
+                  }
+                })}
+                value={currentRoom.id}
+              /> : 
+            <CustomSelect
+              name='Current Chat Room'            
+              className={`bg-slate-900 w-80`}
+              values={[{name : '...'}]}
+            />
+          }  
+
+        </div>              
       
       </section> 
 
-      <section className='flex flex-col mt-2'>        
+      <section className={buttonSectionStyle}>
+                
+       <div className={buttonDivStyle}>
 
-        {
-          (rooms[0]?.id !== '-1') ?
-          <CustomSelect    
-            name='Current Chat Room' 
-            ref={chatRoomContainerRef}
-            onChange={(e) => onSelectChange(e)}
-            className={`bg-slate-900 w-80 text-center hover:bg-black`}
-            title={`Messages : ${messages.length}, Users : ${roomUsers.length}`}
-            values={
-              rooms.map((room) => {
-                return {
-                  id : room.id, 
-                  name : room.name
-                }
-              })}                          
-              value={currentRoom.id}
-            /> : 
-          <CustomSelect
-            name='Current Chat Room'            
-            className={`bg-slate-900 w-80`}
-            values={[{name : '...'}]}
+       <CustomButton 
+            value={'New Room'}
+            variationName='varthree'
+            className={`w-20 h-full m-0 flex items-center justify-center`}
+            disabled={!!reload}
+            onClick={() => onNewRoomClick()}
           />
-        }        
-
-      </section>
-
-      <section className={`flex justify-between w-80`}>
-
-        <CustomButton 
-          value={'New Room'}
-          variationName='varthree'
-          className={`w-full h-12 flex items-center justify-center`}
-          disabled={!!reload}
-          onClick={() => onNewRoomClick()}
-        />
-
-        <CustomButton 
-          value={'Reset Rooms'}
-          variationName='vartwo'
-          className={`w-full h-12 flex items-center justify-center`}
-          disabled={!!reload}
-          onClick={() => onResetRoomsClick()}
-        />
-
-        <CustomButton
-          value={`Get 🐜`}
-          variationName='varthree'
-          className={`bg-green-700 active:bg-green-600 w-full h-12 flex items-center justify-center`}
-          disabled={!!reload}
-          onClick={() => notifyUser(`If the chat happens to go blank, please refresh the page.`)}
-        />
-
         
-        <CustomButton
-          value={`Test 🦾`}
-          variationName='varthree'
-          className={`bg-yellow-700 active:bg-yellow-600 w-full h-12 flex items-center justify-center`}
-          disabled={!!reload}
-          onClick={() => {
-            const selectId = chatRoomContainerRef.current?.selectedIndex
-            const selectValue = chatRoomContainerRef.current?.value
-            const selectOptionContent = chatRoomContainerRef.current?.options[selectId ? selectId : 0].text
-            notifyUser(`SelectId ${selectId} value ${selectValue} name ${selectOptionContent}`)            
-          }}
-        />
+        <CustomButton 
+            value={'Reset Rooms'}
+            variationName='vartwo'
+            className={`w-20 h-full m-0 flex items-center justify-center`}
+            disabled={!!reload}
+            onClick={() => onResetRoomsClick()}
+          />
 
-      </section>      
+          <CustomButton
+            value={`Get 🐜`}
+            variationName='varthree'
+            className={`bg-green-700 active:bg-green-600 w-20 h-full m-0 flex items-center justify-center`}
+            disabled={!!reload}
+            onClick={() => notifyUser(`If the chat happens to go blank, please refresh the page.`)}
+          />
+          
+          <CustomButton
+            value={`Test 🦾`}
+            variationName='varthree'
+            className={`bg-yellow-700 active:bg-yellow-600 w-20 h-full m-0 flex items-center justify-center`}
+            disabled={!!reload}
+            onClick={() => {
+              setVerticalView(!verticalView)
+            }}
+          />
 
-    </section>    
+       </div>
 
+      </section>          
+
+    </section>      
     
   )
   
