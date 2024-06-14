@@ -10,12 +10,12 @@ const LinkStyle = `flex flex-col gap-1 bg-slate-900 text-white rounded-xl p-3 my
 
 const Navbar = () => {
 
-  const {auth, setAuth} = useContext(authContext)
+  const {auth, setAuth} = useContext(authContext)  
 
   const logout = async () => {    
-    if (setAuth) {
-      setAuth(false)
-      await authLogout({})
+    if (setAuth) {  
+      setAuth(false)            
+      await authLogout({})      
     }
   }
 
@@ -48,7 +48,7 @@ const Navbar = () => {
           {
             auth ? 
               <li>                
-                <Link className={LinkStyle} to='/login' onClick={() => logout()}>
+                <Link className={LinkStyle} to={`/login`} onClick={async () => logout()}>
                   <FontAwesomeIcon icon={faSignOut} /> Sign out
                 </Link>              
               </li> : 

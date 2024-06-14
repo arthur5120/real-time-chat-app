@@ -53,3 +53,8 @@ export type TRes = {
     authenticated:boolean,
     role: string
 }
+
+export type TSocketAuthRequest = {
+    user : {id : string, name ? : string}, 
+    isConnecting ? : boolean
+}

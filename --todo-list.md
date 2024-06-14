@@ -9,3 +9,4 @@
 # Show unread messages ()
 # Upon creatin a new room, the current room is not updated, showing the messages from the previous room. [DONE]
 # Make visualization mode vertical or horizontal optionally.
+# Fix Chat/Users Refresh bug, something to do with the socket.

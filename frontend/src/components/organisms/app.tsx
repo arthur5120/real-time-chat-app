@@ -4,17 +4,21 @@ import { Outlet, useLocation } from "react-router-dom"
 import { useContext, useEffect, useState } from "react"
 import { authContext } from "../../utils/contexts/auth-provider"
 import { toastContext } from "../../utils/contexts/toast-provider"
+import { socketContext } from "../../utils/contexts/socket-provider"
+import { TSocketAuthRequest, TRes } from "../../utils/types"
+import { authStatus, getUserById } from "../../hooks/useAxios"
 
 const App = () => {
 
   const {auth, checkToken} = useContext(authContext)
+  const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
   const [checkAuthStatus, setCheckAuthStatus] = useState(false)
   const location = useLocation()  
 
   const timer = setInterval(() => {
     auth ? setCheckAuthStatus(!checkAuthStatus) : ''
-  }, 30000)
+  }, 15000)
 
   const handleSessionExpiration = async () => {
     console.log(`Checking for Authentication Status...`)      
@@ -24,9 +28,31 @@ const App = () => {
       console.log(`Authentication Status Result : ${result}`)
     }
   }
+
+  const removeFromSocketList = async () => {
+    if (!auth) {
+      const authInfo : TRes = await authStatus({})
+      const authRequest : TSocketAuthRequest = {
+        user: {id : authInfo.id}, 
+        isConnecting : false
+      }        
+      socket?.emit(`auth`, authRequest)
+    } else {
+      // const authInfo : TRes = await authStatus({})
+      // const user = await getUserById(authInfo.id)
+      // if (authInfo.authenticated) { 
+      //   const authRequest : TSocketAuthRequest = {
+      //     user : {name : user.name, id : authInfo.id},
+      //     isConnecting : true
+      //   }
+      //   socket?.emit(`auth`, authRequest)
+      // }      
+    }
+  }
   
   useEffect(() => {     
    
+    removeFromSocketList()
     handleSessionExpiration()
 
     return () => {

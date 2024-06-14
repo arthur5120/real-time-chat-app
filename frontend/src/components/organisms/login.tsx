@@ -68,7 +68,7 @@ const Login = () => {
 
           <div className='flex flex-row justify-center items-center bg-transparent my-3'>            
             <CustomButton value='Sign Up' type="reset" className='p-5 my-5' variationName="vartwo" onClick={() => onSignup()}/>
-            <CustomButton value='Sign In' className='p-5 my-5' variationName="varthree"/>              
+            <CustomButton value='Sign In' className='p-5 my-5' variationName="varthree"/>
           </div>
 
         </CustomForm>

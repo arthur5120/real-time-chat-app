@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
-import { TUser, TMessage, TChatMessage, TChatRoom } from '../../utils/types'
+import { TUser, TMessage, TChatMessage, TChatRoom, TSocketAuthRequest, TRes } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { convertDatetimeToMilliseconds, cropMessage, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
@@ -30,6 +30,7 @@ const Chat = () => {
   const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
   const [roomUsers, setRoomUsers] = useState<string[]>([])
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([])
   const [messages, setMessages] = useState<TChatMessage[]>([])
   const [messageBeingEdited, setMessageBeingEdited] = useState<TChatMessage & {previous ? : string}>(messagePlaceholder)
   const [hasErrors, setHasErrors] = useState(false)
@@ -52,9 +53,9 @@ const Chat = () => {
 
   const retrieveCurrentUser = async () => {
 
-    try {
+    try {      
 
-      const authInfo = await authStatus({})
+      const authInfo : TRes = await authStatus({})
       const user = await getUserById(authInfo.id)
   
       setCurrentUser({
@@ -63,6 +64,14 @@ const Chat = () => {
         email : user.email,
         role : authInfo.role,
       })
+
+      if (authInfo.authenticated) { 
+        const authRequest : TSocketAuthRequest = {
+          user : {name : user.name, id : authInfo.id},
+          isConnecting : true
+        }
+        socket?.emit(`auth`, authRequest)
+      }
 
     } catch(e) {
       setHasErrors(true)
@@ -109,7 +118,7 @@ const Chat = () => {
           id : sortedLocalRooms[0].id,
           selectId : 0, 
           name : sortedLocalRooms[0].name
-        })        
+        })
       } else if (!isNumberOfRoomsTheSame!) {        
         const updatedSelectId = sortedLocalRooms.findIndex((room) => room.id.trim() == currentRoom.id.trim())      
         setCurrentRoom({
@@ -158,7 +167,7 @@ const Chat = () => {
             
         const sortedMessages = sortByMilliseconds(convertedMessages)
 
-        setRoomUsers(userNameList)
+        setRoomUsers(userNameList)        
         setMessages(sortedMessages)        
 
       } catch (e) {
@@ -213,7 +222,7 @@ const Chat = () => {
       const savedMessageId = await createMessage(
         userInfo.id,
         currentRoom.id,
-        newMessage.content,    
+        newMessage.content,
         newMessage.user
       ) as string
 
@@ -249,7 +258,7 @@ const Chat = () => {
       await createChat()
 
       notifyUser(creationMessage, 'success')
-      socket?.emit('change', creationMessage)  
+      socket?.emit('change', creationMessage)
 
       setReload(reload + 1)
 
@@ -330,7 +339,7 @@ const Chat = () => {
     }
   }
 
-  const initialSetup = async () => {        
+  const initialSetup = async () => {     
     await retrieveCurrentUser()
     await createRoomIfNoneAreFound()
     await retrieveRooms()
@@ -378,7 +387,11 @@ const Chat = () => {
      socket?.on('change', (msg : string) => {
         notifyUser(msg, 'info')        
         setReload(reload + 1)              
-     })     
+     })    
+     
+     socket?.on(`auth`, (onlineUsers) => {
+      setOnlineUsers(onlineUsers)
+     })
 
      return () => {        
               
@@ -396,7 +409,7 @@ const Chat = () => {
 
      }
 
-  }, [rooms.length, messages.length, currentRoom.id, reload, auth, showNotifications])
+  }, [rooms.length, messages.length, onlineUsers.length, roomUsers.length, currentRoom.id, reload, auth, showNotifications])
   
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -480,7 +493,7 @@ const Chat = () => {
 
   const usersOnlineSection = verticalView ? 
   `flex hidden` : 
-  `flex flex-col mb-auto w-1/3 justify-end items-end text-end`
+  `flex flex-col mb-auto w-1/3 justify-end items-end text-end gap-3`
 
   const chatSectionStyle = verticalView ? 
   `flex flex-col justify-center items-center text-center gap-3`   : 
@@ -500,12 +513,23 @@ const Chat = () => {
 
       <section className={usersOnlineSection}>
 
-        <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2`} bg-slate-900 rounded-lg p-2 text-center items-center items`}>
-          <h3 className={`bg-white text-black rounded p-1`}>Users in Room</h3>
+        <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center items`}>
+          <h3 className={`bg-white text-black rounded p-1`}>Room Users</h3>
           {
             roomUsers.length > 0 ? 
               roomUsers.map((user) => {
-                return <p className=''>{user}</p>
+                return <p className=''>{cropMessage(user, 12)}</p>
+              }) : 
+            <p>...</p>
+          }
+        </div>
+
+        <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center items`}>
+          <h3 className={`bg-white text-black rounded p-1`}>Online Users</h3>          
+          {
+            onlineUsers?.length > 0 ? 
+              onlineUsers.map((user) => {
+                return <p className=''>{cropMessage(user, 12)}</p>
               }) : 
             <p>...</p>
           }
@@ -518,7 +542,7 @@ const Chat = () => {
         <div className={`flex justify-between ${primaryDefault} rounded-lg w-80`}>
 
           <h3 className='bg-transparent justify-start m-2'>
-            {(auth && currentUser?.name) ? `Chatting as ${currentUser.name} ` : `Chatting as Guest`}              
+            {(auth && currentUser?.name) ? `Chatting as ${cropMessage(currentUser.name, 12)} ` : `Chatting as Guest`}              
           </h3>
         
           <span className='flex bg-tranparent m-2 cursor-pointer gap-1'>            
@@ -685,8 +709,17 @@ const Chat = () => {
             variationName='varthree'
             className={`bg-yellow-700 active:bg-yellow-600 w-20 h-full m-0 flex items-center justify-center`}
             disabled={!!reload}
-            onClick={() => {
-              setVerticalView(!verticalView)
+            onClick={ async () => { 
+
+              const authInfo : TRes = await authStatus({})
+
+              const authRequest : TSocketAuthRequest = {
+                user: {id : authInfo.id}, 
+                isConnecting : false
+              }
+        
+              socket?.emit(`auth`, authRequest)
+                          
             }}
           />
 
