@@ -23,22 +23,20 @@ const Login = () => {
 
   const {auth, setAuth} = useContext(authContext)
   
-  const onSubmit = async (e : FormEvent<HTMLFormElement>) => { 
+  const onSubmit = async (e : FormEvent<HTMLFormElement>) => {    
     
     e.preventDefault()  
-    setLoading(true)
+    setLoading(true)    
 
     if (setAuth != null) {
       try {
         const serverResponse = await authLogin(data)
         setMessage(`${serverResponse.success ? 'Authenticated' : 'Invalid Credentials'}`)        
-        setAuth(true)
-        navigate('/chat-rooms')
-        setLoading(false)
+        serverResponse.success ? setAuth(true) : '' 
       } catch (e) {
         setMessage(`Invalid Credentials`)
-        setLoading(false)
       }
+      setLoading(false)
     }
     
   }
@@ -47,9 +45,9 @@ const Login = () => {
     navigate('/create-account')
   }
 
-  useEffect(() => { // Not working, auth returning false.
-    auth ? navigate('/chat-rooms') : ''    
-  }, [])
+  useEffect(() => {
+    auth ? navigate('/chat-rooms') : navigate('/login')
+  }, [auth])
 
   return (
 

@@ -8,21 +8,44 @@ let onlineUsers = []
 let onlineUsersNames = []
 
 setInterval(() => {
-    console.log('Disconnecting Users')    
-}, 15000)
+    console.log(`Currently Online : ${JSON.stringify(onlineUsersNames)}`)    
+}, 5000)
 
 const connectUser = (user) => {
-    const isUserOnline = onlineUsers.find((u) => u.id == user.id)
-    if (!isUserOnline) {
-        onlineUsers.push(user)
-        onlineUsersNames.push(user.name)
+    
+    try {
+        const isUserOnline = onlineUsers.find((u) => u.id == user.id)
+        console.log(`is User in list already? ${isUserOnline} ${!isUserOnline}`)
+        if (!isUserOnline) {            
+            onlineUsers.push(user)            
+            onlineUsersNames.push(user.name)
+        }
+        console.log(`Connecting : ${user.id}`)
+        console.log(`User added : ${JSON.stringify(onlineUsers[onlineUsers.length - 1])}`)
+    } catch (e) {
+        console.log(`Error while connecting : ${e}`)
     }
+    
 }
 
 const disconnectUser = (userId) => {
-    const onlineUserId = onlineUsers.findIndex((u) => u.id == userId)
-    onlineUsers.splice(onlineUserId, 1)
-    onlineUsersNames.splice(onlineUserId, 1)
+    
+   try {
+    
+        const onlineUserId = onlineUsers.findIndex((u) => u.id == userId)
+
+        console.log(`user found? ${onlineUserId} ${onlineUserId != -1}`)
+
+        if (onlineUserId != -1) {
+            onlineUsers.splice(onlineUserId, 1)
+            onlineUsersNames.splice(onlineUserId, 1)
+        }
+
+        console.log(`Disconnecting : ${userId}`)
+
+   } catch (e) {
+        console.log(`Error while disconnecting : ${e}`)
+   }
 }
 
 io.on('connection', (socket) => {   
@@ -30,7 +53,7 @@ io.on('connection', (socket) => {
     socket.on('room', (message) => { // Listening to Room
         console.log(JSON.stringify(message))
         io.emit('room', message)
-        //io.to(socket.id).emit('room', messages) // Sends String, Objects etc...        
+        //io.to(socket.id).emit('room', messages) // Sends String, Objects etc...
     })
 
     socket.on('change', (message) => {
@@ -43,32 +66,36 @@ io.on('connection', (socket) => {
         io.emit('messageChange', message)
     })
 
-    socket.on('auth', (authRequest) => {    
+    socket.on('auth', (authRequest) => {   
+        
+        console.log(`got request.`)
 
         try {
 
             const {user, isConnecting} = authRequest
             const dateNow = Date.now()
-            const expirationTime = dateNow + 15000
+            const expirationTime = dateNow
 
-            if (isConnecting == true) {
-                connectUser({...user, expirationTime})
-                io.emit(`auth`, onlineUsersNames)
-                console.log(`connecting`)
-            } else if (isConnecting == false) {
-                console.log(`trying to disconnect`)
-                console.log(JSON.stringify(user))
-                disconnectUser(user.id)
-                io.emit(`auth`, onlineUsersNames)
-                console.log(`disconnecting`)
-            } else {                 
-                console.log(`exception`)
+            if (user?.id && isConnecting == true) {                
+                //connectUser({...user, expirationTime : expirationTime})
+                connectUser(user)
+                return
             }
+            
+            if (user?.id && isConnecting == false) {
+                disconnectUser(user.id)
+                return
+            }            
 
         } catch (e) {
             console.log(`auth error ${e}`)
         }
 
+    })
+
+    socket.on(`authList`, () => {
+        console.log(`Yep.`)
+        io.emit(`auth`, `OK`)
     })
 
 })

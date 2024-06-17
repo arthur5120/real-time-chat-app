@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
-import { TUser, TMessage, TChatMessage, TChatRoom, TSocketAuthRequest, TRes } from '../../utils/types'
+import { TUser, TMessage, TChatMessage, TChatRoom, TRes } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { convertDatetimeToMilliseconds, cropMessage, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
@@ -41,7 +41,7 @@ const Chat = () => {
 
   const isCurrentRoomIdValid = currentRoom.id == '0' || currentRoom.id == '-1'
 
-  const {auth} = useContext(authContext)
+  const {auth, setAuth} = useContext(authContext)
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
 
@@ -56,7 +56,7 @@ const Chat = () => {
     try {      
 
       const authInfo : TRes = await authStatus({})
-      const user = await getUserById(authInfo.id)
+      const user = await getUserById(authInfo.id)      
   
       setCurrentUser({
         name : user.name,
@@ -65,13 +65,10 @@ const Chat = () => {
         role : authInfo.role,
       })
 
-      if (authInfo.authenticated) { 
-        const authRequest : TSocketAuthRequest = {
-          user : {name : user.name, id : authInfo.id},
-          isConnecting : true
-        }
-        socket?.emit(`auth`, authRequest)
-      }
+      // const redundantAuthRequest : TSocketAuthRequest = { 
+      //   user : {id: authInfo.id,name: user.name},
+      //   isConnecting : true
+      // }      
 
     } catch(e) {
       setHasErrors(true)
@@ -232,8 +229,9 @@ const Chat = () => {
       }      
 
       socket?.connect()
-
       socket?.emit('room', savedMessage)   
+      socket?.disconnect()
+
       addMessage(savedMessage)
       resetMessageContent()
 
@@ -259,6 +257,7 @@ const Chat = () => {
 
       notifyUser(creationMessage, 'success')
       socket?.emit('change', creationMessage)
+      socket?.disconnect() // Added After
 
       setReload(reload + 1)
 
@@ -282,7 +281,8 @@ const Chat = () => {
     try {      
       const deletionMessage = `All rooms deleted, a fresh one was created`
       await deleteAllChats()
-      socket?.emit('change', deletionMessage)          
+      socket?.emit('change', deletionMessage)        
+      socket?.disconnect() // Added after
       setReload(reload + 1)
     } catch (e) {
       setHasErrors(true)
@@ -348,6 +348,8 @@ const Chat = () => {
   }
 
   useEffect(() => {     
+
+    console.log(`Executing Chat Use Effect`)
     
     const timer = setTimeout(() => {      
       setDelay(0)
@@ -372,7 +374,7 @@ const Chat = () => {
         if(showNotifications) {
           notifyMessageInRoom(room)        
         }
-      }
+      }      
     })
     
     socket?.on('messageChange', (msg : string) => {
@@ -381,22 +383,20 @@ const Chat = () => {
           notifyUser(msg, 'info')        
         }
         setReload(reload + 1)        
-      }
+      }          
     })
 
      socket?.on('change', (msg : string) => {
         notifyUser(msg, 'info')        
         setReload(reload + 1)              
      })    
-     
-     socket?.on(`auth`, (onlineUsers) => {
-      setOnlineUsers(onlineUsers)
-     })
 
      return () => {        
-              
-        socket?.disconnect()
-        socket?.off()
+                      
+        //socket?.disconnect()
+        socket?.off('room')
+        socket?.off('messageChange')
+        socket?.off('change')        
         
         if (isCurrentRoomIdValid) {
           setReload(reload + 1)
@@ -409,7 +409,7 @@ const Chat = () => {
 
      }
 
-  }, [rooms.length, messages.length, onlineUsers.length, roomUsers.length, currentRoom.id, reload, auth, showNotifications])
+  }, [rooms.length, messages.length, roomUsers.length, currentRoom.id, reload, auth, showNotifications])
   
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -459,6 +459,7 @@ const Chat = () => {
         const editedMessage = messageBeingEdited?.previous ?  messageBeingEdited.previous : ''
         onExitMessageEditMode()
         socket?.emit('messageChange', `The message "${cropMessage(editedMessage)}" was deleted on ${currentRoom.name}`)
+        socket?.disconnect()
         break
       }
 
@@ -469,6 +470,7 @@ const Chat = () => {
           const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
           const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
           socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)
+          socket?.disconnect()
         break
       }   
 
@@ -709,17 +711,12 @@ const Chat = () => {
             variationName='varthree'
             className={`bg-yellow-700 active:bg-yellow-600 w-20 h-full m-0 flex items-center justify-center`}
             disabled={!!reload}
-            onClick={ async () => { 
-
-              const authInfo : TRes = await authStatus({})
-
-              const authRequest : TSocketAuthRequest = {
-                user: {id : authInfo.id}, 
-                isConnecting : false
-              }
-        
-              socket?.emit(`auth`, authRequest)
-                          
+            onClick={ async () => {                
+              notifyUser(`Button for testing stuff.`)    
+              socket?.connect()
+              socket?.emit(`authList`, {})      
+              socket?.disconnect()                
+              setReload(reload + 1)
             }}
           />
 

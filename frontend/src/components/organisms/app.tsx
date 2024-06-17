@@ -6,56 +6,86 @@ import { authContext } from "../../utils/contexts/auth-provider"
 import { toastContext } from "../../utils/contexts/toast-provider"
 import { socketContext } from "../../utils/contexts/socket-provider"
 import { TSocketAuthRequest, TRes } from "../../utils/types"
-import { authStatus, getUserById } from "../../hooks/useAxios"
+import { authStatus, getUserById, authLogout } from "../../hooks/useAxios"
 
 const App = () => {
 
-  const {auth, checkToken} = useContext(authContext)
+  const {auth, setAuth, checkToken} = useContext(authContext)
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
+  
   const [checkAuthStatus, setCheckAuthStatus] = useState(false)
-  const location = useLocation()  
+  const [previousAuth, setPreviousAuth] = useState(auth)      
+  const [noUpdate, SetNoUpdate] = useState(false)
+  const location = useLocation()    
 
   const timer = setInterval(() => {
     auth ? setCheckAuthStatus(!checkAuthStatus) : ''
   }, 15000)
 
-  const handleSessionExpiration = async () => {
-    console.log(`Checking for Authentication Status...`)      
-    const result = checkToken ? await checkToken() : ''
-    if(auth) {
-      !result ? notifyUser(`Logged out`) : ''
-      console.log(`Authentication Status Result : ${result}`)
-    }
-  }
+  const handleSocketOnlineList = async () => {    
 
-  const removeFromSocketList = async () => {
-    if (!auth) {
-      const authInfo : TRes = await authStatus({})
-      const authRequest : TSocketAuthRequest = {
-        user: {id : authInfo.id}, 
-        isConnecting : false
-      }        
-      socket?.emit(`auth`, authRequest)
-    } else {
-      // const authInfo : TRes = await authStatus({})
-      // const user = await getUserById(authInfo.id)
-      // if (authInfo.authenticated) { 
-      //   const authRequest : TSocketAuthRequest = {
-      //     user : {name : user.name, id : authInfo.id},
-      //     isConnecting : true
-      //   }
-      //   socket?.emit(`auth`, authRequest)
-      // }      
-    }
-  }
+    const authInfo : TRes = await authStatus({})  
+    
+    console.log(`localAuth : ${auth}, serverAuth : ${authInfo.authenticated}`)
+    
+      try {
+
+        socket?.connect()
   
-  useEffect(() => {     
-   
-    removeFromSocketList()
-    handleSessionExpiration()
+        if (auth && authInfo.id != `none`) {             
+          const user = await getUserById(authInfo.id)
+          const authRequest : TSocketAuthRequest = {user : {name : user.name, id : authInfo.id}, isConnecting : true}                        
+          socket?.emit(`auth`, authRequest)
+          //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
+          return
+        }
+    
+        if (!auth && authInfo.id != `none`) {           
+          const authRequest : TSocketAuthRequest = {user: {id : authInfo.id}, isConnecting : false}                                
+          socket?.emit(`auth`, authRequest)
+          await authLogout({}) // Logout if auth is false.
+          //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
+          return
+        } 
 
-    return () => {
+        //socket?.disconnect()
+        socket?.off('auth')
+
+      } catch (e) {
+        notifyUser(e)
+      }      
+    
+  }
+
+  const handleSessionExpiration = async () => {            
+    const authenticated = checkToken ? await checkToken() : ''    
+    if (!authenticated) {                           
+      setAuth ? setAuth(false) : '' // Only updates on next render
+      auth ? notifyUser(`Logged out`) : ''
+      SetNoUpdate(true)         
+    } else if (!auth) {          
+      setAuth ? setAuth(true) : '' // Makes the function run a second time unnecessarily
+      SetNoUpdate(true)
+    }    
+  } 
+  
+  useEffect(() => {
+    
+    const delay = setTimeout(() => { // avoids flicking on auth change
+      SetNoUpdate(false)
+      if (!noUpdate && auth != previousAuth) {
+        handleSessionExpiration()
+      }
+    }, 1000)
+
+    if (auth != previousAuth) {            
+      handleSocketOnlineList()
+      setPreviousAuth(auth)
+    }
+
+    return () => {  
+      clearTimeout(delay)
       clearInterval(timer)
     }
      

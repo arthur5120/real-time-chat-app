@@ -10,3 +10,4 @@
 # Upon creatin a new room, the current room is not updated, showing the messages from the previous room. [DONE]
 # Make visualization mode vertical or horizontal optionally.
 # Fix Chat/Users Refresh bug, something to do with the socket.
+# Unify login/logout into the auth-provider (handling cookies, socket, state) currently on : login, apps and auth-provider files.

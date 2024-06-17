@@ -68,8 +68,7 @@ export const midGetRandomName = () => {
     const randomNumber = Math.floor(Math.random() * 999)
     const randomRoomNumber = Math.floor(Math.random() * (rooms.length - 1))
     const roomName = rooms[randomRoomNumber]
-
-    console.log(`generated number ${randomNumber}`)
+    
     const generatedName = `
       ${adjectives[randomNumber % 10]}
       ${colors[Math.floor(randomNumber / 10) % 10]}  
