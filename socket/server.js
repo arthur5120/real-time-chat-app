@@ -77,8 +77,7 @@ io.on('connection', (socket) => {
             const expirationTime = dateNow
 
             if (user?.id && isConnecting == true) {                
-                //connectUser({...user, expirationTime : expirationTime})
-                connectUser(user)
+                connectUser({...user, expirationTime : expirationTime})                
                 return
             }
             

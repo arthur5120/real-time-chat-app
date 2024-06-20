@@ -23,7 +23,9 @@ const Login = () => {
 
   const {auth, setAuth} = useContext(authContext)
   
-  const onSubmit = async (e : FormEvent<HTMLFormElement>) => {    
+  const onSubmit = async (e : FormEvent<HTMLFormElement>) => {   
+    
+    console.log(`Pressing Submit Button`)
     
     e.preventDefault()  
     setLoading(true)    

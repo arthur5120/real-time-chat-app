@@ -8,22 +8,23 @@ const AuthBanner = () => {
     const [authColor, setAuthColor] = useState('')
     const [authText, setAuthText] = useState('')
   
-    useEffect(() => {
+    useEffect(() => {      
 
-      const intervalId = setInterval(() => {
+      const intervalId = setTimeout(() => { 
 
         if (auth) {
-            setAuthText(`Authenticated with ${role == 'Admin' ? 'Administrator' : role} Privileges`)
-            setAuthColor('bg-emerald-600')
+          console.log(`changing banner`)
+          setAuthText(`Authenticated with ${role == 'Admin' ? 'Administrator' : role} Privileges`)
+          setAuthColor('bg-emerald-600')
         } else {
-            setAuthText('Not Authenticated')
-            setAuthColor('bg-red-600')
+          setAuthText('Not Authenticated')
+          setAuthColor('bg-red-600')
         }
 
       }, 50)
   
       return () => {
-        clearInterval(intervalId)
+        clearTimeout(intervalId)
       }
 
     }, [auth, role])

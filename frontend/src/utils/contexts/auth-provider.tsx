@@ -5,8 +5,7 @@ import {
   ReactElement, 
   Dispatch, 
   SetStateAction,
-  useEffect,
-  useMemo,   
+  useEffect,  
 } from 'react';
 
 import { authStatus } from '../../hooks/useAxios';
@@ -16,7 +15,7 @@ type TAuth = {
   setAuth ? : Dispatch<SetStateAction<boolean>>
   role ? : string,
   setRole ? : Dispatch<SetStateAction<string>>
-  checkToken ? : Function
+  getAuthTokenStatus ? : Function
 }
 
 export const authContext = createContext<TAuth>({})
@@ -27,6 +26,7 @@ const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
   const [role, setRole] = useState('none')  
 
   const getAuthTokenStatus = async () => {
+    console.log(`auth-provider : getAuthTokenStatus`)
     try {
       const {authenticated} = await authStatus({})
       return authenticated
@@ -35,7 +35,7 @@ const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
     }
   }
 
-  const updateBannerRole = async () => {
+  const updateBannerRole = async () => {    
     if(auth) {
       const {role} = await authStatus({})
       setRole(role)
@@ -49,7 +49,7 @@ const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
   }, [auth])
 
   return (
-    <authContext.Provider value={{auth, setAuth, role, setRole, checkToken: getAuthTokenStatus}}>
+    <authContext.Provider value={{auth, setAuth, role, setRole, getAuthTokenStatus}}>
       {children}
     </authContext.Provider>
   )

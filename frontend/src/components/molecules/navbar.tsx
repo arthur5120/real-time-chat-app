@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react'
+import { useContext } from 'react'
 import { Link } from 'react-router-dom'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -13,7 +13,8 @@ const Navbar = () => {
   const {auth, setAuth} = useContext(authContext)    
 
   const logout = async () => {    
-    if (setAuth) {
+    console.log(`Pressing logout button.`)
+    if (setAuth) {      
       setAuth(false)
       //await authLogout({})
     }

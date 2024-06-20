@@ -10,7 +10,7 @@ import { authStatus, getUserById, authLogout } from "../../hooks/useAxios"
 
 const App = () => {
 
-  const {auth, setAuth, checkToken} = useContext(authContext)
+  const {auth, setAuth, setRole, getAuthTokenStatus} = useContext(authContext)
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
   
@@ -18,10 +18,6 @@ const App = () => {
   const [previousAuth, setPreviousAuth] = useState(auth)      
   const [noUpdate, SetNoUpdate] = useState(false)
   const location = useLocation()    
-
-  const timer = setInterval(() => {
-    auth ? setCheckAuthStatus(!checkAuthStatus) : ''
-  }, 15000)
 
   const handleSocketOnlineList = async () => {    
 
@@ -35,6 +31,7 @@ const App = () => {
   
         if (auth && authInfo.id != `none`) {             
           const user = await getUserById(authInfo.id)
+          setRole ? setRole(authInfo.role) : ''
           const authRequest : TSocketAuthRequest = {user : {name : user.name, id : authInfo.id}, isConnecting : true}                        
           socket?.emit(`auth`, authRequest)
           //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
@@ -43,6 +40,7 @@ const App = () => {
     
         if (!auth && authInfo.id != `none`) {           
           const authRequest : TSocketAuthRequest = {user: {id : authInfo.id}, isConnecting : false}                                
+          setRole ? setRole('none') : ''
           socket?.emit(`auth`, authRequest)
           await authLogout({}) // Logout if auth is false.
           //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
@@ -59,25 +57,31 @@ const App = () => {
   }
 
   const handleSessionExpiration = async () => {            
-    const authenticated = checkToken ? await checkToken() : ''    
+    const authenticated = getAuthTokenStatus ? await getAuthTokenStatus() : ''    
     if (!authenticated) {                           
       setAuth ? setAuth(false) : '' // Only updates on next render
-      auth ? notifyUser(`Logged out`) : ''
+      auth ? notifyUser(`Logged out`) : ''      
+      console.log(`handleSessionExpiration : auth to false`)
       SetNoUpdate(true)         
     } else if (!auth) {          
       setAuth ? setAuth(true) : '' // Makes the function run a second time unnecessarily
       SetNoUpdate(true)
+      console.log(`handleSessionExpiration : auth to true`)
     }    
-  } 
+  }
   
-  useEffect(() => {
+   const timer = setInterval(() => {
+     setCheckAuthStatus(!checkAuthStatus)
+   }, 15000)
+  
+   useEffect(() => {
     
     const delay = setTimeout(() => { // avoids flicking on auth change
       SetNoUpdate(false)
       if (!noUpdate && auth != previousAuth) {
         handleSessionExpiration()
       }
-    }, 1000)
+    }, 500)
 
     if (auth != previousAuth) {            
       handleSocketOnlineList()

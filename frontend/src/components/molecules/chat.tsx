@@ -28,20 +28,21 @@ const Chat = () => {
   const [rooms, setRooms] = useState<TRooms>(roomsPlaceholder)
   const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
   const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
-  const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
   const [roomUsers, setRoomUsers] = useState<string[]>([])
   const [onlineUsers, setOnlineUsers] = useState<string[]>([])
+  const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
   const [messages, setMessages] = useState<TChatMessage[]>([])
   const [messageBeingEdited, setMessageBeingEdited] = useState<TChatMessage & {previous ? : string}>(messagePlaceholder)
   const [hasErrors, setHasErrors] = useState(false)
   const [showNotifications, setShowNotifications] = useState(true)
+  const [firstLoad, setFirstLoad] = useState(true) // Prevents disconnecting the socket too early.
   const [reload, setReload] = useState(1)
   const [delay, setDelay] = useState(0)
   const [verticalView, setVerticalView] = useState(false)
 
   const isCurrentRoomIdValid = currentRoom.id == '0' || currentRoom.id == '-1'
 
-  const {auth, setAuth} = useContext(authContext)
+  const {auth} = useContext(authContext)
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
 
@@ -68,7 +69,7 @@ const Chat = () => {
       // const redundantAuthRequest : TSocketAuthRequest = { 
       //   user : {id: authInfo.id,name: user.name},
       //   isConnecting : true
-      // }      
+      // }
 
     } catch(e) {
       setHasErrors(true)
@@ -134,7 +135,7 @@ const Chat = () => {
     
   }
 
-  const retrieveMessages = async () => {      
+  const retrieveMessages = async () => {    
     
       try {
 
@@ -164,8 +165,8 @@ const Chat = () => {
             
         const sortedMessages = sortByMilliseconds(convertedMessages)
 
-        setRoomUsers(userNameList)        
-        setMessages(sortedMessages)        
+        setRoomUsers(userNameList)
+        setMessages(sortedMessages)
 
       } catch (e) {
         setHasErrors(true)
@@ -173,7 +174,7 @@ const Chat = () => {
 
   }
 
-  const addMessage = async (newMessage : TChatMessage) => { // Removed Async
+  const addMessage = async (newMessage : TChatMessage) => { // Removed Async    
     setMessages((rest) => ([
       ...rest, 
       newMessage
@@ -227,10 +228,9 @@ const Chat = () => {
         id : savedMessageId, 
         ...newMessage
       }      
-
+      
       socket?.connect()
-      socket?.emit('room', savedMessage)   
-      socket?.disconnect()
+      socket?.emit('room', savedMessage)
 
       addMessage(savedMessage)
       resetMessageContent()
@@ -256,8 +256,8 @@ const Chat = () => {
       await createChat()
 
       notifyUser(creationMessage, 'success')
-      socket?.emit('change', creationMessage)
-      socket?.disconnect() // Added After
+      socket?.connect()
+      socket?.emit('change', creationMessage)      
 
       setReload(reload + 1)
 
@@ -281,8 +281,8 @@ const Chat = () => {
     try {      
       const deletionMessage = `All rooms deleted, a fresh one was created`
       await deleteAllChats()
-      socket?.emit('change', deletionMessage)        
-      socket?.disconnect() // Added after
+      socket?.connect()      
+      socket?.emit('change', deletionMessage)              
       setReload(reload + 1)
     } catch (e) {
       setHasErrors(true)
@@ -335,7 +335,7 @@ const Chat = () => {
       await createRoom()
       setDelay(5000)
     } else {
-      notifyUser(`Please Wait a Moment`,`warning`)      
+      notifyUser(`Please Wait a Moment`,`warning`)
     }
   }
 
@@ -347,15 +347,15 @@ const Chat = () => {
     resetMessageContent()
   }
 
-  useEffect(() => {     
+  useEffect(() => {
 
     console.log(`Executing Chat Use Effect`)
     
-    const timer = setTimeout(() => {      
+    const timer = setTimeout(() => {
       setDelay(0)
     }, delay)
 
-    if(hasErrors) {      
+    if(hasErrors) {
       notifyUser(`Something Went Wrong, please try again later`, `warning`)
       setHasErrors(false)
     }
@@ -372,38 +372,44 @@ const Chat = () => {
         addMessage(msg)        
       } else {
         if(showNotifications) {
-          notifyMessageInRoom(room)        
+          notifyMessageInRoom(room)
         }
-      }      
+      }
     })
     
     socket?.on('messageChange', (msg : string) => {
       if(msg) {
         if(showNotifications) {
-          notifyUser(msg, 'info')        
+          notifyUser(msg, 'info')
         }
-        setReload(reload + 1)        
-      }          
+        setReload(reload + 1)
+      }
     })
 
      socket?.on('change', (msg : string) => {
         notifyUser(msg, 'info')        
-        setReload(reload + 1)              
-     })    
+        setReload(reload + 1)
+     })             
 
-     return () => {        
-                      
-        //socket?.disconnect()
+     return () => {  
+      
         socket?.off('room')
         socket?.off('messageChange')
-        socket?.off('change')        
-        
+        socket?.off('change')          
+
+        if(!firstLoad) {
+          socket?.disconnect()
+        } else {
+          setFirstLoad(false)
+        }
+               
         if (isCurrentRoomIdValid) {
           setReload(reload + 1)
         } else {
           setReload(0)
-        }
+        }        
 
+        setMessageBeingEdited({...messagePlaceholder, previous : ''})
         clearTimeout(timer)
         scrollToLatest()
 
@@ -411,29 +417,25 @@ const Chat = () => {
 
   }, [rooms.length, messages.length, roomUsers.length, currentRoom.id, reload, auth, showNotifications])
   
-  const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
+  const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {    
 
-    const selectedMessage = e.target as HTMLSpanElement         
+    
+    const selectedMessage = e.target as HTMLSpanElement
     const selectedMessageId = selectedMessage.dataset.id
-    const previousMessagge = selectedMessage.textContent ? selectedMessage.textContent : ''
-
+    const previousMessage = selectedMessage.textContent ? selectedMessage.textContent : ''
+      
     setMessageBeingEdited({
-      ...messageBeingEdited, 
+      ...messageBeingEdited,
       id : selectedMessageId,
-      previous : previousMessagge
+      previous : previousMessage
     })
 
-  }
-
-  const onExitMessageEditMode = async () => {
-    setReload(reload + 1)
-    setMessageBeingEdited({...messagePlaceholder, previous : ''})
   }
 
   const onInputEditableMessage = async (e : React.FormEvent<HTMLSpanElement>) => {    
     const element = e.target as HTMLSpanElement
     const msg = element?.textContent ? element.textContent : ''
-    setMessageBeingEdited({...messageBeingEdited, content : msg})
+    setMessageBeingEdited({...messageBeingEdited, content : msg})    
   }
 
   const onClickEditModeIcon = async (e : React.MouseEvent<HTMLHeadingElement, MouseEvent>) => {
@@ -443,42 +445,43 @@ const Chat = () => {
 
     switch(action) {
 
-      case 'edit' : {        
-        const selectedMessage = messageContainerRef.current as HTMLSpanElement         
+      //BUGHERE
+
+      case 'edit' : {         
+        const selectedMessage = messageContainerRef.current as HTMLSpanElement
         const selectedMessageId = selectedMessage.dataset.id
         setMessageBeingEdited({
           ...messageBeingEdited, 
           id : selectedMessageId
-        })                  
-        messageContainerRef.current?.focus()
+        })
+        messageContainerRef.current?.focus()        
         break
       }
 
-      case 'delete' : {
+      case 'delete' : {        
         messageBeingEdited.id ? await deleteMessage(messageBeingEdited.id) : ''
         const editedMessage = messageBeingEdited?.previous ?  messageBeingEdited.previous : ''
-        onExitMessageEditMode()
         socket?.emit('messageChange', `The message "${cropMessage(editedMessage)}" was deleted on ${currentRoom.name}`)
-        socket?.disconnect()
+        setMessageBeingEdited({...messagePlaceholder, previous : ''})      
+        setReload(reload + 1)
         break
       }
 
-      case 'confirm' : {                   
-          messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''                    
-          messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''          
-          onExitMessageEditMode()
+      case 'confirm' : {
+          messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
+          messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
           const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
           const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
-          socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)
-          socket?.disconnect()
+          socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)                    
+          setMessageBeingEdited({...messagePlaceholder, previous : ''})      
+          setReload(reload + 1)
         break
       }   
 
-      case 'cancel' : {
+      case 'cancel' : {        
         if (messageBeingEdited.previous) {
           messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.previous : ''
-        }
-        onExitMessageEditMode()        
+        }        
         break
       }
 
@@ -507,7 +510,7 @@ const Chat = () => {
 
   const buttonDivStyle = verticalView ? 
   `flex justify-between w-80 gap-3 my-2` : 
-  `flex flex-col justify-between h-80 gap-3 mx-2`  
+  `flex flex-col justify-between h-80 gap-3 mx-2`
 
   return (    
 
@@ -549,14 +552,22 @@ const Chat = () => {
         
           <span className='flex bg-tranparent m-2 cursor-pointer gap-1'>            
 
-            <button title={`Room info`} onClick={() => notifyUser(`Messages : ${messages.length}, Users : ${roomUsers.length}`)} className='bg-[#050D20] hover:bg-black rounded-lg'>                          
+            <button 
+              title={`Room info`} 
+              disabled={!!reload || firstLoad}
+              onClick={() => notifyUser(`Messages : ${messages.length}, Users : ${roomUsers.length}`)} 
+              className='bg-[#050D20] hover:bg-black rounded-lg disabled:cursor-not-allowed'>                          
               <FontAwesomeIcon icon={faCircleInfo} width={48} height={48}/>
             </button>
             
-            <button title={`Toggle hide/show message notifications from other chats`} onClick={() => setShowNotifications(!showNotifications)} className='bg-[#050D20] hover:bg-black rounded-lg'>
-              {!showNotifications ? 
-              <FontAwesomeIcon icon={faEyeSlash} width={48} height={48}/> : 
-              <FontAwesomeIcon icon={faEye} width={48} height={48}/>}
+            <button 
+                title={`Toggle hide/show message notifications from other chats`} 
+                disabled={!!reload || firstLoad}
+                onClick={() => setShowNotifications(!showNotifications)} 
+                className='bg-[#050D20] hover:bg-black rounded-lg disabled:cursor-not-allowed'>
+                {!showNotifications ? 
+                <FontAwesomeIcon icon={faEyeSlash} width={48} height={48}/> : 
+                <FontAwesomeIcon icon={faEye} width={48} height={48}/>}
             </button>
             
           </span>
@@ -565,11 +576,14 @@ const Chat = () => {
 
         <div className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll`} ref={chatContainerRef}> 
 
-          { messages?.map((message, id) => { 
+          {messages?.map((message, id) => {
 
             const isUserSender = currentUser.name == message.user
             const isMessageSelected = message.id == messageBeingEdited.id
-            const isMessageFocused = document.activeElement == messageContainerRef.current                      
+            const isMessageFocused = document.activeElement == messageContainerRef.current
+            console.log(`${message.id}`)            
+            
+            console.log(`isUserSender : ${isUserSender}, isMessageSelected : ${isMessageSelected}, isMessageFocused : ${isMessageFocused},`)
             
             return (
 
@@ -582,25 +596,29 @@ const Chat = () => {
                 <span 
 
                   data-id={message.id}
-                  ref={messageBeingEdited.id == message.id ? messageContainerRef : null}
+                  ref={isMessageSelected ? messageContainerRef : null}
                   className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 ${primaryDefault} rounded max-w-48 h-fit break-words cursor-pointer`}
                   contentEditable={isUserSender && isMessageSelected}
 
-                  onClick={(e) => onEnterMessageEditMode(e)}
-                  onInput={(e) => onInputEditableMessage(e)}
+                  onClick={(e) => {                    
+                    onEnterMessageEditMode(e)
+                  }}
+
+                  onInput={(e) => {
+                    onInputEditableMessage(e)
+                  }}
 
                   onBlur={() => {                  
                     if (!messageBeingEdited.content) {
                       messageContainerRef.current ? messageContainerRef.current.textContent = message.content : ''
-                      onExitMessageEditMode()
+                      setMessageBeingEdited({...messagePlaceholder, previous : ''})
+                      setReload(reload + 1)
                     }
                   }}
 
                 > 
 
-                  <h5 key={`msg-content-${id}`} className='bg-transparent' data-id={message.id}>
-                    {message.content}
-                  </h5>
+                  {message.content}
 
                 </span>
               
@@ -622,7 +640,7 @@ const Chat = () => {
 
             )
 
-          })}      
+          })}
             
         </div>
 
@@ -642,7 +660,7 @@ const Chat = () => {
           <CustomButton
             value={'Send'}
             className='p-2 bg-[#aa5a95] text-white rounded-lg m-1 active:bg-[#bd64a5]'
-            disabled={!!reload}
+            disabled={!!reload || firstLoad}
             onClick={() => sendMessage()}
           />
 
@@ -655,6 +673,7 @@ const Chat = () => {
             <CustomSelect    
               name='Current Chat Room' 
               ref={chatRoomContainerRef}
+              disabled={!!reload || firstLoad}
               onChange={(e) => onSelectChange(e)}
               className={`bg-slate-900 w-80 text-center hover:bg-black`}
               title={`Messages : ${messages.length}, Users : ${roomUsers.length}`}
@@ -668,7 +687,8 @@ const Chat = () => {
                 value={currentRoom.id}
               /> : 
             <CustomSelect
-              name='Current Chat Room'            
+              name='Current Chat Room'
+              disabled={!!reload || firstLoad}
               className={`bg-slate-900 w-80`}
               values={[{name : '...'}]}
             />
@@ -686,7 +706,7 @@ const Chat = () => {
             value={'New Room'}
             variationName='varthree'
             className={`w-20 h-full m-0 flex items-center justify-center`}
-            disabled={!!reload}
+            disabled={!!reload || firstLoad}
             onClick={() => onNewRoomClick()}
           />
         
@@ -694,7 +714,7 @@ const Chat = () => {
             value={'Reset Rooms'}
             variationName='vartwo'
             className={`w-20 h-full m-0 flex items-center justify-center`}
-            disabled={!!reload}
+            disabled={!!reload || firstLoad}
             onClick={() => onResetRoomsClick()}
           />
 
@@ -702,7 +722,7 @@ const Chat = () => {
             value={`Get 🐜`}
             variationName='varthree'
             className={`bg-green-700 active:bg-green-600 w-20 h-full m-0 flex items-center justify-center`}
-            disabled={!!reload}
+            disabled={!!reload || firstLoad}
             onClick={() => notifyUser(`If the chat happens to go blank, please refresh the page.`)}
           />
           
@@ -710,19 +730,23 @@ const Chat = () => {
             value={`Test 🦾`}
             variationName='varthree'
             className={`bg-yellow-700 active:bg-yellow-600 w-20 h-full m-0 flex items-center justify-center`}
-            disabled={!!reload}
+            disabled={!!reload || firstLoad}
             onClick={ async () => {                
-              notifyUser(`Button for testing stuff.`)    
-              socket?.connect()
-              socket?.emit(`authList`, {})      
-              socket?.disconnect()                
-              setReload(reload + 1)
+              setMessageBeingEdited({...messagePlaceholder, previous : 'This is a fake message'})            
             }}
           />
 
        </div>
 
       </section>          
+
+          <div className='flex fixed self-end w-70 h-70 bg-black p-5 mt-50 rounded-lg'>
+            <h3>
+              {/* {messageContainerRef.current?.textContent} */}
+              <h3>ID : {`[${messageBeingEdited.id}]`}, Content : {`[${messageBeingEdited.content}]`}</h3>
+              <h3>ID : {`[${messageContainerRef.current?.dataset.id}]`}, Content : {`[${messageContainerRef.current?.textContent}]`}</h3>
+            </h3>
+          </div>
 
     </section>      
     

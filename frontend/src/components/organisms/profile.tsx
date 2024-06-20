@@ -35,7 +35,11 @@ const Profile = () => {
     }
     
     useEffect(() => {
-        auth ? getUserInfo() : navigate('/login')
+        if(auth) {
+            getUserInfo()
+        } else {
+            navigate('/login')
+        }        
     }, [])
 
     return (
