@@ -8,19 +8,19 @@ import { createUser, getUsers } from "../../hooks/useAxios"
 import { validateUser } from "../../utils/validation-functions"
 import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
 
+const fieldList : TFieldKeys[] = [
+  'name',
+  'email',
+  'username',    
+  'password',
+]
+
 const CreateAccount = () => {
 
   const [data, setData] = useState<TUser>(userPlaceholder)
   const [dataCollection, setDataCollection] = useState<TUser[]>([userPlaceholder])
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
-  
-  const fieldList : TFieldKeys[] = [
-    'name',
-    'email',
-    'username',    
-    'password',
-  ]
 
   const fetchUsers = async () => {
     setLoading(true)

@@ -42,7 +42,7 @@ const Chat = () => {
 
   const isCurrentRoomIdValid = currentRoom.id == '0' || currentRoom.id == '-1'
 
-  const {auth} = useContext(authContext)
+  const {auth, setAuth} = useContext(authContext)
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
 
@@ -389,13 +389,14 @@ const Chat = () => {
      socket?.on('change', (msg : string) => {
         notifyUser(msg, 'info')        
         setReload(reload + 1)
-     })             
+     })     
 
      return () => {  
       
         socket?.off('room')
         socket?.off('messageChange')
         socket?.off('change')          
+        socket?.off('auth')
 
         if(!firstLoad) {
           socket?.disconnect()
@@ -731,22 +732,14 @@ const Chat = () => {
             variationName='varthree'
             className={`bg-yellow-700 active:bg-yellow-600 w-20 h-full m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad}
-            onClick={ async () => {                
-              setMessageBeingEdited({...messagePlaceholder, previous : 'This is a fake message'})            
+            onClick={ async () => {                              
+              notifyUser(`Button for testing stuff.`)
             }}
           />
 
        </div>
 
-      </section>          
-
-          <div className='flex fixed self-end w-70 h-70 bg-black p-5 mt-50 rounded-lg'>
-            <h3>
-              {/* {messageContainerRef.current?.textContent} */}
-              <h3>ID : {`[${messageBeingEdited.id}]`}, Content : {`[${messageBeingEdited.content}]`}</h3>
-              <h3>ID : {`[${messageContainerRef.current?.dataset.id}]`}, Content : {`[${messageContainerRef.current?.textContent}]`}</h3>
-            </h3>
-          </div>
+      </section>
 
     </section>      
     

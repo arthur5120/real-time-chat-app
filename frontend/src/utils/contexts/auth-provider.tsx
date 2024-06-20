@@ -25,8 +25,7 @@ const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
   const [auth, setAuth] = useState(false)
   const [role, setRole] = useState('none')  
 
-  const getAuthTokenStatus = async () => {
-    console.log(`auth-provider : getAuthTokenStatus`)
+  const getAuthTokenStatus = async () => {    
     try {
       const {authenticated} = await authStatus({})
       return authenticated

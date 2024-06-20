@@ -4,20 +4,14 @@ import { authContext } from '../../utils/contexts/auth-provider'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser, faComment, faSignIn, faSignOut } from '@fortawesome/free-solid-svg-icons'
 
-//import { authLogout } from '../../hooks/useAxios'
-
 const LinkStyle = `flex flex-col gap-1 bg-slate-900 text-white rounded-xl p-3 my-2 active:bg-black`
 
 const Navbar = () => {
 
   const {auth, setAuth} = useContext(authContext)    
 
-  const logout = async () => {    
-    console.log(`Pressing logout button.`)
-    if (setAuth) {      
-      setAuth(false)
-      //await authLogout({})
-    }
+  const logout = async () => {            
+    setAuth ? setAuth(false) : ''
   }
 
   return (

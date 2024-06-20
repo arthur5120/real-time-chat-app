@@ -9,23 +9,27 @@ import { authContext } from "../../utils/contexts/auth-provider"
 import { useNavigate } from "react-router-dom"
 import { primaryDefault, secondaryDefault } from "../../utils/tailwindVariations"
 
+const fieldList : TFieldKeys[] = [
+  'email',
+  'password',
+]
+
+const mockUserData = {
+  ...userPlaceholder, 
+  email : 'mockuser@hotmail.com', 
+  password : 'Password@123'
+}
+
 const Login = () => {  
 
-  const [data, setData] = useState<TUser>({...userPlaceholder, email : 'mockuser@hotmail.com', password : 'Password@123'})
+  const {auth, setAuth} = useContext(authContext)
+  const [data, setData] = useState<TUser>(mockUserData)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
-  const navigate = useNavigate()
-  
-  const fieldList : TFieldKeys[] = [
-    'email',
-    'password',
-  ]
 
-  const {auth, setAuth} = useContext(authContext)
+  const navigate = useNavigate() 
   
-  const onSubmit = async (e : FormEvent<HTMLFormElement>) => {   
-    
-    console.log(`Pressing Submit Button`)
+  const onSubmit = async (e : FormEvent<HTMLFormElement>) => {       
     
     e.preventDefault()  
     setLoading(true)    

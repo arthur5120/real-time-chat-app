@@ -17,13 +17,13 @@ const App = () => {
   const [checkAuthStatus, setCheckAuthStatus] = useState(false)
   const [previousAuth, setPreviousAuth] = useState(auth)      
   const [noUpdate, SetNoUpdate] = useState(false)
-  const location = useLocation()    
+  const location = useLocation()  
 
   const handleSocketOnlineList = async () => {    
 
     const authInfo : TRes = await authStatus({})  
     
-    console.log(`localAuth : ${auth}, serverAuth : ${authInfo.authenticated}`)
+    //console.log(`localAuth : ${auth}, serverAuth : ${authInfo.authenticated}`)
     
       try {
 
@@ -47,8 +47,8 @@ const App = () => {
           return
         } 
 
-        //socket?.disconnect()
         socket?.off('auth')
+        //socket?.disconnect()
 
       } catch (e) {
         notifyUser(e)
@@ -59,41 +59,43 @@ const App = () => {
   const handleSessionExpiration = async () => {            
     const authenticated = getAuthTokenStatus ? await getAuthTokenStatus() : ''    
     if (!authenticated) {                           
-      setAuth ? setAuth(false) : '' // Only updates on next render
-      auth ? notifyUser(`Logged out`) : ''      
-      console.log(`handleSessionExpiration : auth to false`)
+      setAuth ? setAuth(false) : ''
+      auth ? notifyUser(`Logged out`) : ''
       SetNoUpdate(true)         
     } else if (!auth) {          
-      setAuth ? setAuth(true) : '' // Makes the function run a second time unnecessarily
-      SetNoUpdate(true)
-      console.log(`handleSessionExpiration : auth to true`)
+      setAuth ? setAuth(true) : ''
+      SetNoUpdate(true)      
     }    
   }
   
-   const timer = setInterval(() => {
-     setCheckAuthStatus(!checkAuthStatus)
-   }, 15000)
-  
-   useEffect(() => {
-    
-    const delay = setTimeout(() => { // avoids flicking on auth change
+  const timer = setInterval(() => {
+    setCheckAuthStatus(!checkAuthStatus)
+  }, 15000)
+
+  useEffect(() => { 
+
+    const delay = setTimeout(() => { // avoids flicking on UI
       SetNoUpdate(false)
-      if (!noUpdate && auth != previousAuth) {
+      if (!noUpdate) {
         handleSessionExpiration()
       }
     }, 500)
+
+    return () => {  
+      clearTimeout(delay)
+      clearInterval(timer)
+    }
+
+  }, [location, checkAuthStatus])
+  
+  useEffect(() => {
 
     if (auth != previousAuth) {            
       handleSocketOnlineList()
       setPreviousAuth(auth)
     }
 
-    return () => {  
-      clearTimeout(delay)
-      clearInterval(timer)
-    }
-     
-  }, [location, auth, checkAuthStatus])
+  }, [location, auth])
 
   return (
 
