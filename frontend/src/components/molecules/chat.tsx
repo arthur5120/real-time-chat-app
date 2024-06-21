@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
-import { TUser, TMessage, TChatMessage, TChatRoom, TRes } from '../../utils/types'
+import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { convertDatetimeToMilliseconds, cropMessage, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
@@ -66,11 +66,6 @@ const Chat = () => {
         role : authInfo.role,
       })
 
-      // const redundantAuthRequest : TSocketAuthRequest = { 
-      //   user : {id: authInfo.id,name: user.name},
-      //   isConnecting : true
-      // }
-
     } catch(e) {
       setHasErrors(true)
     }
@@ -127,7 +122,7 @@ const Chat = () => {
         setReload(reload + 1)
       }
 
-      setRooms(sortedLocalRooms)      
+      setRooms(sortedLocalRooms)
 
     } catch (e) {      
       setHasErrors(true)
@@ -231,7 +226,7 @@ const Chat = () => {
       
       socket?.connect()
       socket?.emit('room', savedMessage)
-
+      
       addMessage(savedMessage)
       resetMessageContent()
 
@@ -347,9 +342,7 @@ const Chat = () => {
     resetMessageContent()
   }
 
-  useEffect(() => {
-
-    console.log(`Executing Chat Use Effect`)
+  useEffect(() => {    
     
     const timer = setTimeout(() => {
       setDelay(0)
@@ -365,6 +358,7 @@ const Chat = () => {
     }
 
     socket?.connect()
+    socket?.emit(`authList`)
 
     socket?.on('room', (msg : TChatMessage) => {
       const {room} = msg
@@ -386,35 +380,39 @@ const Chat = () => {
       }
     })
 
-     socket?.on('change', (msg : string) => {
-        notifyUser(msg, 'info')        
-        setReload(reload + 1)
-     })     
+    socket?.on('change', (msg : string) => {
+      notifyUser(msg, 'info')        
+      setReload(reload + 1)
+    })
 
-     return () => {  
+    socket?.on(`auth`, (currentOnlineUsers : string[]) => {
+      setOnlineUsers(currentOnlineUsers)
+    })
+
+    return () => {
       
-        socket?.off('room')
-        socket?.off('messageChange')
-        socket?.off('change')          
-        socket?.off('auth')
+      socket?.off('room')
+      socket?.off('messageChange')
+      socket?.off('change') 
+      socket?.off(`auth`)
 
-        if(!firstLoad) {
-          socket?.disconnect()
-        } else {
-          setFirstLoad(false)
-        }
+      if(!firstLoad) {
+        socket?.disconnect()
+      } else {
+        setFirstLoad(false)
+      }
                
-        if (isCurrentRoomIdValid) {
-          setReload(reload + 1)
-        } else {
-          setReload(0)
-        }        
+      if (isCurrentRoomIdValid) {
+        setReload(reload + 1)
+      } else {
+        setReload(0)
+      }        
 
-        setMessageBeingEdited({...messagePlaceholder, previous : ''})
-        clearTimeout(timer)
-        scrollToLatest()
+      setMessageBeingEdited({...messagePlaceholder, previous : ''})
+      clearTimeout(timer)
+      scrollToLatest()
 
-     }
+    }
 
   }, [rooms.length, messages.length, roomUsers.length, currentRoom.id, reload, auth, showNotifications])
   
@@ -444,9 +442,7 @@ const Chat = () => {
     const element = e.target as HTMLHeadingElement
     const action = element.dataset.action
 
-    switch(action) {
-
-      //BUGHERE
+    switch(action) {      
 
       case 'edit' : {         
         const selectedMessage = messageContainerRef.current as HTMLSpanElement
@@ -732,8 +728,10 @@ const Chat = () => {
             variationName='varthree'
             className={`bg-yellow-700 active:bg-yellow-600 w-20 h-full m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad}
-            onClick={ async () => {                              
-              notifyUser(`Button for testing stuff.`)
+            title={`Currently updating the online user list.`}
+            onClick={ async () => {   
+              socket?.connect()  
+              socket?.emit(`authList`, `this is from the client end.`)
             }}
           />
 

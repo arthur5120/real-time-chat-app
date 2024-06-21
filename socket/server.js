@@ -14,14 +14,17 @@ setInterval(() => {
 const connectUser = (user) => {
     
     try {
+
+        console.log(`Connecting : ${user.id}`)
         const isUserOnline = onlineUsers.find((u) => u.id == user.id)
-        console.log(`is User in list already? ${isUserOnline} ${!isUserOnline}`)
+
         if (!isUserOnline) {            
             onlineUsers.push(user)            
             onlineUsersNames.push(user.name)
         }
-        console.log(`Connecting : ${user.id}`)
-        console.log(`User added : ${JSON.stringify(onlineUsers[onlineUsers.length - 1])}`)
+
+        console.log(`User added : ${onlineUsers[onlineUsers.length - 1].id}`)
+
     } catch (e) {
         console.log(`Error while connecting : ${e}`)
     }
@@ -32,16 +35,15 @@ const disconnectUser = (userId) => {
     
    try {
     
-        const onlineUserId = onlineUsers.findIndex((u) => u.id == userId)
-
-        console.log(`user found? ${onlineUserId} ${onlineUserId != -1}`)
+       console.log(`Disconnecting : ${userId}`)
+       const onlineUserId = onlineUsers.findIndex((u) => u.id == userId)
 
         if (onlineUserId != -1) {
             onlineUsers.splice(onlineUserId, 1)
             onlineUsersNames.splice(onlineUserId, 1)
         }
 
-        console.log(`Disconnecting : ${userId}`)
+        console.log(`User removed : ${userId}`)
 
    } catch (e) {
         console.log(`Error while disconnecting : ${e}`)
@@ -68,7 +70,7 @@ io.on('connection', (socket) => {
 
     socket.on('auth', (authRequest) => {   
         
-        console.log(`got request.`)
+        console.log(`got request.`)        
 
         try {
 
@@ -93,8 +95,7 @@ io.on('connection', (socket) => {
     })
 
     socket.on(`authList`, () => {
-        console.log(`Yep.`)
-        io.emit(`auth`, `OK`)
+        io.emit(`auth`, onlineUsersNames)
     })
 
 })

@@ -34,6 +34,7 @@ const App = () => {
           setRole ? setRole(authInfo.role) : ''
           const authRequest : TSocketAuthRequest = {user : {name : user.name, id : authInfo.id}, isConnecting : true}                        
           socket?.emit(`auth`, authRequest)
+          socket?.emit(`authList`)
           //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
           return
         }
@@ -42,6 +43,7 @@ const App = () => {
           const authRequest : TSocketAuthRequest = {user: {id : authInfo.id}, isConnecting : false}                                
           setRole ? setRole('none') : ''
           socket?.emit(`auth`, authRequest)
+          socket?.emit(`authList`)
           await authLogout({}) // Logout if auth is false.
           //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
           return

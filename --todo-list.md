@@ -19,3 +19,5 @@
 # Change some buttons on the chat to CustomButton variations.
 # There might be an error when resetting the rooms and not notifying the other user. Not able to replicate it.
 # Change interval to timeout on the banner handler later.
+# Weird behavior during logout on chrome.
+# Handle login with same account.
