@@ -737,9 +737,14 @@ const Chat = () => {
 
        </div>
 
-      </section>
 
-    </section>      
+      </section>
+       
+      <h3 className='flex flex-col absolute h-100 w-100 bg-black rounded-lg p-2 mt-100 justify-self-center self-end'>
+        Socket Connection Status : {JSON.stringify(socket?.connected)}
+      </h3>              
+     
+    </section>
     
   )
   

@@ -1,25 +1,45 @@
 import { modGetUserByEmail } from "../models/user-model"
 import { midGenerateToken } from "../utils/middleware"
 import { Request, Response } from "express"
+import { generateUniqueId } from "../utils/middleware"
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
 
 dotenv.config()
-
 const secretKey = process.env.SECRET_KEY as string
+
+type TUsers = {userId : string, guid : string}
+let onlineUsers : TUsers[] = []
+let usersToLogout : TUsers[] = []
+
+setInterval(() => {
+    console.log(`Currently Online : ${JSON.stringify(onlineUsers)} Users to Logout : ${JSON.stringify(usersToLogout)}`)
+}, 5000)
 
 export const conAuth = async (req : Request, res : Response) => {    
 
     try {
 
-        const user = await modGetUserByEmail(req, res) as Object
-        const token = midGenerateToken(user)
+        const user = await modGetUserByEmail(req, res) as {id : string}
+        const guid = generateUniqueId()
+        const payload = {...user, guid : guid}
+        const token = midGenerateToken(payload) 
+
+        const onlineUserId = onlineUsers.findIndex((u) => u.userId == user?.id)
+        const usersToLogoutId = onlineUserId != -1 ? usersToLogout.findIndex((u) => u.userId == user?.id) : 0
+
+        if (onlineUserId != -1 && usersToLogoutId == -1) {
+            usersToLogout.push(onlineUsers[onlineUserId])            
+            onlineUsers.splice(onlineUserId, 1)
+        }
+
+        onlineUsers.push({userId : user.id, guid : guid})
 
         return res.status(200).cookie('auth', token, {
                 expires: new Date(Date.now() + 1000 * 60 * 15),
                 httpOnly: true,
                 maxAge: 1000 * 60 * 15,
-                sameSite: 'strict'
+                sameSite: 'strict'                
             }).json({success : true})
                     
     } catch (e) {
@@ -28,34 +48,51 @@ export const conAuth = async (req : Request, res : Response) => {
     
 }
 
-export const conGetAuth = async (req : Request, res : Response) => {               
+export const conGetAuth = async (req : Request, res : Response) => {   
+    
+    const noAuthResponse = {
+        id : 'none',
+        authenticated:false,
+        role:'none'
+    }
 
     try {
 
         const {auth} = req.cookies
+        const verifiedUser = jwt.verify(auth, secretKey) as {id : string, role : string, guid : string} | null                
+        const usersToLogoutId = usersToLogout.findIndex((u) => u.guid == verifiedUser?.guid)
+        
+        if (usersToLogoutId != -1) {            
+            usersToLogout.splice(usersToLogoutId, 1)
+            return await res.clearCookie('auth').json(noAuthResponse)
+        }
 
-        const verifiedUser = jwt.verify(auth, secretKey) as {id : string, role : string} | null 
         res.json({
             id : verifiedUser?.id,
             authenticated:true,
             role:verifiedUser?.role
-        })
+        })        
 
     } catch (e) {     
-
-        res.json({
-            id : 'none',
-            authenticated:false,
-            role:'none'
-        })
-
+        res.json(noAuthResponse)
     }
 
 }
 
 export const conLogout = async (req : Request, res : Response) => {
     try {
-        return await res.clearCookie('auth').json({'message':'logged off'})
+
+        const {auth} = req.cookies
+        const verifiedUser = jwt.verify(auth, secretKey) as {id : string, role : string, guid : string} | null
+        const onlineUserId = onlineUsers.findIndex((u) => u.userId == verifiedUser?.id)
+
+        if (onlineUserId != -1) {
+            onlineUsers.splice(onlineUserId, 1)
+            return await res.clearCookie('auth').json({'message':'logged off'})
+        } else {
+            return await res.json({'message' : 'Something went wrong'})    
+        }
+
     } catch (e) {
         console.log(e)
         return await res.json({'message' : 'Something went wrong'})

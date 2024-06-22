@@ -11,7 +11,7 @@ import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations
 const fieldList : TFieldKeys[] = [
   'name',
   'email',
-  'username',    
+  'username',
   'password',
 ]
 
