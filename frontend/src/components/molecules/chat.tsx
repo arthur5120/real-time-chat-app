@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef, useState, Fragment } from 'react'
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
-import { convertDatetimeToMilliseconds, cropMessage, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
+import { convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
@@ -42,7 +42,7 @@ const Chat = () => {
 
   const isCurrentRoomIdValid = currentRoom.id == '0' || currentRoom.id == '-1'
 
-  const {auth, setAuth} = useContext(authContext)
+  const {auth, setAuth, role} = useContext(authContext)
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
 
@@ -290,8 +290,8 @@ const Chat = () => {
   const onSelectChange = (e : React.ChangeEvent<HTMLSelectElement>) => {    
     const selectId = e.target.selectedIndex
     const roomId = e.target[selectId].id
-    const roomName = e.target.value    
-    setCurrentRoom({id : roomId, selectId : selectId, name : roomName})
+    const roomName = e.target[selectId].textContent
+    setCurrentRoom({id : roomId, selectId : selectId, name : roomName ? roomName : 'Unknown Room'})
     setReload(reload + 1)
   }
 
@@ -416,8 +416,7 @@ const Chat = () => {
 
   }, [rooms.length, messages.length, roomUsers.length, currentRoom.id, reload, auth, showNotifications])
   
-  const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {    
-
+  const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {   
     
     const selectedMessage = e.target as HTMLSpanElement
     const selectedMessageId = selectedMessage.dataset.id
@@ -476,8 +475,10 @@ const Chat = () => {
       }   
 
       case 'cancel' : {        
-        if (messageBeingEdited.previous) {
+        if (messageBeingEdited?.previous) {
           messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.previous : ''
+          setMessageBeingEdited({...messagePlaceholder, previous : ''})      
+          //setReload(reload + 1)
         }        
         break
       }
@@ -519,8 +520,8 @@ const Chat = () => {
           <h3 className={`bg-white text-black rounded p-1`}>Room Users</h3>
           {
             roomUsers.length > 0 ? 
-              roomUsers.map((user) => {
-                return <p className=''>{cropMessage(user, 12)}</p>
+              roomUsers.map((user, id) => {
+                return <p className='' key={`roomUser-${id}`}>{cropMessage(user, 12)}</p>
               }) : 
             <p>...</p>
           }
@@ -530,8 +531,8 @@ const Chat = () => {
           <h3 className={`bg-white text-black rounded p-1`}>Online Users</h3>          
           {
             onlineUsers?.length > 0 ? 
-              onlineUsers.map((user) => {
-                return <p className=''>{cropMessage(user, 12)}</p>
+              onlineUsers.map((user, id) => {
+                return <p className='' key={`onlineUsers-${id}`}>{cropMessage(user, 12)}</p>
               }) : 
             <p>...</p>
           }
@@ -584,7 +585,7 @@ const Chat = () => {
             
             return (
 
-              <Fragment key={`msg-${id}`}>
+              <Fragment key={`message-fragment-${id}`}>
 
                 <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 justify-end bg-transparent`}>
                   <h4 className='bg-transparent text'>{isUserSender ? 'You' : message.user}</h4>
@@ -699,7 +700,7 @@ const Chat = () => {
                 
        <div className={buttonDivStyle}>
 
-       <CustomButton 
+          <CustomButton
             value={'New Room'}
             variationName='varthree'
             className={`w-20 h-full m-0 flex items-center justify-center`}
@@ -707,7 +708,7 @@ const Chat = () => {
             onClick={() => onNewRoomClick()}
           />
         
-        <CustomButton 
+          <CustomButton 
             value={'Reset Rooms'}
             variationName='vartwo'
             className={`w-20 h-full m-0 flex items-center justify-center`}
@@ -728,10 +729,9 @@ const Chat = () => {
             variationName='varthree'
             className={`bg-yellow-700 active:bg-yellow-600 w-20 h-full m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad}
-            title={`Currently updating the online user list.`}
+            title={`Currently showing nothing.`}
             onClick={ async () => {   
-              socket?.connect()  
-              socket?.emit(`authList`, `this is from the client end.`)
+              notifyUser(`Shows test stuff.`)
             }}
           />
 
@@ -740,9 +740,13 @@ const Chat = () => {
 
       </section>
        
-      <h3 className='flex flex-col absolute h-100 w-100 bg-black rounded-lg p-2 mt-100 justify-self-center self-end'>
-        Socket Connection Status : {JSON.stringify(socket?.connected)}
-      </h3>              
+      <div className='flex flex-col absolute bg-tranparent top-auto bottom-0 m-12'>        
+        <h3 className='flex mb-5 bg-purple-700 rounded-lg p-3'>
+          {/* auth status : {JSON.stringify(auth)}, role : {role} */}
+          {JSON.stringify(currentRoom)}
+        </h3>
+        
+      </div>
      
     </section>
     

@@ -21,3 +21,5 @@
 # Weird behavior during logout on chrome.
 # Handle login with same account.
 # If user connected recently, set to inactivity status on the socket.
+# Handle online user control on server when removing cookie manually.
+# Handle user timeout on socket.

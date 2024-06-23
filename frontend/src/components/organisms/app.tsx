@@ -15,8 +15,7 @@ const App = () => {
   const {notifyUser} = useContext(toastContext)
   
   const [checkAuthStatus, setCheckAuthStatus] = useState(false)
-  const [previousAuth, setPreviousAuth] = useState(auth)      
-  const [noUpdate, SetNoUpdate] = useState(false)
+  const [previousAuth, setPreviousAuth] = useState(auth)  
   const location = useLocation()  
 
   const handleSocketOnlineList = async () => {    
@@ -40,17 +39,14 @@ const App = () => {
         }
     
         if (!auth && authInfo.id != `none`) {           
-          const authRequest : TSocketAuthRequest = {user: {id : authInfo.id}, isConnecting : false}                                
+          const authRequest : TSocketAuthRequest = {user: {id : authInfo.id}, isConnecting : false}
           setRole ? setRole('none') : ''
           socket?.emit(`auth`, authRequest)
           socket?.emit(`authList`)
           await authLogout({}) // Logout if auth is false.
           //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
           return
-        } 
-
-        socket?.off('auth')
-        //socket?.disconnect()
+        }         
 
       } catch (e) {
         notifyUser(e)
@@ -62,11 +58,9 @@ const App = () => {
     const authenticated = getAuthTokenStatus ? await getAuthTokenStatus() : ''    
     if (!authenticated) {                           
       setAuth ? setAuth(false) : ''
-      auth ? notifyUser(`Logged out`) : ''
-      SetNoUpdate(true)         
+      auth ? notifyUser(`Logged out`) : ''      
     } else if (!auth) {          
-      setAuth ? setAuth(true) : ''
-      SetNoUpdate(true)      
+      setAuth ? setAuth(true) : ''      
     }    
   }
   
@@ -76,12 +70,9 @@ const App = () => {
 
   useEffect(() => { 
 
-    const delay = setTimeout(() => { // avoids flicking on UI
-      SetNoUpdate(false)
-      if (!noUpdate) {
-        handleSessionExpiration()
-      }
-    }, 500)
+    const delay = setTimeout(() => { // avoids flicking on UI      
+      handleSessionExpiration()      
+    }, 200)
 
     return () => {  
       clearTimeout(delay)
@@ -95,6 +86,13 @@ const App = () => {
     if (auth != previousAuth) {            
       handleSocketOnlineList()
       setPreviousAuth(auth)
+    }
+
+    return () => {
+      if (auth != previousAuth) {
+        socket?.off('auth')
+        socket?.disconnect()
+      }
     }
 
   }, [location, auth])
