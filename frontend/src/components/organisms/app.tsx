@@ -28,17 +28,17 @@ const App = () => {
 
         socket?.connect()
   
-        if (auth && authInfo.id != `none`) {             
+        if (auth && authInfo.id != `none`) {
           const user = await getUserById(authInfo.id)
           setRole ? setRole(authInfo.role) : ''
-          const authRequest : TSocketAuthRequest = {user : {name : user.name, id : authInfo.id}, isConnecting : true}                        
+          const authRequest : TSocketAuthRequest = {user : {name : user.name, id : authInfo.id}, isConnecting : true}
           socket?.emit(`auth`, authRequest)
           socket?.emit(`authList`)
           //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
           return
         }
     
-        if (!auth && authInfo.id != `none`) {           
+        if (!auth && authInfo.id != `none`) {
           const authRequest : TSocketAuthRequest = {user: {id : authInfo.id}, isConnecting : false}
           setRole ? setRole('none') : ''
           socket?.emit(`auth`, authRequest)
@@ -56,11 +56,11 @@ const App = () => {
 
   const handleSessionExpiration = async () => {            
     const authenticated = getAuthTokenStatus ? await getAuthTokenStatus() : ''    
-    if (!authenticated) {                           
+    if (!authenticated) {
       setAuth ? setAuth(false) : ''
-      auth ? notifyUser(`Logged out`) : ''      
-    } else if (!auth) {          
-      setAuth ? setAuth(true) : ''      
+      auth ? notifyUser(`Logged out`) : ''
+    } else if (!auth) {
+      setAuth ? setAuth(true) : ''
     }    
   }
   
@@ -86,13 +86,6 @@ const App = () => {
     if (auth != previousAuth) {            
       handleSocketOnlineList()
       setPreviousAuth(auth)
-    }
-
-    return () => {
-      if (auth != previousAuth) {
-        socket?.off('auth')
-        socket?.disconnect()
-      }
     }
 
   }, [location, auth])

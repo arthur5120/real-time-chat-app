@@ -6,10 +6,26 @@ const io = new Server({
 
 let onlineUsers = []
 let onlineUsersNames = []
+let nextExpirationCheck = -1
+
+const expirationCheck = (expirationTime) => {
+    const hereNow = Date.now()
+    return (hereNow - expirationTime) >= 0
+}
 
 setInterval(() => {
-    console.log(`Currently Online : ${JSON.stringify(onlineUsersNames)}`)    
-}, 5000)
+    const hereNow = Date.now()        
+    if (expirationCheck(nextExpirationCheck) || nextExpirationCheck == -1) {
+        console.log(`Running Expiration Check`)        
+        nextExpirationCheck = hereNow + (60 * 1000 * 5)
+        if(onlineUsers.length > 0) {
+            const newList = onlineUsers.filter((user) => !expirationCheck(user.expirationTime))
+            onlineUsers = newList
+            onlineUsersNames = newList.map((user) => user.name)
+        }
+    }
+    console.log(`Currently Online : ${JSON.stringify(onlineUsersNames)} next expiration check : ${((hereNow - nextExpirationCheck) / (1000 * 60)) | 0}m`)
+}, 5000)    
 
 const connectUser = (user) => {
     
@@ -50,7 +66,7 @@ const disconnectUser = (userId) => {
    }
 }
 
-io.on('connection', (socket) => {   
+io.on('connection', (socket) => {    
 
     socket.on('room', (message) => { // Listening to Room
         console.log(JSON.stringify(message))
@@ -76,7 +92,7 @@ io.on('connection', (socket) => {
 
             const {user, isConnecting} = authRequest
             const dateNow = Date.now()
-            const expirationTime = dateNow
+            const expirationTime = dateNow + (1000 * 60 * 15)
 
             if (user?.id && isConnecting == true) {                
                 connectUser({...user, expirationTime : expirationTime})                
@@ -100,6 +116,4 @@ io.on('connection', (socket) => {
 
 })
 
-io.listen(4000, () => {
-    console.log(`Socket running on port : ${4000}`)
-})
+io.listen(4000)

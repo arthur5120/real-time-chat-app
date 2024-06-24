@@ -16,7 +16,7 @@ setInterval(() => {
     console.log(`Currently Online : ${JSON.stringify(onlineUsers)} Users to Logout : ${JSON.stringify(usersToLogout)}`)
 }, 5000)
 
-export const conAuth = async (req : Request, res : Response) => {    
+export const conAuth = async (req : Request, res : Response) => {
 
     try {
 

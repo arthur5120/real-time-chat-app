@@ -738,10 +738,10 @@ const Chat = () => {
        </div>
 
 
-      </section>
+      </section>      
        
       <div className='flex flex-col absolute bg-tranparent top-auto bottom-0 m-12'>        
-        <h3 className='flex mb-5 bg-purple-700 rounded-lg p-3'>
+        <h3 className='flex mb-5 bg-purple-700 rounded-lg p-3 hidden'>
           {/* auth status : {JSON.stringify(auth)}, role : {role} */}
           {JSON.stringify(currentRoom)}
         </h3>
