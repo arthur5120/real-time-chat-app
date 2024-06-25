@@ -128,3 +128,8 @@ export const generateUniqueId = () => {
     const optimisticId = uuidv4()
     return optimisticId
 }
+
+export const expirationCheck = (expirationTime : number) => {
+    const dateNow = Date.now()
+    return (dateNow - expirationTime) >= 0
+}

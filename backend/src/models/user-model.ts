@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 
 export const modCreateUser = async (req : Request, res : Response) => {  
     
-    const {password, ...newUser} = req.body    
+    const {password, ...newUser} = req.body
     const hashedPassword = await midHashPassword(password)    
 
     try {

@@ -185,7 +185,7 @@ const Chat = () => {
 
   const sendMessage = async () => { 
     
-    const dateTimeNow = Date.now()    
+    const dateTimeNow = Date.now()
     
     try {
 
@@ -210,7 +210,7 @@ const Chat = () => {
         return
       }
 
-      await addUserToChat(userInfo.id, currentRoom.id) // Adding user to chat without checking.
+      await addUserToChat(userInfo.id, currentRoom.id) // Adding user to chat without checking.      
   
       const savedMessageId = await createMessage(
         userInfo.id,
@@ -223,10 +223,14 @@ const Chat = () => {
         id : savedMessageId, 
         ...newMessage
       }      
+
+      console.log(`Trying to send : ${JSON.stringify(savedMessage)} | room : ${currentRoom.name} | user id : ${userInfo.id}`)
       
       socket?.connect()
-      socket?.emit('room', savedMessage)
-      
+      socket?.emit('room', savedMessage, () => {
+        notifyUser(`This is a test.`)
+      })
+
       addMessage(savedMessage)
       resetMessageContent()
 
@@ -252,7 +256,7 @@ const Chat = () => {
 
       notifyUser(creationMessage, 'success')
       socket?.connect()
-      socket?.emit('change', creationMessage)      
+      socket?.emit('change', creationMessage)
 
       setReload(reload + 1)
 
@@ -369,6 +373,7 @@ const Chat = () => {
           notifyMessageInRoom(room)
         }
       }
+      setReload(reload + 1)
     })
     
     socket?.on('messageChange', (msg : string) => {
@@ -381,8 +386,8 @@ const Chat = () => {
     })
 
     socket?.on('change', (msg : string) => {
-      notifyUser(msg, 'info')        
       setReload(reload + 1)
+      notifyUser(msg, 'info')        
     })
 
     socket?.on(`auth`, (currentOnlineUsers : string[]) => {
@@ -391,16 +396,10 @@ const Chat = () => {
 
     return () => {
       
-      socket?.off('room')
-      socket?.off('messageChange')
-      socket?.off('change') 
-      socket?.off(`auth`)
-
-      if(!firstLoad) {
-        socket?.disconnect()
-      } else {
-        setFirstLoad(false)
-      }
+      // socket?.off('room')
+      // socket?.off('messageChange')
+      // socket?.off('change')
+      // socket?.off(`auth`)
                
       if (isCurrentRoomIdValid) {
         setReload(reload + 1)
@@ -411,10 +410,17 @@ const Chat = () => {
       setMessageBeingEdited({...messagePlaceholder, previous : ''})
       clearTimeout(timer)
       scrollToLatest()
+      
+      if(!firstLoad) {
+        socket?.off()
+        socket?.disconnect()
+      } else {
+        setFirstLoad(false)
+      }
 
-    }
-
-  }, [rooms.length, messages.length, roomUsers.length, currentRoom.id, reload, auth, showNotifications])
+    }  
+  
+  }, [rooms.length, messages.length, currentRoom.id, reload, auth, showNotifications])  
   
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {   
     
@@ -579,9 +585,6 @@ const Chat = () => {
             const isUserSender = currentUser.name == message.user
             const isMessageSelected = message.id == messageBeingEdited.id
             const isMessageFocused = document.activeElement == messageContainerRef.current
-            console.log(`${message.id}`)            
-            
-            console.log(`isUserSender : ${isUserSender}, isMessageSelected : ${isMessageSelected}, isMessageFocused : ${isMessageFocused},`)
             
             return (
 
@@ -741,9 +744,8 @@ const Chat = () => {
       </section>      
        
       <div className='flex flex-col absolute bg-tranparent top-auto bottom-0 m-12'>        
-        <h3 className='flex mb-5 bg-purple-700 rounded-lg p-3 hidden'>
-          {/* auth status : {JSON.stringify(auth)}, role : {role} */}
-          {JSON.stringify(currentRoom)}
+        <h3 className='flex mb-5 bg-purple-700 rounded-lg p-3'>
+          room id : {JSON.stringify(currentRoom.id)}
         </h3>
         
       </div>

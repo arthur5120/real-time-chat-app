@@ -23,3 +23,7 @@
 # If user connected recently, set to inactivity status on the socket.
 # Handle online user control on server and socket when removing cookie manually.
 # Handle user timeout on socket.
+
+// Done today
+
+On the server, set periodic check on the server for expired sessions to remove the users from the local online users array.

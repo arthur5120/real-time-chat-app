@@ -1,16 +1,20 @@
 import { useContext, useEffect, useState } from "react"
 import { authContext } from "../../utils/contexts/auth-provider"
+import { toastContext } from "../../utils/contexts/toast-provider"
 import CustomTitle from "../atoms/title"
 
 const AuthBanner = () => {
 
     const { auth, role } = useContext(authContext)
+    const { notifyUser } = useContext(toastContext)
     const [authColor, setAuthColor] = useState('')
     const [authText, setAuthText] = useState('')
   
     useEffect(() => {      
 
       const intervalId = setTimeout(() => { 
+        
+        notifyUser(`Changing Banner, auth : ${auth}`)
 
         if (auth) {          
           setAuthText(`Authenticated with ${role == 'Admin' ? 'Administrator' : role} Privileges`)
@@ -20,7 +24,7 @@ const AuthBanner = () => {
           setAuthColor('bg-red-600')
         }
 
-      }, 50)
+      }, 200)
   
       return () => {
         clearTimeout(intervalId)
