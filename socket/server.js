@@ -16,7 +16,7 @@ const expirationCheck = (expirationTime) => {
 setInterval(() => {
     const hereNow = Date.now()        
     if (expirationCheck(nextExpirationCheck) || nextExpirationCheck == -1) {
-        console.log(`Running Expiration Check`)        
+        console.log(`Running Expiration Check`)
         nextExpirationCheck = hereNow + (60 * 1000 * 5)
         if(onlineUsers.length > 0) {
             const newList = onlineUsers.filter((user) => !expirationCheck(user.expirationTime))
@@ -68,14 +68,28 @@ const disconnectUser = (userId) => {
 
 io.on('connection', (socket) => {    
 
-    socket.on('room', (message) => { // Listening to Room
+    socket.on('test', (message, callback = null) => {
         console.log(JSON.stringify(message))
+        if (callback != null) {
+            callback(true)
+        }
+        io.emit('change', message)
+    })
+
+    socket.on('room', (message, callback = null) => { // Listening to Room
+        console.log(JSON.stringify(message))
+        if (callback != null) {
+            callback(true)
+        }
         io.emit('room', message)
         //io.to(socket.id).emit('room', messages) // Sends String, Objects etc...
     })
 
-    socket.on('change', (message) => {
+    socket.on('change', (message, callback = null) => {
         console.log(JSON.stringify(message))
+        if (callback != null) {
+            callback(true)
+        }
         io.emit('change', message)
     })
 

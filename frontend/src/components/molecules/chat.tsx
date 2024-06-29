@@ -35,16 +35,18 @@ const Chat = () => {
   const [messageBeingEdited, setMessageBeingEdited] = useState<TChatMessage & {previous ? : string}>(messagePlaceholder)
   const [hasErrors, setHasErrors] = useState(false)
   const [showNotifications, setShowNotifications] = useState(true)
-  const [firstLoad, setFirstLoad] = useState(true) // Prevents disconnecting the socket too early.
+  const [firstLoad, setFirstLoad] = useState(true)
   const [reload, setReload] = useState(1)
-  const [delay, setDelay] = useState(0)
+  const [cooldown, setCooldown] = useState(0)
+  const [useDelayOnEmit, setUseDelayOnEmit] = useState(false)
   const [verticalView, setVerticalView] = useState(false)
+  const [renderCounter, setRenderCounter] = useState(0)  
 
   const isCurrentRoomIdValid = currentRoom.id == '0' || currentRoom.id == '-1'
 
-  const {auth, setAuth, role} = useContext(authContext)
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
+  const {auth, setAuth, role} = useContext(authContext)
 
   const scrollToLatest = () => {
     if (chatContainerRef.current) {
@@ -189,7 +191,7 @@ const Chat = () => {
     
     try {
 
-      const newMessage : TChatMessage = {        
+      const newMessage : TChatMessage = {
         user : currentUser?.name ? currentUser.name : '',
         content : message.content,
         created_at : dateTimeNow,
@@ -205,12 +207,12 @@ const Chat = () => {
       const userInfo = await authStatus({})
 
       if (!userInfo.authenticated) {              
-        notifyUser('Not Allowed!', 'error')        
+        notifyUser('Not Allowed!', 'error')
         resetMessageContent()
         return
       }
 
-      await addUserToChat(userInfo.id, currentRoom.id) // Adding user to chat without checking.      
+      await addUserToChat(userInfo.id, currentRoom.id) // Adding user to chat without checking.
   
       const savedMessageId = await createMessage(
         userInfo.id,
@@ -224,18 +226,35 @@ const Chat = () => {
         ...newMessage
       }      
 
-      console.log(`Trying to send : ${JSON.stringify(savedMessage)} | room : ${currentRoom.name} | user id : ${userInfo.id}`)
-      
-      socket?.connect()
-      socket?.emit('room', savedMessage, () => {
-        notifyUser(`This is a test.`)
-      })
+      if(socket?.disconnected) {        
+        socket?.connect()
+      }
+
+      const delay = useDelayOnEmit ? 200 : 0
+
+      setTimeout(() => {
+        socket?.emit(`room`, savedMessage, (response : boolean) => {
+          if (response) {
+            console.log(`Message Sent Successfully : ${response}`)          
+          } else {
+            console.log(`Failed to Send the Message`)
+            setHasErrors(true)
+          }
+        })
+      }, delay)
+
+      console.log(`Sending message : ${JSON.stringify(savedMessage)}, socket connection : ${socket?.connected}`)
 
       addMessage(savedMessage)
-      resetMessageContent()
-
+      resetMessageContent()   
+      setUseDelayOnEmit(false)    
+          
+      const isUserOnList = roomUsers.find((name) => name == currentUser.name) // Short List
+      currentUser?.name && !isUserOnList ? setRoomUsers([...roomUsers, currentUser.name]) : ''
+      
     } catch (e) {
       setHasErrors(true)
+      setUseDelayOnEmit(false)
     }
 
   }
@@ -255,8 +274,13 @@ const Chat = () => {
       await createChat()
 
       notifyUser(creationMessage, 'success')
-      socket?.connect()
-      socket?.emit('change', creationMessage)
+
+      if(socket?.disconnected) {
+	      socket?.connect()
+      }
+
+      socket?.emit(`change`, creationMessage)
+      console.log(`Creating chat, socket connection : ${socket?.connected}`)
 
       setReload(reload + 1)
 
@@ -275,19 +299,31 @@ const Chat = () => {
     }
   }
 
-  const deleteAllRooms = async () => {       
+  const deleteAllRooms = async () => {
 
     try {      
-      const deletionMessage = `All rooms deleted, a fresh one was created`
+
+      if(socket?.disconnected) {
+        socket?.connect()
+      }
+
+      setTimeout(() => {
+        socket?.emit(`change`, `All rooms deleted, a fresh one was created`, (test : boolean) => {          
+          console.log(`Callback Response : ${!!test}`)
+        })
+      }, 200)
+
+      console.log(`Deleting Rooms, socket connection : ${socket?.connected}`)
+      
       await deleteAllChats()
-      socket?.connect()      
-      socket?.emit('change', deletionMessage)              
+      await retrieveRooms()
+                  
       setReload(reload + 1)
+      setUseDelayOnEmit(true)
+
     } catch (e) {
       setHasErrors(true)
     }
-
-    setDelay(5000)
 
   }
 
@@ -306,22 +342,22 @@ const Chat = () => {
     }))        
   }
 
-  const onResetRoomsClick = async () => {         
+  const onResetRoomsClick = async () => {
 
-    if(!delay) {
+    if(!cooldown) {
       
       const userInfo = await authStatus({})
   
-      if (!userInfo.authenticated || userInfo.role != 'Admin') {        
+      if (!userInfo.authenticated || userInfo.role != 'Admin') {
         notifyUser('Not Allowed!', 'error')
         return
       }
 
       setCurrentRoom({ id: '-1', selectId: 0, name : ''})
 
-      await deleteAllRooms()   
+      await deleteAllRooms()
 
-      setDelay(5000)
+      setCooldown(5000)
 
     } else {
       notifyUser(`Please Wait a Moment`,`warning`)
@@ -330,15 +366,15 @@ const Chat = () => {
   }
   
   const onNewRoomClick = async () => {
-    if(!delay) {
+    if(!cooldown) {
       await createRoom()
-      setDelay(5000)
+      setCooldown(5000)
     } else {
       notifyUser(`Please Wait a Moment`,`warning`)
     }
   }
 
-  const initialSetup = async () => {     
+  const initializeAppData = async () => {     
     await retrieveCurrentUser()
     await createRoomIfNoneAreFound()
     await retrieveRooms()
@@ -346,11 +382,15 @@ const Chat = () => {
     resetMessageContent()
   }
 
-  useEffect(() => {    
+  useEffect(() => {
+
+    setRenderCounter(renderCounter + 1)
+    
+    console.log(` - Running useEffect.`)
     
     const timer = setTimeout(() => {
-      setDelay(0)
-    }, delay)
+      setCooldown(0)
+    }, cooldown)
 
     if(hasErrors) {
       notifyUser(`Something Went Wrong, please try again later`, `warning`)
@@ -358,22 +398,38 @@ const Chat = () => {
     }
 
     if(reload > 0) {
-      initialSetup()      
+      initializeAppData()
     }
 
-    socket?.connect()
-    socket?.emit(`authList`)
+    if(socket?.disconnected) {
+      socket?.connect()
+    }
+
+    socket?.emit(`authList`)    
 
     socket?.on('room', (msg : TChatMessage) => {
-      const {room} = msg
-      if (room === currentRoom.id) {        
-        addMessage(msg)        
+
+      // When the socket is disconnected, it gets a new id.
+      // So the delayed response triggers a new render when receiving a callback of the sent message.
+      // This prevents it from happening : id != previousMessageId
+
+      const {id, room} = msg
+      const previousMessageId = messages?.length > 0 ? messages[0].id : -1      
+      
+      if (room == currentRoom.id) {
+        if (id != previousMessageId) {
+          addMessage(msg)
+        }
       } else {
         if(showNotifications) {
           notifyMessageInRoom(room)
         }
       }
-      setReload(reload + 1)
+
+      if(id != previousMessageId) {
+        setReload(reload + 1)
+      }      
+
     })
     
     socket?.on('messageChange', (msg : string) => {
@@ -394,24 +450,19 @@ const Chat = () => {
       setOnlineUsers(currentOnlineUsers)
     })
 
-    return () => {
-      
-      // socket?.off('room')
-      // socket?.off('messageChange')
-      // socket?.off('change')
-      // socket?.off(`auth`)
+    return () => {      
                
       if (isCurrentRoomIdValid) {
         setReload(reload + 1)
       } else {
         setReload(0)
-      }        
+      }       
 
       setMessageBeingEdited({...messagePlaceholder, previous : ''})
       clearTimeout(timer)
       scrollToLatest()
       
-      if(!firstLoad) {
+      if(!firstLoad) {        
         socket?.off()
         socket?.disconnect()
       } else {
@@ -473,8 +524,8 @@ const Chat = () => {
           messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
           messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
           const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
-          const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
-          socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)                    
+          const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'          
+          socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)      
           setMessageBeingEdited({...messagePlaceholder, previous : ''})      
           setReload(reload + 1)
         break
@@ -546,7 +597,7 @@ const Chat = () => {
 
       </section> 
 
-      <section className={chatSectionStyle}>  
+      <section className={chatSectionStyle}>
 
         <div className={`flex justify-between ${primaryDefault} rounded-lg w-80`}>
 
@@ -609,7 +660,7 @@ const Chat = () => {
                     onInputEditableMessage(e)
                   }}
 
-                  onBlur={() => {                  
+                  onBlur={() => {
                     if (!messageBeingEdited.content) {
                       messageContainerRef.current ? messageContainerRef.current.textContent = message.content : ''
                       setMessageBeingEdited({...messagePlaceholder, previous : ''})
@@ -733,8 +784,8 @@ const Chat = () => {
             className={`bg-yellow-700 active:bg-yellow-600 w-20 h-full m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad}
             title={`Currently showing nothing.`}
-            onClick={ async () => {   
-              notifyUser(`Shows test stuff.`)
+            onClick={ async () => {
+              notifyUser(`Button for testing stuff.`)
             }}
           />
 
@@ -743,11 +794,13 @@ const Chat = () => {
 
       </section>      
        
-      <div className='flex flex-col absolute bg-tranparent top-auto bottom-0 m-12'>        
+      <div className='flex absolute bg-tranparent top-auto bottom-0 m-12 gap-2'>        
         <h3 className='flex mb-5 bg-purple-700 rounded-lg p-3'>
-          room id : {JSON.stringify(currentRoom.id)}
-        </h3>
-        
+            Render Counter : {renderCounter}
+        </h3>        
+        <h3 className={`flex mb-5 ${reload ? `bg-red-500` : `bg-green-500` } rounded-lg p-3`}>
+          {reload ? `Danger` : `Safe` }
+        </h3>        
       </div>
      
     </section>

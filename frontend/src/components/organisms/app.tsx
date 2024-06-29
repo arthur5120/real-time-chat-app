@@ -10,8 +10,8 @@ import { authStatus, getUserById, authLogout } from "../../hooks/useAxios"
 
 const App = () => {
 
-  const {auth, setAuth, setRole, getAuthTokenStatus} = useContext(authContext)
   const socket = useContext(socketContext)
+  const {auth, setAuth, setRole, getAuthTokenStatus} = useContext(authContext)
   const {notifyUser} = useContext(toastContext)
   
   const [checkAuthStatus, setCheckAuthStatus] = useState(false)
@@ -39,8 +39,8 @@ const App = () => {
         }
     
         if (!auth && authInfo.id != `none`) {
-          const authRequest : TSocketAuthRequest = {user: {id : authInfo.id}, isConnecting : false}
           setRole ? setRole('none') : ''
+          const authRequest : TSocketAuthRequest = {user: {id : authInfo.id}, isConnecting : false}
           socket?.emit(`auth`, authRequest)
           socket?.emit(`authList`)
           await authLogout({}) // Logout if auth is false.

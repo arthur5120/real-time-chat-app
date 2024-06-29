@@ -14,16 +14,16 @@
 # Not returning the Auth state when refreshing the page. [DONE]
 # Auth Timeout not working. [DONE]
 # Banner changing too often on auth-banner [DONE]
-# Handle Socket connections and disconnections properly.
-# Change some buttons on the chat to CustomButton variations.
-# There might be an error when resetting the rooms and not notifying the other user. Not able to replicate it.
 # Change interval to timeout on the banner handler later. [DONE]
+# Handle login with same account. [DONE]
+# Handle user timeout on socket. [DONE]
+# Change some buttons on the chat to CustomButton variations.
 # Weird behavior during logout on chrome.
-# Handle login with same account.
 # If user connected recently, set to inactivity status on the socket.
 # Handle online user control on server and socket when removing cookie manually.
-# Handle user timeout on socket.
+# When resetting rooms, the socket is disconnected prematurely and the users don't receive updates. (On chrome only?)
 
 // Done today
 
-On the server, set periodic check on the server for expired sessions to remove the users from the local online users array.
+Introduce minor delay on first socket emit after room deletion.
+Update room users list in real-time when sending messages.

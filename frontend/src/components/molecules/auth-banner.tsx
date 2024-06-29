@@ -14,8 +14,6 @@ const AuthBanner = () => {
 
       const intervalId = setTimeout(() => { 
         
-        notifyUser(`Changing Banner, auth : ${auth}`)
-
         if (auth) {          
           setAuthText(`Authenticated with ${role == 'Admin' ? 'Administrator' : role} Privileges`)
           setAuthColor('bg-emerald-600')
