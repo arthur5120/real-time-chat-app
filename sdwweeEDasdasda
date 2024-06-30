@@ -1,0 +1,455 @@
+[33mcommit 0facc82dd68367ccab8a78ef57a00f4ce35ab06e[m[33m ([m[1;36mHEAD -> [m[1;32mtesting-chat[m[33m)[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sat Jun 29 21:48:44 2024 -0300
+
+    Slight increase delay on first socket emit after room deletion
+
+[33mcommit e0ed796885756dca35272105212fa420bf02ebaf[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Fri Jun 28 21:48:23 2024 -0300
+
+    Introduce minor delay on first socket emit after room deletion
+
+[33mcommit 7286ef7d9b4c9018f4368b0a2bc67c2721de592f[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Mon Jun 24 22:13:23 2024 -0300
+
+    set periodic check on the server for expired sessions to remove the users from the local online users array.
+
+[33mcommit 9097c5aac8c85f90b544dbcce22862d0be1766f4[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sun Jun 23 22:20:12 2024 -0300
+
+    Add expiration check for online users for the socket
+
+[33mcommit 86efbe85807fb5c85879c8844ce18763566a3b5a[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sat Jun 22 22:20:30 2024 -0300
+
+    Fix room ID display in edit notifications and menu not hiding on clicking the cancel button on the edit menu
+
+[33mcommit 0f2f544132742cdf94aed26e18316cce0f68b373[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Fri Jun 21 22:28:47 2024 -0300
+
+    Add auto logout for duplicated user logins
+
+[33mcommit e88610138448a71f8d5c419c538e6aa8ca6c0f72[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Thu Jun 20 21:59:29 2024 -0300
+
+    Make user list display online users in real time
+
+[33mcommit 719f2511981c5ed96aa24d91592af72387e049f7[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Thu Jun 20 20:52:55 2024 -0300
+
+    create useEffect on app to handle auth state update and periodic session expiration verification separatedly
+
+[33mcommit 9ffdbe50df95fb398e7d435f02eb5002d893bec8[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Wed Jun 19 22:04:35 2024 -0300
+
+    fix : bug with edited message persisting on the chat after being removed
+
+[33mcommit d7635e48d9783a67652d3453bcd45584f90e82b1[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sun Jun 16 22:56:01 2024 -0300
+
+    change chat page useEffect to not disconnect the socket on return but on each individual spot is being used instead, preventing unintended disconnections
+
+[33mcommit 8f11a14cbe99edf4937fb01b0dca728d292fce41[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Thu Jun 13 23:06:13 2024 -0300
+
+    implement online user tracking to socket and list to show them in chat page
+
+[33mcommit 671262b4a681c1652156816fbb157f7d2e0a7dd9[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Wed Jun 12 22:15:01 2024 -0300
+
+    Add user list and button layout options
+
+[33mcommit ee9656b2dbf90bc2689aa568917d98517787a8f1[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Tue Jun 11 22:55:07 2024 -0300
+
+    Fix select element index breaking on creating new room and set rooms to be organized alphabetically
+
+[33mcommit 176f36de299369e3e1bbc6bb43cf8b363408ad70[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Mon Jun 10 22:31:58 2024 -0300
+
+    replace toggle show/hide chat functionality to toggle hide/show message notifications from other chats instead
+
+[33mcommit be07b4dec9fbbb90d72063b98fa8a44c1d04e26f[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sun Jun 9 21:55:44 2024 -0300
+
+    Enhance message updated notification to include both previous and new content. Crop both messages for readability. Update 'New message in another room' notification to display the room name instead of the room ID.
+
+[33mcommit a2e07069e1e141b741d5d663b5eb07761122e22c[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sat Jun 8 22:26:40 2024 -0300
+
+    add input element highlighting on activation and fix toggle chat visibility button positioning
+
+[33mcommit e9af91eff1ec17e9c3b98c63f400ae608caec5dc[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Fri Jun 7 21:40:14 2024 -0300
+
+    change room name generation to include different words instead of numbers
+
+[33mcommit 39dfac544ee7155e9b598eb9eb21fc5abaf4e6a1[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Thu Jun 6 22:54:09 2024 -0300
+
+    change chat room select to display names instead of ids, add room info button
+
+[33mcommit 63728b7cc5ff74d1f94ded9a6f98285868ca9038[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Wed Jun 5 21:44:11 2024 -0300
+
+    extract auth banner into its own component and delays its render to prevent flicking, delete removeToken function
+
+[33mcommit d6ee1247596511d615862ee939beac63baa07849[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Mon Jun 3 19:33:22 2024 -0300
+
+    implement real time update upon editing or deleting message
+
+[33mcommit 7df92e3ff47ea1d105b4845104231392bd7e390c[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Mon Jun 3 19:20:26 2024 -0300
+
+    fix image loading raw bug and create loading page
+
+[33mcommit 893aca8e568965dbe3eb5862b7964a648fe549dc[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sun Jun 2 21:40:36 2024 -0300
+
+    add background image
+
+[33mcommit a018eaade3e33e1b764057b0e6c6e3010412fda9[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sat Jun 1 21:32:07 2024 -0300
+
+    Fix: Return UUID on message creation to resolve refresh issue
+
+[33mcommit 68c3d0c5f70cd2f83bcae54cf36c09098c02219d[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Fri May 31 21:20:40 2024 -0300
+
+    Add feature to display message creation and updated time
+
+[33mcommit f0e251bbcebbbd24703ba1259ca81efe17bf7588[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Thu May 30 20:59:50 2024 -0300
+
+    fix auto logout on signing in
+
+[33mcommit 91a4e3af470602a38e854d135e26d893f5baa619[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Thu May 30 20:41:48 2024 -0300
+
+    add session expiration handling check on interval
+
+[33mcommit edf30d95b2b74c927fc3caa1d1c5cf7316e298ca[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Wed May 29 22:03:22 2024 -0300
+
+    add message editing/deletion with cancel option and message click actions
+
+[33mcommit 923a028646c93fa452cc89d3744b3308edd29264[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sat May 25 22:45:19 2024 -0300
+
+    adds delay to certain requests
+
+[33mcommit 9192eb38e38c7dbc207d430935b0d1080395c5d7[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Tue May 21 22:33:22 2024 -0300
+
+    implements idempotency uuid keys for axios post requests
+
+[33mcommit 959bcdf60bee2254223c10ecfe46a0585f261369[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Tue May 21 21:24:07 2024 -0300
+
+    adds administrator role requirement for room deletion
+
+[33mcommit 18dfa94504771b3ec1870fefae0b9152b91a63ac[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Tue May 21 20:15:42 2024 -0300
+
+    changes chat send button color for accessibility
+
+[33mcommit 7407124fc74466ad54707d5486fb3cc183963d8d[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Mon May 20 22:05:15 2024 -0300
+
+    changes routes names, adds more routes, feeds profile page with user information
+
+[33mcommit b3f7750b04f3601ef4012b18c16b3800b5d69a1e[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Mon May 20 19:35:58 2024 -0300
+
+    adds try-catch blocks to chat async functions
+
+[33mcommit 52374d9be3ca3c95435cd2721a158bbbe5bda1dd[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sun May 19 21:38:30 2024 -0300
+
+    fixes element key problem
+
+[33mcommit 86235b10e0d2168ea755dbcefd7ba49122e7d6ff[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sun May 19 20:49:49 2024 -0300
+
+    changes page names, adds new profile page
+
+[33mcommit 3242c9f0c1597816b0c04734771f384b17a1b18c[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sat May 18 22:05:47 2024 -0300
+
+    adds icons to navbar and the toggable visibility option on chat page and an error page
+
+[33mcommit ea4e484214e591978320dc416d76137d529fe521[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sat May 18 20:45:45 2024 -0300
+
+    changes favicon
+
+[33mcommit ac9bb9ef498964913c6db139f4a33c6db3e66d35[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sat May 18 20:25:14 2024 -0300
+
+    adds sender username field to message model, updates chat so it showsit
+
+[33mcommit 8f20e1cde378947c00932ef1937520d8b923b679[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Fri May 17 21:35:24 2024 -0300
+
+    adds toggle visibility feature for the chat
+
+[33mcommit f28df0d41088460aff436c935e890092eacb9a5b[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Fri May 17 21:15:13 2024 -0300
+
+    adds ui notifications to inform the user of authentication status and permissions
+
+[33mcommit 7624ec64abf5f459e3b086cd287e8018f6cfe899[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Fri May 17 20:05:12 2024 -0300
+
+    adds middleware to check auth, grants chat/messages permission or not
+
+[33mcommit 2fc4e32bc116eb568c69e67b9514bc9c426d2cdc[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Fri May 17 19:01:25 2024 -0300
+
+    fixes footer on the bottom
+
+[33mcommit ca06aee029e57b43f790b5318e72e6111deff696[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Thu May 16 20:43:02 2024 -0300
+
+    changes primary/secondary colors, adds classname variables for testing
+
+[33mcommit 6b3496842fd67c18e6d1b0dbd87cd97ae97a304c[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Mon May 13 21:48:47 2024 -0300
+
+    fixes selectid/currentid not matching on chat
+
+[33mcommit 3b3bd8ab3469d05d24e6449a93bb5e9e4f3931e2[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Mon May 13 21:26:40 2024 -0300
+
+    creates toast message context, replaces it on chat
+
+[33mcommit f45b3876368ed3ccaaea7fd0195d442b010626ce[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Mon May 13 20:24:54 2024 -0300
+
+    simplified retrieve rooms method
+
+[33mcommit f2b1b2be3bbf19d73e34d012c522620ea8da4245[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Mon May 13 19:50:50 2024 -0300
+
+    fixes current room id update bug upon deleting all rooms
+
+[33mcommit b3061f1e6cde5ed17279d78a9e79c700cf582190[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sun May 12 22:15:34 2024 -0300
+
+    adds notification message when deleting all rooms
+
+[33mcommit 3aab16ccf5cab7bf5977e0763acdd874f8353440[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sun May 12 22:03:58 2024 -0300
+
+    fixes stuck reloading with single chat
+
+[33mcommit bfb1477ef63cb8e9909b29bcc4f5b653a0f540f8[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sat May 11 22:43:03 2024 -0300
+
+    fixes room select update and optimized reloading
+
+[33mcommit 46ad5526dad5375d2c678408928d1d8234d3f81f[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sat May 11 20:30:03 2024 -0300
+
+    adds react toastify notifications
+
+[33mcommit 9030de59a13e15e7428f61476ad61efd3226ef5d[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sat May 11 20:00:59 2024 -0300
+
+    changes updating method to add only changes instead of entire chat, fixes cross chat messages bug
+
+[33mcommit 902629f39ba2a9755b73f290fdd1831ac036807f[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sat May 11 19:23:00 2024 -0300
+
+    added real time functionality
+
+[33mcommit 30e30d16f7fb8e68c99d1a607e82bd87245ffd8e[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Thu May 9 22:38:37 2024 -0300
+
+    organizes chat a lot but removes real time functionality for now.
+
+[33mcommit 41f078aafa1d721b39fe16ae2ef9a72bb28917f1[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Tue May 7 20:16:21 2024 -0300
+
+    fixed all chat rooms being updated upon sending a message
+
+[33mcommit bbce112eb2eead8377418595ff561d5a39c91374[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Mon May 6 22:59:47 2024 -0300
+
+    adds real time functionality with socket.io
+
+[33mcommit 1817da76cffc3e736e0080d25348aa1426fb2810[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Mon May 6 20:55:04 2024 -0300
+
+    makes chats be separated by rooms
+
+[33mcommit c6e0eaaa164026b7d33138562a51176a4afc7c1e[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Mon May 6 19:37:24 2024 -0300
+
+    fixed duplicated messages bug
+
+[33mcommit 30a7f3816b9cd7787a353839b54e41e329f74e89[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sun May 5 22:11:00 2024 -0300
+
+    adds retrieve messages from database to chat functionality
+
+[33mcommit b4f1be3403ddacdb27bc85f8d7d2c8ccb5e0b7e8[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sun May 5 20:29:22 2024 -0300
+
+    creates axios functions for messages and chat
+
+[33mcommit 0219406aa80b91e4e4f5e76c4138ac874a30e199[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Thu May 2 21:47:47 2024 -0300
+
+    adds chat and message structures with crud operations as well
+
+[33mcommit 17ad702086489ce7c2655fca128344754c7332d6[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Wed May 1 22:31:45 2024 -0300
+
+    adds method to redirect user after auth and replaces Link for navigate
+
+[33mcommit 9218e9decba0dc8f4f5e14e886ad1217ee28d83c[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Wed May 1 22:24:16 2024 -0300
+
+    create UI for chat
+
+[33mcommit a6765443e76a0e8d25a48760b414f37699cef728[m[33m ([m[1;32mmaster[m[33m)[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Tue Apr 30 21:40:59 2024 -0300
+
+    creates logout button and profile based on role system
+
+[33mcommit 657f632cac57dc1b2662bafe5aecbb335a19edee[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Tue Apr 30 21:14:39 2024 -0300
+
+    customizes buttons for each page
+
+[33mcommit 7beb727fca0518d193d16a8be5fdf08243709b1d[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Tue Apr 30 20:31:37 2024 -0300
+
+    adds authentication check with role and fixes only user role allowed bug
+
+[33mcommit 07de98c852e6b6710e14cd7895caf49a2ee4ad6f[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Mon Apr 29 23:21:23 2024 -0300
+
+    adds role column to user
+
+[33mcommit 0ed01444d1508697436348a861b06a43e9817476[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Mon Apr 29 22:32:42 2024 -0300
+
+    adds authentication, tokens and cookies
+
+[33mcommit ce4476b0b23694c8fbc4df443daeb250a9acc97e[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Mon Apr 29 21:38:19 2024 -0300
+
+    adds create user functionality
+
+[33mcommit f73855e72f7ba60c1ef002c70a49cf0606ef4623[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sun Apr 28 21:03:48 2024 -0300
+
+    moved style variations away from title and changed title variation on login
+
+[33mcommit 5bd9f8fda40aadfd91fc7ded8ff01f17ed538988[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sun Apr 28 20:45:29 2024 -0300
+
+    adds variations to custom title component and customizes them on create account and login
+
+[33mcommit 328d7d13604a2261c9df0f8219b3539095d196b1[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sun Apr 28 20:30:32 2024 -0300
+
+    create button group and changed notification on create and login
+
+[33mcommit 6dbd57723d1a873cf5b494c428a32023f7aada0d[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Sun Apr 28 20:20:35 2024 -0300
+
+    first commit
+
+[33mcommit bdb836465048027aeee12d3237f026c309f65f95[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Wed Apr 24 22:43:34 2024 -0300
+
+    create CRUD ops on API
+
+[33mcommit 8bfce66b4f5b46bcc483accd0832afe238d3f68c[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Wed Apr 24 20:10:37 2024 -0300
+
+    Change directory
+
+[33mcommit 0527fbca576874c59e42649189faa2c34c949972[m
+Author: Arthur <142846244+arthur5120@users.noreply.github.com>
+Date:   Wed Apr 24 19:38:39 2024 -0300
+
+    first commit
