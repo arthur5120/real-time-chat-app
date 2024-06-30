@@ -1,8 +1,8 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
-import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest } from '../../utils/types'
+import { TUser, TMessage, TChatMessage, TChatRoom, TRes } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
-import { convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
+import { convertDatetimeToMilliseconds, cropMessage, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
@@ -152,7 +152,7 @@ const Chat = () => {
           if(!uniqueIdList.has(m.senderId)) {
             uniqueIdList.add(m.senderId)
             userNameList.push(m.senderName)
-          }
+          } 
 
           return {
             id : m.id,
