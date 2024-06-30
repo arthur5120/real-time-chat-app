@@ -136,9 +136,14 @@ const Chat = () => {
     
       try {
 
+        if(currentRoom.id == '-1') {          
+          setReload(reload + 1)
+          return
+        }
+
         const authInfo = await authStatus({})
-        const rawMessages = await getMessages()
-        const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)
+        const rawMessages = await getMessages() // Getting all messages to filter them based on room, change this later.
+        const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)        
         const uniqueIdList = new Set<string>()
         const userNameList : string[] = []
     
@@ -230,7 +235,7 @@ const Chat = () => {
         socket?.connect()
       }
 
-      const delay = useDelayOnEmit ? 200 : 0
+      const delay = useDelayOnEmit ? 500 : 0 // Prevents the socket from being disconnected too early.
 
       setTimeout(() => {
         socket?.emit(`room`, savedMessage, (response : boolean) => {
@@ -409,6 +414,8 @@ const Chat = () => {
 
     socket?.on('room', (msg : TChatMessage) => {
 
+      console.log(`socket on room : ${currentRoom?.id}`)
+
       // When the socket is disconnected, it gets a new id.
       // So the delayed response triggers a new render when receiving a callback of the sent message.
       // This prevents it from happening : id != previousMessageId
@@ -417,7 +424,7 @@ const Chat = () => {
       const previousMessageId = messages?.length > 0 ? messages[0].id : -1      
       
       if (room == currentRoom.id) {
-        if (id != previousMessageId) {
+        if (id != previousMessageId) {          
           addMessage(msg)
         }
       } else {
@@ -433,6 +440,7 @@ const Chat = () => {
     })
     
     socket?.on('messageChange', (msg : string) => {
+      console.log(`socket on messageChange : ${currentRoom?.id}`)
       if(msg) {
         if(showNotifications) {
           notifyUser(msg, 'info')
@@ -442,11 +450,13 @@ const Chat = () => {
     })
 
     socket?.on('change', (msg : string) => {
+      console.log(`socket on change : ${currentRoom?.id}`)
       setReload(reload + 1)
       notifyUser(msg, 'info')        
     })
 
     socket?.on(`auth`, (currentOnlineUsers : string[]) => {
+      console.log(`socket on auth : ${currentRoom?.id}`)
       setOnlineUsers(currentOnlineUsers)
     })
 
@@ -573,7 +583,7 @@ const Chat = () => {
 
       <section className={usersOnlineSection}>
 
-        <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center items`}>
+        <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center items select-none`}>
           <h3 className={`bg-white text-black rounded p-1`}>Room Users</h3>
           {
             roomUsers.length > 0 ? 
@@ -584,8 +594,8 @@ const Chat = () => {
           }
         </div>
 
-        <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center items`}>
-          <h3 className={`bg-white text-black rounded p-1`}>Online Users</h3>          
+        <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center items select-none`}>
+          <h3 className={`bg-white text-black rounded p-1`}>Online Users</h3>
           {
             onlineUsers?.length > 0 ? 
               onlineUsers.map((user, id) => {
@@ -718,7 +728,7 @@ const Chat = () => {
 
         </div> 
 
-        <div className={`flex flex-col items-center justify-center`}>
+        <div className={`flex flex-col items-center justify-center select-none`}>
 
           {
             (rooms[0]?.id !== '-1') ?
@@ -800,8 +810,11 @@ const Chat = () => {
         </h3>        
         <h3 className={`flex mb-5 ${reload ? `bg-red-500` : `bg-green-500` } rounded-lg p-3`}>
           {reload ? `Danger` : `Safe` }
-        </h3>        
-      </div>
+        </h3>
+        <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
+          Messages : {messages.length}
+        </h3>
+      </div>      
      
     </section>
     

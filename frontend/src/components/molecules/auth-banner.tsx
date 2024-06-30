@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react"
 import { authContext } from "../../utils/contexts/auth-provider"
 import { toastContext } from "../../utils/contexts/toast-provider"
+import { useLocation } from "react-router-dom"
 import CustomTitle from "../atoms/title"
 
 const AuthBanner = () => {
@@ -9,10 +10,11 @@ const AuthBanner = () => {
     const { notifyUser } = useContext(toastContext)
     const [authColor, setAuthColor] = useState('')
     const [authText, setAuthText] = useState('')
+    const location = useLocation()
   
-    useEffect(() => {      
+    useEffect(() => {
 
-      const intervalId = setTimeout(() => { 
+      const intervalId = setTimeout(() => {         
         
         if (auth) {          
           setAuthText(`Authenticated with ${role == 'Admin' ? 'Administrator' : role} Privileges`)
@@ -28,7 +30,7 @@ const AuthBanner = () => {
         clearTimeout(intervalId)
       }
 
-    }, [auth, role])
+    }, [auth, role, location])
   
     return (
 

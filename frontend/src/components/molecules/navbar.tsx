@@ -4,7 +4,7 @@ import { authContext } from '../../utils/contexts/auth-provider'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser, faComment, faSignIn, faSignOut } from '@fortawesome/free-solid-svg-icons'
 
-const LinkStyle = `flex flex-col gap-1 bg-slate-900 text-white rounded-xl p-3 my-2 active:bg-black`
+const LinkStyle = `flex flex-col gap-1 bg-slate-900 text-white rounded-xl p-3 my-2 active:bg-black select-none`
 
 const Navbar = () => {
 
@@ -21,7 +21,7 @@ const Navbar = () => {
       <ul className='flex gap-4 items-center justify-center'>
 
           <li>
-            <Link className={LinkStyle} to='/chat-rooms'>
+            <Link className={LinkStyle} to='/chat-rooms' draggable={false}>
               <FontAwesomeIcon icon={faComment} /> Chats
             </Link>
           </li>
@@ -29,12 +29,12 @@ const Navbar = () => {
           {
             auth ? 
               <li>
-                <Link className={LinkStyle} to='/profile'>
+                <Link className={LinkStyle} to='/profile' draggable={false}>
                   <FontAwesomeIcon icon={faUser} /> Profile
                 </Link>
               </li> : 
               <li>
-                <Link className={LinkStyle} to='/create-account'>
+                <Link className={LinkStyle} to='/create-account' draggable={false}>
                   <FontAwesomeIcon icon={faUser} /> Sign Up
                 </Link>
               </li>
@@ -43,12 +43,12 @@ const Navbar = () => {
           {
             auth ? 
               <li>                
-                <Link className={LinkStyle} to={`/login`} onClick={async () => logout()}>
+                <Link className={LinkStyle} to={`/login`} onClick={async () => logout()} draggable={false}>
                   <FontAwesomeIcon icon={faSignOut} /> Sign out
                 </Link>              
               </li> : 
               <li>
-                <Link className={LinkStyle} to='/login'>              
+                <Link className={LinkStyle} to='/login' draggable={false}>              
                   <FontAwesomeIcon icon={faSignIn} /> Sign in
                 </Link>
               </li> 

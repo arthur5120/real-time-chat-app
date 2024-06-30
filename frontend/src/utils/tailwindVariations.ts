@@ -7,7 +7,7 @@ const inputDefault = `
     p-2 m-2 rounded-lg
     disabled:opacity-75
     disabled:text-gray-200
-    disabled:cursor-not-allowed
+    disabled:cursor-not-allowed    
 `
 
 export const inputVariations : TVariations = {
@@ -24,7 +24,7 @@ export const selectVariations = {
 }
 
 export const titleVariations = {
-    varone : 'text-xl font-bold text-red-500',
-    vartwo : 'text-lg font-bold text-yellow-500',
-    varthree : 'text font text-green-500',
+    varone : 'text-xl font-bold text-red-500 select-none',
+    vartwo : 'text-lg font-bold text-yellow-500 select-none',
+    varthree : 'text font text-green-500 select-none',
   }

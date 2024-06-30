@@ -34,7 +34,7 @@ const App = () => {
           const authRequest : TSocketAuthRequest = {user : {name : user.name, id : authInfo.id}, isConnecting : true}
           socket?.emit(`auth`, authRequest)
           socket?.emit(`authList`)
-          //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
+          // notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
           return
         }
     
@@ -44,7 +44,7 @@ const App = () => {
           socket?.emit(`auth`, authRequest)
           socket?.emit(`authList`)
           await authLogout({}) // Logout if auth is false.
-          //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
+          // notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
           return
         }         
 
@@ -55,7 +55,7 @@ const App = () => {
   }
 
   const handleSessionExpiration = async () => {            
-    const authenticated = getAuthTokenStatus ? await getAuthTokenStatus() : ''    
+    const authenticated = getAuthTokenStatus ? await getAuthTokenStatus() : ''
     if (!authenticated) {
       setAuth ? setAuth(false) : ''
       auth ? notifyUser(`Logged out`) : ''
