@@ -15,14 +15,12 @@ const App = () => {
   const {notifyUser} = useContext(toastContext)
   
   const [checkAuthStatus, setCheckAuthStatus] = useState(false)
-  const [previousAuth, setPreviousAuth] = useState(auth)  
-  const location = useLocation()  
+  const [previousAuth, setPreviousAuth] = useState(auth)
+  const location = useLocation()
 
   const handleSocketOnlineList = async () => {    
 
     const authInfo : TRes = await authStatus({})  
-    
-    //console.log(`localAuth : ${auth}, serverAuth : ${authInfo.authenticated}`)
     
       try {
 

@@ -51,7 +51,7 @@ export const conAuth = async (req : Request, res : Response) => {
         return res.status(200).cookie('auth', token, {
                 expires: new Date(Date.now() + 1000 * 60 * 15),
                 httpOnly: true,
-                maxAge: 1000 * 60 * 15,
+                maxAge: 1000 * 60 * 15,                
                 sameSite: 'strict'                
             }).json({success : true})
                     

@@ -8,7 +8,7 @@ import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
 import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faEyeSlash, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
+import { faEye, faEyeSlash, faCircleInfo, faClipboard, faClipboardCheck } from '@fortawesome/free-solid-svg-icons'
 
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
@@ -41,6 +41,7 @@ const Chat = () => {
   const [useDelayOnEmit, setUseDelayOnEmit] = useState(false)
   const [verticalView, setVerticalView] = useState(false)
   const [renderCounter, setRenderCounter] = useState(0)  
+  const [copiedToClipboard, setCopiedToClipboard] = useState(false)
 
   const isCurrentRoomIdValid = currentRoom.id == '0' || currentRoom.id == '-1'
 
@@ -332,6 +333,12 @@ const Chat = () => {
 
   }
 
+  const copyRoomNameToClipboard = () => {
+    navigator.clipboard.writeText(currentRoom.name.trim())
+    notifyUser(`Copied to clipboard`)
+    setCopiedToClipboard(true)
+  }
+
   const onSelectChange = (e : React.ChangeEvent<HTMLSelectElement>) => {    
     const selectId = e.target.selectedIndex
     const roomId = e.target[selectId].id
@@ -460,7 +467,7 @@ const Chat = () => {
       setOnlineUsers(currentOnlineUsers)
     })
 
-    return () => {      
+    return () => {
                
       if (isCurrentRoomIdValid) {
         setReload(reload + 1)
@@ -495,7 +502,7 @@ const Chat = () => {
       previous : previousMessage
     })
 
-  }
+  }  
 
   const onInputEditableMessage = async (e : React.FormEvent<HTMLSpanElement>) => {    
     const element = e.target as HTMLSpanElement
@@ -730,31 +737,43 @@ const Chat = () => {
 
         <div className={`flex flex-col items-center justify-center select-none`}>
 
-          {
-            (rooms[0]?.id !== '-1') ?
-            <CustomSelect    
-              name='Current Chat Room' 
-              ref={chatRoomContainerRef}
-              disabled={!!reload || firstLoad}
-              onChange={(e) => onSelectChange(e)}
-              className={`bg-slate-900 w-80 text-center hover:bg-black`}
-              title={`Messages : ${messages.length}, Users : ${roomUsers.length}`}
-              values={
-                rooms.map((room) => {
-                  return {
-                    id : room.id,
-                    name : room.name
-                  }
-                })}
-                value={currentRoom.id}
-              /> : 
-            <CustomSelect
-              name='Current Chat Room'
-              disabled={!!reload || firstLoad}
-              className={`bg-slate-900 w-80`}
-              values={[{name : '...'}]}
-            />
-          }  
+          <h3>Current Chat Room</h3>
+
+          <span className={`flex items-center justify-center select-none w-80`}>
+
+            {
+
+              (rooms[0]?.id !== '-1') ? 
+              <CustomSelect
+                name=''
+                ref={chatRoomContainerRef}
+                disabled={!!reload || firstLoad}
+                onChange={(e) => onSelectChange(e)}
+                className={`bg-slate-900 text-center hover:bg-black w-full`}
+                title={`Messages : ${messages.length}, Users : ${roomUsers.length}`}
+                values={
+                  rooms.map((room) => {
+                    return {
+                      id : room.id,
+                      name : room.name
+                    }
+                  })}
+                  value={currentRoom.id}
+                /> : 
+              <CustomSelect
+                name=''
+                disabled={!!reload || firstLoad}
+                className={`bg-slate-900 w-80`}
+                values={[{name : '...'}]}                                
+              />
+
+            }  
+
+            <button title={`Copy Room Name`} onClick={() => copyRoomNameToClipboard()}>
+              {copiedToClipboard ? <FontAwesomeIcon icon={faClipboardCheck} /> : <FontAwesomeIcon icon={faClipboard} />}
+            </button>
+            
+          </span>       
 
         </div>              
       

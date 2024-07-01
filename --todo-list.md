@@ -21,7 +21,7 @@
 # If user connected recently, set to inactivity status on the socket.
 # Handle online user control on server and socket when removing cookie manually.
 # When resetting rooms, the socket is disconnected prematurely and the users don't receive updates. [DONE]
-# Chat not loading sometimes when first getting to the page.
+# Chat not loading sometimes when first getting to the page. [DONE]
 # Add button to copy current room.
 
 // Done today
