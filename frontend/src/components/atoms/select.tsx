@@ -6,9 +6,10 @@ import { forwardRef } from "react";
 type SelectProps = Partial<{
     values : Partial<{id : string, name : string}>[],
     variationName : 'varone' | 'vartwo' | 'varthree'
+    createLabel ? : boolean
 } & React.SelectHTMLAttributes<HTMLSelectElement>>
 
-const CustomSelect = forwardRef<HTMLSelectElement, SelectProps>(({name, values, className, variationName='varone', ...props}, ref) => {  
+const CustomSelect = forwardRef<HTMLSelectElement, SelectProps>(({name, values, className, variationName='varone', createLabel=true, ...props}, ref) => {  
 
   const mergedClasses = twMerge(selectVariations[variationName], className)  
 
@@ -16,7 +17,7 @@ const CustomSelect = forwardRef<HTMLSelectElement, SelectProps>(({name, values, 
 
     <>    
 
-    <label htmlFor={name} className="bg-transparent">{capitalizeFirst(`${name}`)}</label>
+    {createLabel ? <label htmlFor={name} className="bg-transparent">{capitalizeFirst(`${name}`)}</label> : ''}
     
       <select name={name} ref={ref} id={name} {...props} className={mergedClasses}>{
         values?
@@ -28,7 +29,7 @@ const CustomSelect = forwardRef<HTMLSelectElement, SelectProps>(({name, values, 
 
           ) 
         : ''
-      }</select>
+      } </select>
       
     </>
 

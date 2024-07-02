@@ -404,6 +404,10 @@ const Chat = () => {
       setCooldown(0)
     }, cooldown)
 
+    if(copiedToClipboard) {
+      setCopiedToClipboard(false)
+    }
+
     if(hasErrors) {
       notifyUser(`Something Went Wrong, please try again later`, `warning`)
       setHasErrors(false)
@@ -422,10 +426,6 @@ const Chat = () => {
     socket?.on('room', (msg : TChatMessage) => {
 
       console.log(`socket on room : ${currentRoom?.id}`)
-
-      // When the socket is disconnected, it gets a new id.
-      // So the delayed response triggers a new render when receiving a callback of the sent message.
-      // This prevents it from happening : id != previousMessageId
 
       const {id, room} = msg
       const previousMessageId = messages?.length > 0 ? messages[0].id : -1      
@@ -551,8 +551,7 @@ const Chat = () => {
       case 'cancel' : {        
         if (messageBeingEdited?.previous) {
           messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.previous : ''
-          setMessageBeingEdited({...messagePlaceholder, previous : ''})      
-          //setReload(reload + 1)
+          setMessageBeingEdited({...messagePlaceholder, previous : ''})
         }        
         break
       }
@@ -628,7 +627,7 @@ const Chat = () => {
               title={`Room info`} 
               disabled={!!reload || firstLoad}
               onClick={() => notifyUser(`Messages : ${messages.length}, Users : ${roomUsers.length}`)} 
-              className='bg-[#050D20] hover:bg-black rounded-lg disabled:cursor-not-allowed'>                          
+              className='bg-[#050D20] hover:bg-black rounded-lg disabled:cursor-not-allowed'>
               <FontAwesomeIcon icon={faCircleInfo} width={48} height={48}/>
             </button>
             
@@ -735,21 +734,24 @@ const Chat = () => {
 
         </div> 
 
-        <div className={`flex flex-col items-center justify-center select-none`}>
+        <div className={`flex flex-col items-center justify-center select-none gap-3`}>
 
-          <h3>Current Chat Room</h3>
+          <label htmlFor={`current-chat-room`} className="bg-transparent">
+            Current Chat Room
+          </label>
 
-          <span className={`flex items-center justify-center select-none w-80`}>
+          <span className={`flex items-center justify-center select-none w-80 h-[48px]`}>
 
             {
 
               (rooms[0]?.id !== '-1') ? 
               <CustomSelect
-                name=''
+                name='current-chat-room'
+                createLabel={false}
                 ref={chatRoomContainerRef}
                 disabled={!!reload || firstLoad}
                 onChange={(e) => onSelectChange(e)}
-                className={`bg-slate-900 text-center hover:bg-black w-full`}
+                className={`bg-slate-900 text-center hover:bg-black w-full h-full`}
                 title={`Messages : ${messages.length}, Users : ${roomUsers.length}`}
                 values={
                   rooms.map((room) => {
@@ -763,14 +765,20 @@ const Chat = () => {
               <CustomSelect
                 name=''
                 disabled={!!reload || firstLoad}
-                className={`bg-slate-900 w-80`}
-                values={[{name : '...'}]}                                
+                className={`bg-slate-900 text-center hover:bg-black w-full h-full`}
+                values={[{name : '...'}]}
               />
 
             }  
 
-            <button title={`Copy Room Name`} onClick={() => copyRoomNameToClipboard()}>
-              {copiedToClipboard ? <FontAwesomeIcon icon={faClipboardCheck} /> : <FontAwesomeIcon icon={faClipboard} />}
+            <button title={`Copy Room Name`} onClick={() => copyRoomNameToClipboard()}
+              disabled={!!reload || firstLoad}
+                className={`${copiedToClipboard ? `bg-green-700 hover:bg-green-600` : `bg-[#050D20] hover:bg-black`} rounded-lg disabled:cursor-not-allowed h-full w-[48px]`}
+              >
+              {copiedToClipboard ? 
+                <FontAwesomeIcon icon={faClipboardCheck}/> : 
+                <FontAwesomeIcon icon={faClipboard}/>
+              }
             </button>
             
           </span>       
@@ -823,7 +831,7 @@ const Chat = () => {
 
       </section>      
        
-      <div className='flex absolute bg-tranparent top-auto bottom-0 m-12 gap-2'>        
+      {/* <div className='flex absolute bg-tranparent top-auto bottom-0 m-12 gap-2'>        
         <h3 className='flex mb-5 bg-purple-700 rounded-lg p-3'>
             Render Counter : {renderCounter}
         </h3>        
@@ -833,7 +841,7 @@ const Chat = () => {
         <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
           Messages : {messages.length}
         </h3>
-      </div>      
+      </div>       */}
      
     </section>
     
