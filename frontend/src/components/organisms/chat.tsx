@@ -334,9 +334,12 @@ const Chat = () => {
   }
 
   const copyRoomNameToClipboard = () => {
-    navigator.clipboard.writeText(currentRoom.name.trim())
-    notifyUser(`Copied to clipboard`)
+    const roomName = currentRoom.name.trim().replace(/\s+/g, ' ')
+    navigator.clipboard.writeText(roomName)    
     setCopiedToClipboard(true)
+    setTimeout(() => {
+      setCopiedToClipboard(false)
+    }, 3000)
   }
 
   const onSelectChange = (e : React.ChangeEvent<HTMLSelectElement>) => {    
