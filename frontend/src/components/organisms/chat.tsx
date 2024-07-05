@@ -40,7 +40,7 @@ const Chat = () => {
   const [cooldown, setCooldown] = useState(0)
   const [useDelayOnEmit, setUseDelayOnEmit] = useState(false)
   const [verticalView, setVerticalView] = useState(false)
-  const [renderCounter, setRenderCounter] = useState(0)  
+  const [renderCounter, setRenderCounter] = useState(0)
   const [copiedToClipboard, setCopiedToClipboard] = useState(false)
 
   const isCurrentRoomIdValid = currentRoom.id == '0' || currentRoom.id == '-1'
@@ -462,7 +462,9 @@ const Chat = () => {
     socket?.on('change', (msg : string) => {
       console.log(`socket on change : ${currentRoom?.id}`)
       setReload(reload + 1)
-      notifyUser(msg, 'info')        
+      if (msg != ``) {
+        notifyUser(msg, 'info')
+      }
     })
 
     socket?.on(`auth`, (currentOnlineUsers : string[]) => {
@@ -480,7 +482,10 @@ const Chat = () => {
 
       setMessageBeingEdited({...messagePlaceholder, previous : ''})
       clearTimeout(timer)
-      scrollToLatest()
+
+      if (reload) {
+        scrollToLatest()
+      }
       
       if(!firstLoad) {        
         socket?.off()
@@ -551,11 +556,11 @@ const Chat = () => {
         break
       }   
 
-      case 'cancel' : {        
+      case 'cancel' : {
         if (messageBeingEdited?.previous) {
           messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.previous : ''
           setMessageBeingEdited({...messagePlaceholder, previous : ''})
-        }        
+        }
         break
       }
 
@@ -564,7 +569,7 @@ const Chat = () => {
       
     }
     
-  }  
+  }
 
   const mainSectionStyle = verticalView ? 
   `flex flex-col justify-center items-center text-center` : 
@@ -584,7 +589,7 @@ const Chat = () => {
 
   const buttonDivStyle = verticalView ? 
   `flex justify-between w-80 gap-3 my-2` : 
-  `flex flex-col justify-between h-80 gap-3 mx-2`
+  `flex flex-col justify-start h-80 gap-3 mx-2`
 
   return (    
 
@@ -592,29 +597,33 @@ const Chat = () => {
 
       <section className={usersOnlineSection}>
 
-        <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center items select-none`}>
-          <h3 className={`bg-white text-black rounded p-1`}>Room Users</h3>
-          {
-            roomUsers.length > 0 ? 
-              roomUsers.map((user, id) => {
-                return <p className='' key={`roomUser-${id}`}>{cropMessage(user, 12)}</p>
-              }) : 
-            <p>...</p>
-          }
+        <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28 max-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center items select-none`}>
+          <h3 className={`bg-white text-black rounded p-1 w-full`}>Room Users</h3>
+          <span className={`bg-transparent m-1 rounded-lg overflow-y-scroll w-full max-h-28`}>
+            {
+              roomUsers.length > 0 ? 
+                roomUsers.map((user, id) => {
+                  return <p className='' key={`roomUser-${id}`}>{cropMessage(user, 8)}</p>
+                }) : 
+              <p>...</p>
+            }
+          </span>
         </div>
 
-        <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center items select-none`}>
-          <h3 className={`bg-white text-black rounded p-1`}>Online Users</h3>
-          {
-            onlineUsers?.length > 0 ? 
-              onlineUsers.map((user, id) => {
-                return <p className='' key={`onlineUsers-${id}`}>{cropMessage(user, 12)}</p>
-              }) : 
-            <p>...</p>
-          }
+        <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28 max-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center items select-none`}>
+          <h3 className={`bg-white text-black rounded p-1 w-full h-full`}>Online</h3>
+          <span className={`bg-transparent m-1 rounded-lg overflow-y-scroll w-full max-h-28`}>
+            {
+              onlineUsers?.length > 0 ? 
+                onlineUsers.map((user, id) => {
+                  return <p className='' key={`onlineUsers-${id}`}>{cropMessage(user, 8)}</p>
+                }) : 
+              <p>...</p>
+            }
+          </span>
         </div>
 
-      </section> 
+      </section>
 
       <section className={chatSectionStyle}>
 
@@ -655,24 +664,33 @@ const Chat = () => {
             const isUserSender = currentUser.name == message.user
             const isMessageSelected = message.id == messageBeingEdited.id
             const isMessageFocused = document.activeElement == messageContainerRef.current
+
+            // 🥗 🌮 🍣 🍙 🍘 🍥 🍨 ☕️ 🎂 🥡 🍵 🍢🍡
             
             return (
 
               <Fragment key={`message-fragment-${id}`}>
 
-                <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 justify-end bg-transparent`}>
-                  <h4 className='bg-transparent text'>{isUserSender ? 'You' : message.user}</h4>
+                <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 py-2 justify-end bg-transparent`}>
+                  <h4 className={`bg-transparent font-semibold ${isUserSender ? 'text-yellow-500' : ''}`}>{isUserSender ? `🍣 You` : `🥡 ${message.user}`}</h4>
                 </span>
                             
-                <span 
-
+                <span // Editable component with `children` managed by React.
+                  
                   data-id={message.id}
                   ref={isMessageSelected ? messageContainerRef : null}
                   className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 ${primaryDefault} rounded max-w-48 h-fit break-words cursor-pointer`}
+                  suppressContentEditableWarning={true}
                   contentEditable={isUserSender && isMessageSelected}
 
                   onClick={(e) => {                    
-                    onEnterMessageEditMode(e)
+                    if (isUserSender) {
+                      onEnterMessageEditMode(e)
+                    } else {
+                      notifyUser(
+                        `Message wrote by ${message.user}, it was created ${getTime(message.updated_at)} ${message.updated_at == message.created_at ? `` : `and updated at ${getTime(message.updated_at)}`}`
+                      )
+                    }
                   }}
 
                   onInput={(e) => {
@@ -687,8 +705,8 @@ const Chat = () => {
                     }
                   }}
 
-                > 
-
+                >                  
+                  
                   {message.content}
 
                 </span>
@@ -715,9 +733,9 @@ const Chat = () => {
             
         </div>
 
-        <div className={`flex ${primaryDefault} rounded-lg w-80 h-15 gap-2 p-1`}>                
+        <div className={`flex ${primaryDefault} rounded-lg w-80 h-15 gap-2 p-1`}>
 
-          <textarea 
+          <textarea
             name=''
             id=''
             className={`items-start ${secondaryDefault} text-white rounded-lg resize-none p-1 m-1 h-full w-full`}
@@ -797,7 +815,7 @@ const Chat = () => {
           <CustomButton
             value={'New Room'}
             variationName='varthree'
-            className={`w-20 h-full m-0 flex items-center justify-center`}
+            className={`w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad}
             onClick={() => onNewRoomClick()}
           />
@@ -805,7 +823,7 @@ const Chat = () => {
           <CustomButton 
             value={'Reset Rooms'}
             variationName='vartwo'
-            className={`w-20 h-full m-0 flex items-center justify-center`}
+            className={`w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad}
             onClick={() => onResetRoomsClick()}
           />
@@ -813,19 +831,19 @@ const Chat = () => {
           <CustomButton
             value={`Get 🐜`}
             variationName='varthree'
-            className={`bg-green-700 active:bg-green-600 w-20 h-full m-0 flex items-center justify-center`}
+            className={`bg-orange-900 active:bg-orange-800 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad}
-            onClick={() => notifyUser(`If the chat happens to go blank, please refresh the page.`)}
+            onClick={() => notifyUser(`Button to get a bug.`)}
           />
           
           <CustomButton
             value={`Test 🦾`}
             variationName='varthree'
-            className={`bg-yellow-700 active:bg-yellow-600 w-20 h-full m-0 flex items-center justify-center`}
+            className={`bg-black active:bg-gray-900 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad}
             title={`Currently showing nothing.`}
             onClick={ async () => {
-              notifyUser(`Button for testing stuff.`)
+              notifyUser(`Button for testing.`)
             }}
           />
 

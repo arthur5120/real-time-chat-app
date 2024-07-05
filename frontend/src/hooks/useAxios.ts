@@ -4,7 +4,7 @@ import { generateUniqueId, getConfig } from "../utils/useful-functions";
 import axios from 'axios'
 
 export const createUser = async(data : TUser) => { // Idempotency
-    try {
+    try {        
         const optimisticId = generateUniqueId()
         const config = getConfig(optimisticId)
         const res = await baseURL.post(`/create-user`, data, config)

@@ -23,11 +23,11 @@
 # When resetting rooms, the socket is disconnected prematurely and the users don't receive updates. [DONE]
 # Chat not loading sometimes when first getting to the page. [DONE]
 # Add button to copy current room.
+# Fix idempotency when creating user.
+# Allow both first and last name when creating user.
+# Handle room/online user list overflow on x axis. [DONE]
+# Make room/online a single list, but highlighting who's online.
 
 // Done today
 
-Slight increase the delay on first socket emit after room deletion
-Disable dragging and user select property on navigation bar links and other chat elements
-Add no cache option to package.json
-Add router location as a new dependency to auth-banner useEffect
-Add conditional return and reload to retrieveMessages function when currentRoomid is invalid
+Implement scrollable user list to handle overflow, add icons to better distinguish the current user and update form component to use new custom select dropdown.

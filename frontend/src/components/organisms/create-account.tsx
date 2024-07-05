@@ -29,7 +29,7 @@ const CreateAccount = () => {
     setLoading(false)
   }
   
-  const onSubmit = async (e : FormEvent<HTMLFormElement>) => {  
+  const onSubmit = async (e : FormEvent<HTMLFormElement>) => {
 
     e.preventDefault()
 
@@ -73,11 +73,11 @@ const CreateAccount = () => {
                 <CustomButton value='Clear' onClick={() => onClear()} type="reset" className='p-5 my-5' variationName="vartwo"/>
                 <CustomButton value='Submit' className='p-5 my-5' variationName="varthree"/>
               </div>
-          </CustomForm>        
+          </CustomForm>
 
         <CustomTitle value={message} variationName="varthree"/>
         
-        {loading ? <CustomTitle value={'please wait...'} variationName="varthree"/> : ''}      
+        {loading ? <CustomTitle value={'please wait...'} variationName="varthree"/> : ''}         
 
     </>
 

@@ -29,12 +29,24 @@ const CustomForm : FC<TFormProps> = ({
   data, setData, onSubmit, fields, role=false, dataCollection=null, children,
   formClassName, inputClassName  
 }) => {
-  
-  const handleChange = (e : ChangeEvent<HTMLInputElement | HTMLSelectElement>) => { 
+
+  const handleInputChange = (e : ChangeEvent<HTMLInputElement>) => { 
     setData((values) => ({
       ...values,
       [e.target.name] : e.target.value
     }))
+  }
+  
+  const handleSelectChange = (e : ChangeEvent<HTMLSelectElement>) => { 
+
+    const selectId = e.target.selectedIndex    
+    const roomName = e.target[selectId].textContent
+
+    setData((values) => ({
+      ...values,
+      [e.target.name] : roomName
+    }))    
+    
   }
 
   const mergedFormClassName = twMerge(`flex flex-col items-center justify-center bg-slate-700 rounded-lg p-5`, formClassName)
@@ -53,7 +65,7 @@ const CustomForm : FC<TFormProps> = ({
                 name={field}
                 autoComplete={`${field}`}
                 type={field}
-                onChange={(e) => handleChange(e)}
+                onChange={(e) => handleInputChange(e)}
                 placeholder={formPlaceHolders[field]}
                 value={data[field]}
                 className={inputClassName}
@@ -62,7 +74,7 @@ const CustomForm : FC<TFormProps> = ({
           ) : ''}
           
           {role ? <>
-            <CustomSelect id='role' name='role' values={[{name : 'User'}, {name : 'Admin'}]} onChange={(e) => handleChange(e)} className={inputClassName}/>
+            <CustomSelect id='role' name='role' values={[{name : 'User'}, {name : 'Admin'}]} onChange={(e) => handleSelectChange(e)} className={inputClassName}/>
           </> : ''}
           
           {dataCollection != null ? <CustomSelect values={dataCollection} className={inputClassName}/> : ''}
