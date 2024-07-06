@@ -22,12 +22,15 @@
 # Handle online user control on server and socket when removing cookie manually.
 # When resetting rooms, the socket is disconnected prematurely and the users don't receive updates. [DONE]
 # Chat not loading sometimes when first getting to the page. [DONE]
-# Add button to copy current room.
+# Add button to copy current room name. [DONE]
 # Fix idempotency when creating user.
-# Allow both first and last name when creating user.
+# Allow both first and last name when creating user. [DONE]
 # Handle room/online user list overflow on x axis. [DONE]
-# Make room/online a single list, but highlighting who's online.
+# Make room/online a single list, but highlighting who's online. [DONE]
+# Update the room users when the session expires.
+# Handle name with spaces on the online user list.
 
 // Done today
 
-Implement scrollable user list to handle overflow, add icons to better distinguish the current user and update form component to use new custom select dropdown.
+Make room/online a single list, but highlighting online users and tweaked placeholder text on the room user list.
+Make room/online a single list, highlight online users, and tweak placeholder text on the room user list.

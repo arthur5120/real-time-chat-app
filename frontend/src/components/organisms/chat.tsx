@@ -483,20 +483,20 @@ const Chat = () => {
       setMessageBeingEdited({...messagePlaceholder, previous : ''})
       clearTimeout(timer)
 
-      if (reload) {
-        scrollToLatest()
-      }
-      
       if(!firstLoad) {        
         socket?.off()
         socket?.disconnect()
       } else {
         setFirstLoad(false)
-      }
+      }      
 
-    }  
+    }
   
-  }, [rooms.length, messages.length, currentRoom.id, reload, auth, showNotifications])  
+  }, [rooms.length, messages.length, currentRoom.id, reload, auth, showNotifications])
+
+  useEffect(() => {
+    scrollToLatest()
+  }, [messages.length])
   
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {   
     
@@ -599,20 +599,23 @@ const Chat = () => {
 
         <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28 max-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center items select-none`}>
           <h3 className={`bg-white text-black rounded p-1 w-full`}>Room Users</h3>
-          <span className={`bg-transparent m-1 rounded-lg overflow-y-scroll w-full max-h-28`}>
-            {
+          <span className={`bg-transparent m-1 rounded-lg ${roomUsers.length >= 10 ? `overflow-y-scroll` : ``} w-full min-h-[312px] max-h-[312px]`}>
+            {              
               roomUsers.length > 0 ? 
                 roomUsers.map((user, id) => {
-                  return <p className='' key={`roomUser-${id}`}>{cropMessage(user, 8)}</p>
+                  const isUserOnline = onlineUsers.find((onlineUser) => onlineUser == user)
+                  return <p title={isUserOnline ? `${user} is online.` : `${user} is offline.`} className={`${
+                    isUserOnline ? `text-green-400` : `text-gray-300`}`
+                  } key={`roomUser-${id}`}>{cropMessage(user, 8)}</p>
                 }) : 
-              <p>...</p>
+              <p className={`text-gray-400`}>...</p>
             }
           </span>
         </div>
 
-        <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28 max-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center items select-none`}>
+        {/* <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28 max-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center items select-none`}>
           <h3 className={`bg-white text-black rounded p-1 w-full h-full`}>Online</h3>
-          <span className={`bg-transparent m-1 rounded-lg overflow-y-scroll w-full max-h-28`}>
+          <span className={`bg-transparent m-1 rounded-lg ${onlineUsers.length >= 5 ? `overflow-y-scroll` : ``} w-full min-h-[120px] max-h-[120px]`}>
             {
               onlineUsers?.length > 0 ? 
                 onlineUsers.map((user, id) => {
@@ -621,7 +624,7 @@ const Chat = () => {
               <p>...</p>
             }
           </span>
-        </div>
+        </div> */}
 
       </section>
 
@@ -843,7 +846,8 @@ const Chat = () => {
             disabled={!!reload || firstLoad}
             title={`Currently showing nothing.`}
             onClick={ async () => {
-              notifyUser(`Button for testing.`)
+              notifyUser(`Button for testing.`)   
+              setReload(reload + 1)           
             }}
           />
 
