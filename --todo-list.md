@@ -29,6 +29,7 @@
 # Make room/online a single list, but highlighting who's online. [DONE]
 # Update the room users when the session expires.
 # Handle name with spaces on the online user list.
+# Save user preferences in cookies.
 
 // Done today
 

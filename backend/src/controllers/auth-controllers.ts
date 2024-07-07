@@ -25,7 +25,7 @@ setInterval(() => {
             onlineUsers = newList
         }
     }
-    console.log(`Currently Online : ${onlineUsers.length}. \n Users to Logout : ${usersToLogout.length}. \n Next expiration check : ${((dateNow - nextExpirationCheck) / (1000 * 60)) | 0}m.`)
+    console.log(`Currently Online : ${onlineUsers.length}. \n Users to Logout : ${usersToLogout.length}. \n Next expiration check : ${((nextExpirationCheck - dateNow) / (1000 * 60)) | 0}m.`)
 }, 5000)
 
 export const conAuth = async (req : Request, res : Response) => {

@@ -7,8 +7,6 @@ import { toastContext } from "../../utils/contexts/toast-provider"
 import { socketContext } from "../../utils/contexts/socket-provider"
 import { TSocketAuthRequest, TRes } from "../../utils/types"
 import { authStatus, getUserById, authLogout } from "../../hooks/useAxios"
-import { generateUniqueId } from "../../utils/useful-functions"
-import Cookies from 'js-cookie'
 
 const App = () => {
 
@@ -18,7 +16,7 @@ const App = () => {
   
   const [checkAuthStatus, setCheckAuthStatus] = useState(false)
   const [previousAuth, setPreviousAuth] = useState(auth)
-  const [sessionId, setSessionId] = useState(0)
+  const [hasSessionExpired, setHasSessionExpired] = useState(false)
   const location = useLocation()
 
   const handleSocketOnlineList = async () => {    
@@ -27,27 +25,33 @@ const App = () => {
     
       try {
 
-        socket?.connect()
-  
-        if (auth && authInfo.id != `none`) {
-          const user = await getUserById(authInfo.id)
+        socket?.connect() 
+        
+        if(hasSessionExpired) { // Session Expired or the token was not found.          
           setRole ? setRole(authInfo.role) : ''
-          const authRequest : TSocketAuthRequest = {user : {name : user.name, id : authInfo.id}, isConnecting : true}
-          const localUserSessionId = handleSessionId()
+          const authRequest : TSocketAuthRequest = {user : {id : ``}, isConnecting : false}
           socket?.emit(`auth`, authRequest)
           socket?.emit(`authList`)
-          notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}, session Id : ${localUserSessionId}`)
+          setHasSessionExpired(false)
+        }
+  
+        if (auth && authInfo.id != `none`) { // Login          
+          const user = await getUserById(authInfo.id)
+          setRole ? setRole(authInfo.role) : ''
+          const authRequest : TSocketAuthRequest = {user : {id : authInfo.id, name : user.name}, isConnecting : true}
+          socket?.emit(`auth`, authRequest)
+          socket?.emit(`authList`)
+          //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
           return
         }
     
-        if (!auth && authInfo.id != `none`) {
-          setRole ? setRole('none') : ''
+        if (!auth && authInfo.id != `none`) { // Logout          
+          setRole ? setRole('none') : ''          
           const authRequest : TSocketAuthRequest = {user: {id : authInfo.id}, isConnecting : false}
-          const localUserSessionId = handleSessionId()
           socket?.emit(`auth`, authRequest)
           socket?.emit(`authList`)
-          await authLogout({}) // Logout if auth is false.
-          notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}, session Id : ${localUserSessionId}`)
+          await authLogout({})
+          //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
           return
         }         
 
@@ -61,34 +65,22 @@ const App = () => {
     const authenticated = getAuthTokenStatus ? await getAuthTokenStatus() : ''
     if (!authenticated) {
       setAuth ? setAuth(false) : ''
-      auth ? notifyUser(`Logged out`) : ''
+      if (auth) {
+        notifyUser(`Logged out`)     
+        setHasSessionExpired(true)
+      }      
     } else if (!auth) {
       setAuth ? setAuth(true) : ''
     }    
   }
-
-  const handleSessionId = () => {
-    if(!sessionId) { 
-      const recoveredId = Cookies.get(`sessionId`)
-      const uniqueId = recoveredId ? recoveredId : generateUniqueId()
-      Cookies.set(`sessionId`, uniqueId, { expires: 1, secure: true })
-      return uniqueId
-    } else {
-      return sessionId
-    }
-  }
   
   const timer = setInterval(() => {
     setCheckAuthStatus(!checkAuthStatus)
-  }, 15000) 
-
-  useEffect(() => {         
-    handleSessionId()
-  }, [])
+  }, 15000)
 
   useEffect(() => {     
 
-    const delay = setTimeout(() => { // avoids flicking on UI      
+    const delay = setTimeout(() => { // avoids flicking on the UI      
       handleSessionExpiration()      
     }, 200)
 
@@ -122,11 +114,8 @@ const App = () => {
       <section className='flex flex-col absolute inset-0 min-h-screen min-w-screen w-full h-full'>
 
         <header>
-
-        <AuthBanner/>
-        
-        <Navbar />
-
+          <AuthBanner/>          
+          <Navbar />
         </header>
 
         <main>

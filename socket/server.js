@@ -24,7 +24,7 @@ setInterval(() => {
             onlineUsersNames = newList.map((user) => user.name)
         }
     }
-    console.log(`Currently Online : ${JSON.stringify(onlineUsersNames)} next expiration check : ${((hereNow - nextExpirationCheck) / (1000 * 60)) | 0}m`)
+    console.log(`Online : ${JSON.stringify(onlineUsersNames)}, next check in ${(((nextExpirationCheck - hereNow) / (1000 * 60)) | 0)}m.`)
 }, 5000)    
 
 const connectUser = (user) => {
@@ -110,13 +110,15 @@ io.on('connection', (socket) => {
 
             if (user?.id && isConnecting == true) {                
                 connectUser({...user, expirationTime : expirationTime})
+                console.log(`connecting user : ${JSON.stringify(user)}`)
                 return
             }
             
             if (user?.id && isConnecting == false) {
                 disconnectUser(user.id)
+                console.log(`disconnecting user : ${JSON.stringify(user)}`)
                 return
-            }            
+            }
 
         } catch (e) {
             console.log(`auth error ${e}`)

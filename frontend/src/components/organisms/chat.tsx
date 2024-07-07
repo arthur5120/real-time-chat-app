@@ -42,6 +42,8 @@ const Chat = () => {
   const [verticalView, setVerticalView] = useState(false)
   const [renderCounter, setRenderCounter] = useState(0)
   const [copiedToClipboard, setCopiedToClipboard] = useState(false)
+  const [userActivity, setUserActivity] = useState(true)  
+  const [inactivityTimer, setInactivityTimer] = useState<NodeJS.Timeout | null>(null)
 
   const isCurrentRoomIdValid = currentRoom.id == '0' || currentRoom.id == '-1'
 
@@ -497,6 +499,22 @@ const Chat = () => {
   useEffect(() => {
     scrollToLatest()
   }, [messages.length])
+
+  
+  useEffect(() => {
+    setInactivityTimer(setTimeout(() => {    
+        setUserActivity(false)
+        // Send inactivity status to socket.
+    }, 30000))
+  }, [userActivity])
+
+  const handleUserActivity = () => {
+    if (!userActivity) {
+      setUserActivity(true)
+      // Send activity status to socket.
+    }
+    inactivityTimer ? clearTimeout(inactivityTimer) : ''
+  }
   
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {   
     
@@ -593,20 +611,31 @@ const Chat = () => {
 
   return (    
 
-    <section className={mainSectionStyle}>
+    <section className={mainSectionStyle} onMouseDown={() => handleUserActivity()}>
 
       <section className={usersOnlineSection}>
 
         <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28 max-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center items select-none`}>
           <h3 className={`bg-white text-black rounded p-1 w-full`}>Room Users</h3>
-          <span className={`bg-transparent m-1 rounded-lg ${roomUsers.length >= 10 ? `overflow-y-scroll` : ``} w-full min-h-[312px] max-h-[312px]`}>
+          <span className={`bg-transparent m-1 rounded-lg ${roomUsers.length >= 10 ? `overflow-y-scroll` : ``} w-full min-h-[20px] max-h-[312px]`}>
             {              
               roomUsers.length > 0 ? 
                 roomUsers.map((user, id) => {
-                  const isUserOnline = onlineUsers.find((onlineUser) => onlineUser == user)
-                  return <p title={isUserOnline ? `${user} is online.` : `${user} is offline.`} className={`${
-                    isUserOnline ? `text-green-400` : `text-gray-300`}`
-                  } key={`roomUser-${id}`}>{cropMessage(user, 8)}</p>
+
+                  const isCurrentUserName = currentUser.name == user
+
+                  const isUserOnline = onlineUsers.find((onlineUser) => {
+                    if (onlineUser == user) {
+                      return onlineUser
+                    }
+                  })                  
+
+                  return <p 
+                    title={isUserOnline ? `${user} is online.` : `${user} is offline.`} 
+                    className={`${isUserOnline ? `${isCurrentUserName && !userActivity ? `text-orange-400` : `text-green-400`}` : `text-gray-300`}`}
+                    key={`roomUser-${id}`}>{cropMessage(user, 8)}
+                  </p>
+
                 }) : 
               <p className={`text-gray-400`}>...</p>
             }
@@ -831,15 +860,15 @@ const Chat = () => {
             onClick={() => onResetRoomsClick()}
           />
 
-          <CustomButton
+          {/* <CustomButton
             value={`Get 🐜`}
             variationName='varthree'
             className={`bg-orange-900 active:bg-orange-800 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad}
             onClick={() => notifyUser(`Button to get a bug.`)}
-          />
+          /> */}
           
-          <CustomButton
+          {/* <CustomButton
             value={`Test 🦾`}
             variationName='varthree'
             className={`bg-black active:bg-gray-900 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
@@ -849,7 +878,7 @@ const Chat = () => {
               notifyUser(`Button for testing.`)   
               setReload(reload + 1)           
             }}
-          />
+          /> */}
 
        </div>
 
