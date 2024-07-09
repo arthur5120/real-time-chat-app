@@ -30,8 +30,8 @@
 # Update the room users when the session expires.
 # Handle name with spaces on the online user list.
 # Save user preferences in cookies.
+# Handle repeated names on the room user list.
 
 // Done today
 
-Make room/online a single list, but highlighting online users and tweaked placeholder text on the room user list.
-Make room/online a single list, highlight online users, and tweak placeholder text on the room user list.
+Limit number of characters for each message to 255

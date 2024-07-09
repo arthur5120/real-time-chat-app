@@ -25,7 +25,7 @@ const App = () => {
     
       try {
 
-        socket?.connect() 
+        socket?.connect()
         
         if(hasSessionExpired) { // Session Expired or the token was not found.          
           setRole ? setRole(authInfo.role) : ''
@@ -35,12 +35,12 @@ const App = () => {
           setHasSessionExpired(false)
         }
   
-        if (auth && authInfo.id != `none`) { // Login          
+        if (auth && authInfo.id != `none`) { // Login
           const user = await getUserById(authInfo.id)
           setRole ? setRole(authInfo.role) : ''
           const authRequest : TSocketAuthRequest = {user : {id : authInfo.id, name : user.name}, isConnecting : true}
           socket?.emit(`auth`, authRequest)
-          socket?.emit(`authList`)
+          socket?.emit(`authList`)          
           //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
           return
         }
@@ -71,7 +71,7 @@ const App = () => {
       }      
     } else if (!auth) {
       setAuth ? setAuth(true) : ''
-    }    
+    }
   }
   
   const timer = setInterval(() => {
@@ -98,7 +98,7 @@ const App = () => {
       setPreviousAuth(auth)
     }
 
-  }, [location, auth])
+  }, [location, auth]) 
 
   return (
 

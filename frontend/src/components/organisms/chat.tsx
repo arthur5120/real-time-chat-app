@@ -30,6 +30,7 @@ const Chat = () => {
   const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
   const [roomUsers, setRoomUsers] = useState<string[]>([])
   const [onlineUsers, setOnlineUsers] = useState<string[]>([])
+  const [inactiveUsers, setInactiveUsers] = useState<string[]>([])
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
   const [messages, setMessages] = useState<TChatMessage[]>([])
   const [messageBeingEdited, setMessageBeingEdited] = useState<TChatMessage & {previous ? : string}>(messagePlaceholder)
@@ -42,8 +43,8 @@ const Chat = () => {
   const [verticalView, setVerticalView] = useState(false)
   const [renderCounter, setRenderCounter] = useState(0)
   const [copiedToClipboard, setCopiedToClipboard] = useState(false)
-  const [userActivity, setUserActivity] = useState(true)  
-  const [inactivityTimer, setInactivityTimer] = useState<NodeJS.Timeout | null>(null)
+  const [userActivity, setUserActivity] = useState(true)
+  const [inactivityTimerId, setInactivityTimerId] = useState<any>(null)
 
   const isCurrentRoomIdValid = currentRoom.id == '0' || currentRoom.id == '-1'
 
@@ -146,7 +147,7 @@ const Chat = () => {
 
         const authInfo = await authStatus({})
         const rawMessages = await getMessages() // Getting all messages to filter them based on room, change this later.
-        const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)        
+        const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)
         const uniqueIdList = new Set<string>()
         const userNameList : string[] = []
     
@@ -316,9 +317,7 @@ const Chat = () => {
       }
 
       setTimeout(() => {
-        socket?.emit(`change`, `All rooms deleted, a fresh one was created`, (test : boolean) => {          
-          console.log(`Callback Response : ${!!test}`)
-        })
+        socket?.emit(`change`, `All rooms deleted, a fresh one was created`)
       }, 200)
 
       console.log(`Deleting Rooms, socket connection : ${socket?.connected}`)
@@ -424,7 +423,7 @@ const Chat = () => {
 
     if(socket?.disconnected) {
       socket?.connect()
-    }
+    }    
 
     socket?.emit(`authList`)    
 
@@ -471,7 +470,12 @@ const Chat = () => {
 
     socket?.on(`auth`, (currentOnlineUsers : string[]) => {
       console.log(`socket on auth : ${currentRoom?.id}`)
-      setOnlineUsers(currentOnlineUsers)
+      setOnlineUsers(currentOnlineUsers)      
+    })
+
+    socket?.on(`inactive`, (currentInactiveUsers : string[]) => {
+      console.log(`socket on auth : ${currentRoom?.id}`)
+      setInactiveUsers(currentInactiveUsers)      
     })
 
     return () => {
@@ -489,6 +493,7 @@ const Chat = () => {
         socket?.off()
         socket?.disconnect()
       } else {
+        handleUserActivity()
         setFirstLoad(false)
       }      
 
@@ -500,22 +505,61 @@ const Chat = () => {
     scrollToLatest()
   }, [messages.length])
 
+  // useEffect(() => {     
+
+  //   const handleBeforeUnload = () => {
+  //     socket?.connect()
+  //     socket?.emit('inactive', {name : currentUser.name, inactive : true})    
+  //   }
+
+  //   window.addEventListener('beforeunload', handleBeforeUnload)  
+    
+  //   return () => {
+  //     window.removeEventListener('beforeunload', handleBeforeUnload)
+  //     socket?.off()
+  //     socket?.disconnect()
+  //   }
+
+  // }, [])
+
+  // useEffect(() => {
+  //   socket.on('disconnect', () => {
+  //     socket.emit('inactive', currentUser.name);
+  //   });
   
+  //   return () => {
+  //     socket.off('disconnect');
+  //   };
+  // }, []);  
+
   useEffect(() => {
-    setInactivityTimer(setTimeout(() => {    
-        setUserActivity(false)
-        // Send inactivity status to socket.
-    }, 30000))
-  }, [userActivity])
+
+    setInactivityTimer()
+
+    return () => {
+      clearTimeout(inactivityTimerId)
+    }
+
+  }, [])  
+
+  const setInactivityTimer = () => {
+    const timerId = setTimeout(() => {
+      setUserActivity(false)
+      socket?.connect()
+      socket?.emit('inactive', { name: currentUser.name, inactive: true })
+    }, 5000)
+
+    setInactivityTimerId(timerId)
+  }
 
   const handleUserActivity = () => {
-    if (!userActivity) {
-      setUserActivity(true)
-      // Send activity status to socket.
-    }
-    inactivityTimer ? clearTimeout(inactivityTimer) : ''
+    setUserActivity(true)
+    socket?.connect()
+    socket?.emit('inactive', { name: currentUser.name, inactive: false })
+    clearTimeout(inactivityTimerId)    
+    setInactivityTimer()
   }
-  
+
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {   
     
     const selectedMessage = e.target as HTMLSpanElement
@@ -623,16 +667,22 @@ const Chat = () => {
                 roomUsers.map((user, id) => {
 
                   const isCurrentUserName = currentUser.name == user
+                  const inactiveUserId = inactiveUsers.findIndex((inactiveUser) => inactiveUser == user)
+                  const isUserInactive = inactiveUserId > -1
 
                   const isUserOnline = onlineUsers.find((onlineUser) => {
                     if (onlineUser == user) {
                       return onlineUser
                     }
-                  })                  
+                  })       
 
                   return <p 
                     title={isUserOnline ? `${user} is online.` : `${user} is offline.`} 
-                    className={`${isUserOnline ? `${isCurrentUserName && !userActivity ? `text-orange-400` : `text-green-400`}` : `text-gray-300`}`}
+                    className={
+                      `${isUserOnline ? (
+                          isCurrentUserName ? (!userActivity ? `text-orange-400` : `text-green-400`) : (isUserInactive ? `text-orange-400` : `text-green-400`)
+                        ) : `text-gray-300`}`
+                    }                    
                     key={`roomUser-${id}`}>{cropMessage(user, 8)}
                   </p>
 
@@ -641,19 +691,6 @@ const Chat = () => {
             }
           </span>
         </div>
-
-        {/* <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28 max-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center items select-none`}>
-          <h3 className={`bg-white text-black rounded p-1 w-full h-full`}>Online</h3>
-          <span className={`bg-transparent m-1 rounded-lg ${onlineUsers.length >= 5 ? `overflow-y-scroll` : ``} w-full min-h-[120px] max-h-[120px]`}>
-            {
-              onlineUsers?.length > 0 ? 
-                onlineUsers.map((user, id) => {
-                  return <p className='' key={`onlineUsers-${id}`}>{cropMessage(user, 8)}</p>
-                }) : 
-              <p>...</p>
-            }
-          </span>
-        </div> */}
 
       </section>
 
@@ -773,6 +810,7 @@ const Chat = () => {
             className={`items-start ${secondaryDefault} text-white rounded-lg resize-none p-1 m-1 h-full w-full`}
             cols={41}
             rows={3}
+            maxLength={255}
             onChange={(e) => {onTextareaChange(e)}}
             placeholder={`Say something...`}
             value={message.content}
@@ -876,7 +914,7 @@ const Chat = () => {
             title={`Currently showing nothing.`}
             onClick={ async () => {
               notifyUser(`Button for testing.`)   
-              setReload(reload + 1)           
+              setReload(reload + 1)
             }}
           /> */}
 
@@ -885,17 +923,14 @@ const Chat = () => {
 
       </section>      
        
-      {/* <div className='flex absolute bg-tranparent top-auto bottom-0 m-12 gap-2'>        
-        <h3 className='flex mb-5 bg-purple-700 rounded-lg p-3'>
-            Render Counter : {renderCounter}
-        </h3>        
-        <h3 className={`flex mb-5 ${reload ? `bg-red-500` : `bg-green-500` } rounded-lg p-3`}>
-          {reload ? `Danger` : `Safe` }
+      {/* <div className='flex absolute bg-tranparent top-auto bottom-0 m-12 gap-2'>
+        <h3 className={`flex mb-5 bg-green-600 rounded-lg p-3`}>
+          online users : {JSON.stringify(onlineUsers)}
         </h3>
         <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
-          Messages : {messages.length}
+          inactive users : {JSON.stringify(inactiveUsers)}
         </h3>
-      </div>       */}
+      </div> */}
      
     </section>
     

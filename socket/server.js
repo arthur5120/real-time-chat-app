@@ -6,6 +6,7 @@ const io = new Server({
 
 let onlineUsers = []
 let onlineUsersNames = []
+let inactiveUsersNames = []
 let nextExpirationCheck = -1
 
 const expirationCheck = (expirationTime) => {
@@ -25,7 +26,7 @@ setInterval(() => {
         }
     }
     console.log(`Online : ${JSON.stringify(onlineUsersNames)}, next check in ${(((nextExpirationCheck - hereNow) / (1000 * 60)) | 0)}m.`)
-}, 5000)    
+}, 5000)
 
 const connectUser = (user) => {
     
@@ -34,8 +35,8 @@ const connectUser = (user) => {
         console.log(`Connecting : ${user.id}`)
         const isUserOnline = onlineUsers.find((u) => u.id == user.id)
 
-        if (!isUserOnline) {            
-            onlineUsers.push(user)            
+        if (!isUserOnline) {
+            onlineUsers.push(user)
             onlineUsersNames.push(user.name)
         }
 
@@ -66,14 +67,39 @@ const disconnectUser = (userId) => {
    }
 }
 
-io.on('connection', (socket) => {    
-
-    socket.on('test', (message, callback = null) => {
-        console.log(JSON.stringify(message))
-        if (callback != null) {
-            callback(true)
+io.on('connection', (socket) => {  
+    
+    socket?.on(`disconnect`, (reason) => {      
+        if (reason == `client namespace disconnect`) {
+            //console.log(`scheduled disconnect`)
+        } else {
+            //console.log(`id : ${socket.id}, reason : ${reason}`)
         }
-        io.emit('change', message)
+    })
+
+    socket.on(`inactive`, (user) => { 
+                       
+        const {name, inactive} = user
+        const inactiveUserId = inactiveUsersNames.findIndex((u) => u == name)
+        
+        if(!name || name == ``) {
+            return
+        }
+
+        if (inactive == true) {
+            if(inactiveUserId == -1) {                
+                console.log(`${name} went inactive.`)
+                inactiveUsersNames.push(name)                
+                io.emit('inactive', inactiveUsersNames)
+            }
+        } else {
+            if(inactiveUserId > -1) {                
+                console.log(`${name} went active.`)
+                inactiveUsersNames.splice(inactiveUserId, 1)                
+                io.emit('inactive', inactiveUsersNames)
+            }
+        }    
+
     })
 
     socket.on('room', (message, callback = null) => { // Listening to Room
@@ -96,7 +122,7 @@ io.on('connection', (socket) => {
     socket.on('messageChange', (message) => {
         console.log(JSON.stringify(message))
         io.emit('messageChange', message)
-    })
+    })   
 
     socket.on('auth', (authRequest) => {   
         
