@@ -35,9 +35,15 @@ const connectUser = (user) => {
         console.log(`Connecting : ${user.id}`)
         const isUserOnline = onlineUsers.find((u) => u.id == user.id)
 
-        if (!isUserOnline) {
+        if (!isUserOnline) {                        
             onlineUsers.push(user)
             onlineUsersNames.push(user.name)
+        }  
+        
+        const inactiveUserId = inactiveUsersNames.findIndex((u) => u == user.name)
+
+        if(inactiveUserId > -1) {
+            inactiveUsersNames.splice(inactiveUserId, 1)
         }
 
         console.log(`User added : ${onlineUsers[onlineUsers.length - 1].id}`)
@@ -53,11 +59,18 @@ const disconnectUser = (userId) => {
    try {
     
        console.log(`Disconnecting : ${userId}`)
+
        const onlineUserId = onlineUsers.findIndex((u) => u.id == userId)
+       const inactiveUserId = onlineUserId != -1 ?  
+       inactiveUsersNames.findIndex((u) => u == onlineUsersNames[onlineUserId]) : -1
 
         if (onlineUserId != -1) {
             onlineUsers.splice(onlineUserId, 1)
             onlineUsersNames.splice(onlineUserId, 1)
+        }
+
+        if(inactiveUserId != -1) {
+            inactiveUsersNames.splice(inactiveUserId, 1)
         }
 
         console.log(`User removed : ${userId}`)
@@ -80,6 +93,9 @@ io.on('connection', (socket) => {
     socket.on(`inactive`, (user) => { 
                        
         const {name, inactive} = user
+
+        console.log(`inactivity request : name ${name}, isInactive : ${inactive}`)
+
         const inactiveUserId = inactiveUsersNames.findIndex((u) => u == name)
         
         if(!name || name == ``) {
@@ -89,18 +105,18 @@ io.on('connection', (socket) => {
         if (inactive == true) {
             if(inactiveUserId == -1) {                
                 console.log(`${name} went inactive.`)
-                inactiveUsersNames.push(name)                
+                inactiveUsersNames.push(name)
                 io.emit('inactive', inactiveUsersNames)
             }
         } else {
             if(inactiveUserId > -1) {                
                 console.log(`${name} went active.`)
-                inactiveUsersNames.splice(inactiveUserId, 1)                
+                inactiveUsersNames.splice(inactiveUserId, 1)
                 io.emit('inactive', inactiveUsersNames)
             }
         }    
 
-    })
+    })    
 
     socket.on('room', (message, callback = null) => { // Listening to Room
         console.log(JSON.stringify(message))
@@ -154,6 +170,10 @@ io.on('connection', (socket) => {
 
     socket.on(`authList`, () => {
         io.emit(`auth`, onlineUsersNames)
+    })
+
+    socket.on(`inactiveList`, () => {
+        io.emit('inactive', inactiveUsersNames)
     })
 
 })

@@ -28,10 +28,12 @@
 # Handle room/online user list overflow on x axis. [DONE]
 # Make room/online a single list, but highlighting who's online. [DONE]
 # Update the room users when the session expires.
-# Handle name with spaces on the online user list.
+# Handle name with spaces on the online user list. [DONE]
 # Save user preferences in cookies.
 # Handle repeated names on the room user list.
+# Not loading inactive list on start. [DONE]
+# Not removing user from inactive list on logout and login. [DONE]
 
 // Done today
 
-Limit number of characters for each message to 255
+Change inactivity timer function and place it on the user retrieval to fix the socket list not updating on first time going inactive. Update login and logout socket functions to handle adding/removing users from the inactive list.

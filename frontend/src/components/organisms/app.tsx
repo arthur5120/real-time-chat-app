@@ -31,7 +31,8 @@ const App = () => {
           setRole ? setRole(authInfo.role) : ''
           const authRequest : TSocketAuthRequest = {user : {id : ``}, isConnecting : false}
           socket?.emit(`auth`, authRequest)
-          socket?.emit(`authList`)
+          socket?.emit(`authList`)          
+          socket?.emit(`inactiveList`)
           setHasSessionExpired(false)
         }
   
@@ -40,16 +41,18 @@ const App = () => {
           setRole ? setRole(authInfo.role) : ''
           const authRequest : TSocketAuthRequest = {user : {id : authInfo.id, name : user.name}, isConnecting : true}
           socket?.emit(`auth`, authRequest)
-          socket?.emit(`authList`)          
+          socket?.emit(`authList`) 
+          socket?.emit(`inactiveList`)
           //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
           return
         }
     
         if (!auth && authInfo.id != `none`) { // Logout          
-          setRole ? setRole('none') : ''          
+          setRole ? setRole('none') : ''
           const authRequest : TSocketAuthRequest = {user: {id : authInfo.id}, isConnecting : false}
           socket?.emit(`auth`, authRequest)
           socket?.emit(`authList`)
+          socket?.emit(`inactiveList`)
           await authLogout({})
           //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
           return

@@ -72,6 +72,8 @@ const Chat = () => {
         role : authInfo.role,
       })
 
+    setInactivityTimer(user.name)
+
     } catch(e) {
       setHasErrors(true)
     }
@@ -394,7 +396,7 @@ const Chat = () => {
     await retrieveCurrentUser()
     await createRoomIfNoneAreFound()
     await retrieveRooms()
-    await retrieveMessages()
+    await retrieveMessages()    
     resetMessageContent()
   }
 
@@ -423,7 +425,7 @@ const Chat = () => {
 
     if(socket?.disconnected) {
       socket?.connect()
-    }    
+    }
 
     socket?.emit(`authList`)    
 
@@ -432,10 +434,10 @@ const Chat = () => {
       console.log(`socket on room : ${currentRoom?.id}`)
 
       const {id, room} = msg
-      const previousMessageId = messages?.length > 0 ? messages[0].id : -1      
+      const previousMessageId = messages?.length > 0 ? messages[0].id : -1
       
       if (room == currentRoom.id) {
-        if (id != previousMessageId) {          
+        if (id != previousMessageId) {
           addMessage(msg)
         }
       } else {
@@ -470,19 +472,19 @@ const Chat = () => {
 
     socket?.on(`auth`, (currentOnlineUsers : string[]) => {
       console.log(`socket on auth : ${currentRoom?.id}`)
-      setOnlineUsers(currentOnlineUsers)      
+      setOnlineUsers(currentOnlineUsers)
     })
 
     socket?.on(`inactive`, (currentInactiveUsers : string[]) => {
       console.log(`socket on auth : ${currentRoom?.id}`)
-      setInactiveUsers(currentInactiveUsers)      
+      setInactiveUsers(currentInactiveUsers)
     })
 
     return () => {
                
       if (isCurrentRoomIdValid) {
         setReload(reload + 1)
-      } else {
+      } else {        
         setReload(0)
       }       
 
@@ -492,8 +494,7 @@ const Chat = () => {
       if(!firstLoad) {        
         socket?.off()
         socket?.disconnect()
-      } else {
-        handleUserActivity()
+      } else {        
         setFirstLoad(false)
       }      
 
@@ -530,23 +531,15 @@ const Chat = () => {
   //   return () => {
   //     socket.off('disconnect');
   //   };
-  // }, []);  
+  // }, []);
 
-  useEffect(() => {
 
-    setInactivityTimer()
-
-    return () => {
-      clearTimeout(inactivityTimerId)
-    }
-
-  }, [])  
-
-  const setInactivityTimer = () => {
-    const timerId = setTimeout(() => {
+  const setInactivityTimer = (localUserName = null) => {
+    const name = localUserName ? localUserName : currentUser.name
+    const timerId = setTimeout(() => {      
       setUserActivity(false)
       socket?.connect()
-      socket?.emit('inactive', { name: currentUser.name, inactive: true })
+      socket?.emit('inactive', { name: name, inactive: true })
     }, 5000)
 
     setInactivityTimerId(timerId)
@@ -556,11 +549,11 @@ const Chat = () => {
     setUserActivity(true)
     socket?.connect()
     socket?.emit('inactive', { name: currentUser.name, inactive: false })
-    clearTimeout(inactivityTimerId)    
+    inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
     setInactivityTimer()
   }
 
-  const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {   
+  const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
     
     const selectedMessage = e.target as HTMLSpanElement
     const selectedMessageId = selectedMessage.dataset.id
@@ -572,12 +565,12 @@ const Chat = () => {
       previous : previousMessage
     })
 
-  }  
+  }
 
-  const onInputEditableMessage = async (e : React.FormEvent<HTMLSpanElement>) => {    
+  const onInputEditableMessage = async (e : React.FormEvent<HTMLSpanElement>) => {
     const element = e.target as HTMLSpanElement
     const msg = element?.textContent ? element.textContent : ''
-    setMessageBeingEdited({...messageBeingEdited, content : msg})    
+    setMessageBeingEdited({...messageBeingEdited, content : msg})
   }
 
   const onClickEditModeIcon = async (e : React.MouseEvent<HTMLHeadingElement, MouseEvent>) => {
@@ -611,12 +604,12 @@ const Chat = () => {
           messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
           messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
           const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
-          const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'          
-          socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)      
-          setMessageBeingEdited({...messagePlaceholder, previous : ''})      
+          const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
+          socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)
+          setMessageBeingEdited({...messagePlaceholder, previous : ''})
           setReload(reload + 1)
         break
-      }   
+      }
 
       case 'cancel' : {
         if (messageBeingEdited?.previous) {
@@ -923,14 +916,11 @@ const Chat = () => {
 
       </section>      
        
-      {/* <div className='flex absolute bg-tranparent top-auto bottom-0 m-12 gap-2'>
-        <h3 className={`flex mb-5 bg-green-600 rounded-lg p-3`}>
-          online users : {JSON.stringify(onlineUsers)}
-        </h3>
+      <div className='flex absolute bg-tranparent top-auto bottom-0 m-12 gap-2'>        
         <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
           inactive users : {JSON.stringify(inactiveUsers)}
         </h3>
-      </div> */}
+      </div>
      
     </section>
     
