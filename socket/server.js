@@ -30,9 +30,8 @@ setInterval(() => {
 
 const connectUser = (user) => {
     
-    try {
+    try {        
 
-        console.log(`Connecting : ${user.id}`)
         const isUserOnline = onlineUsers.find((u) => u.id == user.id)
 
         if (!isUserOnline) {                        
@@ -46,7 +45,7 @@ const connectUser = (user) => {
             inactiveUsersNames.splice(inactiveUserId, 1)
         }
 
-        console.log(`User added : ${onlineUsers[onlineUsers.length - 1].id}`)
+        console.log(`Connected : ${onlineUsers[onlineUsers.length - 1].id}`)
 
     } catch (e) {
         console.log(`Error while connecting : ${e}`)
@@ -56,9 +55,7 @@ const connectUser = (user) => {
 
 const disconnectUser = (userId) => {
     
-   try {
-    
-       console.log(`Disconnecting : ${userId}`)
+   try {       
 
        const onlineUserId = onlineUsers.findIndex((u) => u.id == userId)
        const inactiveUserId = onlineUserId != -1 ?  
@@ -73,7 +70,7 @@ const disconnectUser = (userId) => {
             inactiveUsersNames.splice(inactiveUserId, 1)
         }
 
-        console.log(`User removed : ${userId}`)
+        console.log(`Disconnected : ${userId}`)
 
    } catch (e) {
         console.log(`Error while disconnecting : ${e}`)
@@ -94,7 +91,7 @@ io.on('connection', (socket) => {
                        
         const {name, inactive} = user
 
-        console.log(`inactivity request : name ${name}, isInactive : ${inactive}`)
+        console.log(`inactivity status change to ${inactive} for ${name}`)
 
         const inactiveUserId = inactiveUsersNames.findIndex((u) => u == name)
         
@@ -119,7 +116,7 @@ io.on('connection', (socket) => {
     })    
 
     socket.on('room', (message, callback = null) => { // Listening to Room
-        console.log(JSON.stringify(message))
+        console.log(`${message.user} says "${message.content}".`)
         if (callback != null) {
             callback(true)
         }
@@ -128,7 +125,7 @@ io.on('connection', (socket) => {
     })
 
     socket.on('change', (message, callback = null) => {
-        console.log(JSON.stringify(message))
+        console.log(message)
         if (callback != null) {
             callback(true)
         }
@@ -136,13 +133,11 @@ io.on('connection', (socket) => {
     })
 
     socket.on('messageChange', (message) => {
-        console.log(JSON.stringify(message))
+        console.log(message.trim().replace(/\s+/g, ' '))
         io.emit('messageChange', message)
     })   
 
-    socket.on('auth', (authRequest) => {   
-        
-        console.log(`got request.`)        
+    socket.on('auth', (authRequest) => {           
 
         try {
 
@@ -151,19 +146,17 @@ io.on('connection', (socket) => {
             const expirationTime = dateNow + (1000 * 60 * 15)
 
             if (user?.id && isConnecting == true) {                
-                connectUser({...user, expirationTime : expirationTime})
-                console.log(`connecting user : ${JSON.stringify(user)}`)
+                connectUser({...user, expirationTime : expirationTime})                
                 return
             }
             
             if (user?.id && isConnecting == false) {
-                disconnectUser(user.id)
-                console.log(`disconnecting user : ${JSON.stringify(user)}`)
+                disconnectUser(user.id)                
                 return
             }
 
         } catch (e) {
-            console.log(`auth error ${e}`)
+            console.log(`auth error`)
         }
 
     })

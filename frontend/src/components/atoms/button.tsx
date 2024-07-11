@@ -2,7 +2,7 @@ import { twMerge } from "tailwind-merge";
 import { TElementProps } from "../../utils/types";
 import { inputVariations } from "../../utils/tailwindVariations";
 
-type TButtonProps = TElementProps & React.ButtonHTMLAttributes<HTMLButtonElement>
+type TButtonProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, `value`> & TElementProps
 
 const CustomButton = ({value, className, variationName='varone', ...props} : TButtonProps) => {
 

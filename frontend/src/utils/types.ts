@@ -8,7 +8,7 @@ export type TUser = Partial <{
 }>
 
 export type TElementProps = Partial<{
-    value : string,
+    value : React.ReactNode,
     variationName : 'varone' | 'vartwo' | 'varthree'
 }>
 

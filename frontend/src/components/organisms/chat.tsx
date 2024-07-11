@@ -44,7 +44,7 @@ const Chat = () => {
   const [renderCounter, setRenderCounter] = useState(0)
   const [copiedToClipboard, setCopiedToClipboard] = useState(false)
   const [userActivity, setUserActivity] = useState(true)
-  const [inactivityTimerId, setInactivityTimerId] = useState<any>(null)
+  const [inactivityTimerId, setInactivityTimerId] = useState<NodeJS.Timeout | null>(null)
 
   const isCurrentRoomIdValid = currentRoom.id == '0' || currentRoom.id == '-1'
 
@@ -464,11 +464,12 @@ const Chat = () => {
 
     socket?.on('change', (msg : string) => {
       console.log(`socket on change : ${currentRoom?.id}`)
+      setUseDelayOnEmit(true)
       setReload(reload + 1)
       if (msg != ``) {
         notifyUser(msg, 'info')
       }
-    })
+    })    
 
     socket?.on(`auth`, (currentOnlineUsers : string[]) => {
       console.log(`socket on auth : ${currentRoom?.id}`)
@@ -537,19 +538,23 @@ const Chat = () => {
   const setInactivityTimer = (localUserName = null) => {
     const name = localUserName ? localUserName : currentUser.name
     const timerId = setTimeout(() => {      
-      setUserActivity(false)
-      socket?.connect()
-      socket?.emit('inactive', { name: name, inactive: true })
-    }, 5000)
+      if (userActivity) {
+        setUserActivity(false)
+        socket?.connect()
+        socket?.emit('inactive', { name: name, inactive: true })
+      }
+    }, 60000) // Time until inactivity
 
     setInactivityTimerId(timerId)
   }
 
   const handleUserActivity = () => {
-    setUserActivity(true)
-    socket?.connect()
-    socket?.emit('inactive', { name: currentUser.name, inactive: false })
-    inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
+    if (!userActivity) {
+      setUserActivity(true)
+      socket?.connect()
+      socket?.emit('inactive', { name: currentUser.name, inactive: false })
+      inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
+    }
     setInactivityTimer()
   }
 
@@ -692,10 +697,10 @@ const Chat = () => {
         <div className={`flex justify-between ${primaryDefault} rounded-lg w-80`}>
 
           <h3 className='bg-transparent justify-start m-2'>
-            {(auth && currentUser?.name) ? `Chatting as ${cropMessage(currentUser.name, 12)} ` : `Chatting as Guest`}              
+            {(auth && currentUser?.name) ? `Chatting as ${cropMessage(currentUser.name, 12)} ` : `Chatting as Guest`}
           </h3>
         
-          <span className='flex bg-tranparent m-2 cursor-pointer gap-1'>            
+          <span className='flex bg-tranparent m-2 cursor-pointer gap-1'>
 
             <button 
               title={`Room info`} 
@@ -760,11 +765,11 @@ const Chat = () => {
                   }}
 
                   onBlur={() => {
-                    if (!messageBeingEdited.content) {
+                    //if (!messageBeingEdited.content) {
                       messageContainerRef.current ? messageContainerRef.current.textContent = message.content : ''
                       setMessageBeingEdited({...messagePlaceholder, previous : ''})
                       setReload(reload + 1)
-                    }
+                    //}
                   }}
 
                 >                  
@@ -807,13 +812,30 @@ const Chat = () => {
             onChange={(e) => {onTextareaChange(e)}}
             placeholder={`Say something...`}
             value={message.content}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                if (e.ctrlKey || e.metaKey) {
+                  sendMessage()
+                }
+              }
+            }}
           />
 
-          <CustomButton
-            value={'Send'}
-            className='p-2 bg-[#aa5a95] text-white rounded-lg m-1 active:bg-[#bd64a5]'
+          <CustomButton        
+            value={
+              <span className={`flex flex-col gap-1`}>
+                <h3 className='text-slate-100 group-hover:text-white'>
+                  Send
+                </h3>
+                <h3 className={`font-light text-sm text-slate-200 group-hover:text-slate-100`}>
+                  Ctrl+Enter
+                </h3>
+              </span>
+            }
+            className='p-2 bg-[#aa5a95] text-white rounded-lg m-1 active:bg-[#bd64a5] group'
             disabled={!!reload || firstLoad}
             onClick={() => sendMessage()}
+            title={`Post a message to current chat (Ctrl + Enter)`}
           />
 
         </div> 
@@ -855,7 +877,7 @@ const Chat = () => {
 
             }  
 
-            <button title={`Copy Room Name`} onClick={() => copyRoomNameToClipboard()}
+            <button title={`Copy room name to clipboard`} onClick={() => copyRoomNameToClipboard()}
               disabled={!!reload || firstLoad}
                 className={`${copiedToClipboard ? `bg-green-700 hover:bg-green-600` : `bg-[#050D20] hover:bg-black`} rounded-lg disabled:cursor-not-allowed h-full w-[48px]`}
               >
@@ -876,18 +898,37 @@ const Chat = () => {
        <div className={buttonDivStyle}>
 
           <CustomButton
-            value={'New Room'}
+
+            value={
+              <span className={`flex flex-col gap-1`}>
+                <h3 className='text-slate-100 group-hover:text-white'>
+                  New Room
+                </h3>                
+              </span>
+            }
+
             variationName='varthree'
-            className={`w-20 h-full max-h-28 m-0 flex items-center justify-center`}
+            className={`w-20 h-full max-h-28 m-0 flex items-center justify-center group`}
             disabled={!!reload || firstLoad}
+            title={`Create a new room`}
             onClick={() => onNewRoomClick()}
+
           />
         
           <CustomButton 
-            value={'Reset Rooms'}
+
+             value={
+              <span className={`flex flex-col gap-1`}>
+                <h3 className='text-slate-100 group-hover:text-white'>
+                  Reset Rooms
+                </h3>               
+              </span>
+            }
+
             variationName='vartwo'
-            className={`w-20 h-full max-h-28 m-0 flex items-center justify-center`}
+            className={`w-20 h-full max-h-28 m-0 flex items-center justify-center group`}
             disabled={!!reload || firstLoad}
+            title={`Delete all rooms`}
             onClick={() => onResetRoomsClick()}
           />
 
@@ -899,28 +940,27 @@ const Chat = () => {
             onClick={() => notifyUser(`Button to get a bug.`)}
           /> */}
           
-          {/* <CustomButton
+          <CustomButton
             value={`Test 🦾`}
             variationName='varthree'
             className={`bg-black active:bg-gray-900 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad}
             title={`Currently showing nothing.`}
             onClick={ async () => {
-              notifyUser(`Button for testing.`)   
-              setReload(reload + 1)
+              notifyUser(`Button for testing.`)
             }}
-          /> */}
+          /> 
 
        </div>
 
 
       </section>      
-       
-      <div className='flex absolute bg-tranparent top-auto bottom-0 m-12 gap-2'>        
+             
+      <div className='flex absolute bg-tranparent top-auto bottom-0 m-8 gap-2'>   
         <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
-          inactive users : {JSON.stringify(inactiveUsers)}
+          Render : {renderCounter}
         </h3>
-      </div>
+      </div>   
      
     </section>
     
