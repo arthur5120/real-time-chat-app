@@ -35,14 +35,14 @@
 # Not removing user from inactive list on logout and login. [DONE]
 # Missing the click on confirming the message edit makes the button disappear.[DONE]
 # Sending unnecessary inactive status requests to socket.
-
+# Inactivity status not working properly.
 
 // Done yesterday
 
-Change Custom Button component's value type to ReactNode to include JSX elements.
-Add shortcut to the send message button. Fix confirm button disappearing when clicking off during edit mode.
+Change onBlur event for the messages to prevent it from triggering when clicking confirm button.
 
 // Done today
 
-Change onBlur event for the messages to prevent it from triggering when clicking confirm button.
+Remove edit mode condition on onBlur to cancel the editing when clicking out of the message. Fix the inactivity state flickering due to the setTimout running multiple times.
+ 
 

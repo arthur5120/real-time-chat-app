@@ -61,6 +61,8 @@ const Chat = () => {
 
   const retrieveCurrentUser = async () => {
 
+    console.log(`FUNCTION : Retrieving current user.`)
+
     try {      
 
       const authInfo : TRes = await authStatus({})
@@ -73,7 +75,9 @@ const Chat = () => {
         role : authInfo.role,
       })
 
-    setInactivityTimer(user.name)
+      if(firstLoad) {
+        setInactivityTimer(user.name)
+      }
 
     } catch(e) {
       setHasErrors(true)
@@ -81,7 +85,9 @@ const Chat = () => {
 
   }
 
-  const createRoomIfNoneAreFound = async () => {          
+  const createRoomIfNoneAreFound = async () => {      
+    
+    console.log(`FUNCTION : Creating room if none are found.`)
 
     try {
 
@@ -101,11 +107,13 @@ const Chat = () => {
 
   const retrieveRooms = async () => {
 
+    console.log(`FUNCTION : Retrieving rooms.`)
+
     try {
       
       const unsortedLocalRooms = await getChats() as TChatRoom[]
-      const sortedLocalRooms = sortByAlphabeticalOrder(unsortedLocalRooms)      
-      const hasValidRooms = !!sortedLocalRooms[0]      
+      const sortedLocalRooms = sortByAlphabeticalOrder(unsortedLocalRooms)
+      const hasValidRooms = !!sortedLocalRooms[0]
 
       if(!hasValidRooms) {
         return
@@ -115,10 +123,10 @@ const Chat = () => {
       const isRoomIdValid = !isRoomIdEmpty ? sortedLocalRooms.some((room : TChatRoom) => room.id.trim() == currentRoom.id.trim()) : false
       const isNumberOfRoomsTheSame = unsortedLocalRooms.length == rooms.length
 
-      if (isRoomIdEmpty || !isRoomIdValid) {        
+      if (isRoomIdEmpty || !isRoomIdValid) {
         setCurrentRoom({
           id : sortedLocalRooms[0].id,
-          selectId : 0, 
+          selectId : 0,
           name : sortedLocalRooms[0].name
         })
       } else if (!isNumberOfRoomsTheSame!) {        
@@ -139,7 +147,9 @@ const Chat = () => {
     
   }
 
-  const retrieveMessages = async () => {    
+  const retrieveMessages = async () => {  
+    
+    console.log(`FUNCTION : Retrieving messages.`)
     
       try {
 
@@ -339,7 +349,7 @@ const Chat = () => {
 
   const copyRoomNameToClipboard = () => {
     const roomName = currentRoom.name.trim().replace(/\s+/g, ' ')
-    navigator.clipboard.writeText(roomName)    
+    navigator.clipboard.writeText(roomName)
     setCopiedToClipboard(true)
     setTimeout(() => {
       setCopiedToClipboard(false)
@@ -535,28 +545,33 @@ const Chat = () => {
   //   };
   // }, []);
 
+  useEffect(() => { 
+    if(!firstLoad) { // First load handled by retrieveCurrentUser
+      setInactivityTimer()
+    }
+  }, [userActivity])
 
   const setInactivityTimer = (localUserName = null) => {
-    const name = localUserName ? localUserName : currentUser.name
-    const timerId = setTimeout(() => {      
-      if (userActivity) {
+    if (userActivity) {
+      //notifyUser(`Scheduled Inactivity Activation.`)
+      const name = localUserName ? localUserName : currentUser.name          
+      const timerId = setTimeout(() => {
         setUserActivity(false)
         socket?.connect()
         socket?.emit('inactive', { name: name, inactive: true })
-      }
-    }, 60000) // Time until inactivity
-
-    setInactivityTimerId(timerId)
+      }, 60000) // Time until inactivity      
+      setInactivityTimerId(timerId)
+    }
   }
 
   const handleUserActivity = () => {
     if (!userActivity) {
+      //notifyUser(`Renewed Activity Status`)
       setUserActivity(true)
       socket?.connect()
       socket?.emit('inactive', { name: currentUser.name, inactive: false })
       inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
-    }
-    setInactivityTimer()
+    }    
   }
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {    
@@ -602,7 +617,7 @@ const Chat = () => {
         messageBeingEdited.id ? await deleteMessage(messageBeingEdited.id) : ''
         const editedMessage = messageBeingEdited?.previous ?  messageBeingEdited.previous : ''
         socket?.emit('messageChange', `The message "${cropMessage(editedMessage)}" was deleted on ${currentRoom.name}`)
-        setMessageBeingEdited({...messagePlaceholder, previous : ''})      
+        setMessageBeingEdited({...messagePlaceholder, previous : ''})
         setReload(reload + 1)
         break
       }
@@ -769,14 +784,12 @@ const Chat = () => {
                   }}
 
                   onBlur={(event) => {                    
-                    if (!messageBeingEdited.content) {
-                      if (confirmContainerRef.current && event.relatedTarget != confirmContainerRef.current) {                      
-                        messageContainerRef.current ? messageContainerRef.current.textContent = message.content : ''
-                        setMessageBeingEdited({...messagePlaceholder, previous : ''})
-                        setReload(reload + 1)
-                      }
-                    }
-                  }}                  
+                    if (confirmContainerRef.current && event.relatedTarget != confirmContainerRef.current) {
+                      messageContainerRef.current ? messageContainerRef.current.textContent = message.content : ''
+                      setMessageBeingEdited({...messagePlaceholder, previous : ''})
+                      setReload(reload + 1)
+                    }                    
+                  }}
 
                 >                  
                   
@@ -954,11 +967,11 @@ const Chat = () => {
         
           <CustomButton 
 
-             value={
+            value={
               <span className={`flex flex-col gap-1`}>
                 <h3 className='text-slate-100 group-hover:text-white'>
                   Reset Rooms
-                </h3>               
+                </h3>
               </span>
             }
 
@@ -986,7 +999,7 @@ const Chat = () => {
             onClick={ async () => {
               notifyUser(`Button for testing.`)
             }}
-          /> 
+          />
 
        </div>
 

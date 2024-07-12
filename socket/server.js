@@ -91,11 +91,12 @@ io.on('connection', (socket) => {
                        
         const {name, inactive} = user
 
-        console.log(`inactivity status change to ${inactive} for ${name}`)
+        console.log(`inactivity status change to ${inactive} for ${name}...`)
 
         const inactiveUserId = inactiveUsersNames.findIndex((u) => u == name)
         
         if(!name || name == ``) {
+            console.log(`invalid name`)
             return
         }
 
