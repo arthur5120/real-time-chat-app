@@ -34,12 +34,15 @@
 # Not loading inactive list on start. [DONE]
 # Not removing user from inactive list on logout and login. [DONE]
 # Missing the click on confirming the message edit makes the button disappear.[DONE]
+# Sending unnecessary inactive status requests to socket.
+
 
 // Done yesterday
 
-Change inactivity timer function and place it on the user retrieval to fix the socket list not updating on first time going inactive. Update login and logout socket functions to handle adding/removing users from the inactive list.
+Change Custom Button component's value type to ReactNode to include JSX elements.
+Add shortcut to the send message button. Fix confirm button disappearing when clicking off during edit mode.
 
 // Done today
 
-Change Custom Button component's value type to ReactNode to include JSX elements.
-Add shortcut to the send message button. Fix confirm button disappearing when clicking off during edit mode.
+Change onBlur event for the messages to prevent it from triggering when clicking confirm button.
+

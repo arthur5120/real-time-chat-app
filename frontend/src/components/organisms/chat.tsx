@@ -24,6 +24,7 @@ const Chat = () => {
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)  
   let messageContainerRef =  useRef<HTMLSpanElement>(null)  
+  let confirmContainerRef =  useRef<HTMLButtonElement>(null)
 
   const [rooms, setRooms] = useState<TRooms>(roomsPlaceholder)
   const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
@@ -257,8 +258,8 @@ const Chat = () => {
       console.log(`Sending message : ${JSON.stringify(savedMessage)}, socket connection : ${socket?.connected}`)
 
       addMessage(savedMessage)
-      resetMessageContent()   
-      setUseDelayOnEmit(false)    
+      resetMessageContent()
+      setUseDelayOnEmit(false)
           
       const isUserOnList = roomUsers.find((name) => name == currentUser.name) // Short List
       currentUser?.name && !isUserOnList ? setRoomUsers([...roomUsers, currentUser.name]) : ''
@@ -558,8 +559,8 @@ const Chat = () => {
     setInactivityTimer()
   }
 
-  const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
-    
+  const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {    
+
     const selectedMessage = e.target as HTMLSpanElement
     const selectedMessageId = selectedMessage.dataset.id
     const previousMessage = selectedMessage.textContent ? selectedMessage.textContent : ''
@@ -573,14 +574,15 @@ const Chat = () => {
   }
 
   const onInputEditableMessage = async (e : React.FormEvent<HTMLSpanElement>) => {
+    
     const element = e.target as HTMLSpanElement
     const msg = element?.textContent ? element.textContent : ''
     setMessageBeingEdited({...messageBeingEdited, content : msg})
   }
 
-  const onClickEditModeIcon = async (e : React.MouseEvent<HTMLHeadingElement, MouseEvent>) => {
+  const onClickEditModeIcon = async (e : React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 
-    const element = e.target as HTMLHeadingElement
+    const element = e.target as HTMLButtonElement
     const action = element.dataset.action
 
     switch(action) {      
@@ -592,11 +594,11 @@ const Chat = () => {
           ...messageBeingEdited, 
           id : selectedMessageId
         })
-        messageContainerRef.current?.focus()        
+        messageContainerRef.current?.focus()
         break
       }
 
-      case 'delete' : {        
+      case 'delete' : {   
         messageBeingEdited.id ? await deleteMessage(messageBeingEdited.id) : ''
         const editedMessage = messageBeingEdited?.previous ?  messageBeingEdited.previous : ''
         socket?.emit('messageChange', `The message "${cropMessage(editedMessage)}" was deleted on ${currentRoom.name}`)
@@ -606,13 +608,13 @@ const Chat = () => {
       }
 
       case 'confirm' : {
-          messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
-          messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
-          const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
-          const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
-          socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)
-          setMessageBeingEdited({...messagePlaceholder, previous : ''})
-          setReload(reload + 1)
+        messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
+        messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
+        const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
+        const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
+        socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)
+        setMessageBeingEdited({...messagePlaceholder, previous : ''})
+        setReload(reload + 1)
         break
       }
 
@@ -750,9 +752,11 @@ const Chat = () => {
                   suppressContentEditableWarning={true}
                   contentEditable={isUserSender && isMessageSelected}
 
-                  onClick={(e) => {                    
+                  onClick={(e) => {                     
                     if (isUserSender) {
-                      onEnterMessageEditMode(e)
+                      if (!messageBeingEdited.content) {
+                        onEnterMessageEditMode(e)
+                      }
                     } else {
                       notifyUser(
                         `Message wrote by ${message.user}, it was created ${getTime(message.updated_at)} ${message.updated_at == message.created_at ? `` : `and updated at ${getTime(message.updated_at)}`}`
@@ -764,13 +768,15 @@ const Chat = () => {
                     onInputEditableMessage(e)
                   }}
 
-                  onBlur={() => {
-                    //if (!messageBeingEdited.content) {
-                      messageContainerRef.current ? messageContainerRef.current.textContent = message.content : ''
-                      setMessageBeingEdited({...messagePlaceholder, previous : ''})
-                      setReload(reload + 1)
-                    //}
-                  }}
+                  onBlur={(event) => {                    
+                    if (!messageBeingEdited.content) {
+                      if (confirmContainerRef.current && event.relatedTarget != confirmContainerRef.current) {                      
+                        messageContainerRef.current ? messageContainerRef.current.textContent = message.content : ''
+                        setMessageBeingEdited({...messagePlaceholder, previous : ''})
+                        setReload(reload + 1)
+                      }
+                    }
+                  }}                  
 
                 >                  
                   
@@ -779,10 +785,41 @@ const Chat = () => {
                 </span>
               
                 <span className={`flex items-end justify-end cursor-pointer mx-3 px-1 gap-1 ${(isUserSender && isMessageSelected) ? '' : 'hidden'}`}>
-                  { !isMessageFocused && !messageBeingEdited.content ? <h3 data-action={`edit`} title={`Edit`} onClick={(e) => onClickEditModeIcon(e)}>&#128393;</h3> : ''}
-                  { isMessageFocused ? <h3 data-action={`confirm`} title={`Confirm`} onClick={(e) => onClickEditModeIcon(e)}>&#10003;</h3> : ''}
-                  { !isMessageFocused && !messageBeingEdited.content ? <h3 data-action={`delete`} title={`Delete`} onClick={(e) => onClickEditModeIcon(e)}>&#128465;</h3> : ''}
-                  <h3 data-action={`cancel`} title={`Cancel`}  onClick={(e) => onClickEditModeIcon(e)}>&#10005;</h3>
+                  
+                  { !isMessageFocused && !messageBeingEdited.content ? <button                      
+                    className='hover:bg-slate-600 rounded-full' 
+                    data-action={`edit`} 
+                    title={`Edit`} 
+                    onClick={(e) => onClickEditModeIcon(e)}>
+                      &#128393;
+                  </button> : ''}
+                  
+                  { isMessageFocused ? <button
+                    name={`confirm`} 
+                    ref={confirmContainerRef}
+                    className='hover:bg-slate-600 rounded-full' 
+                    data-action={`confirm`} 
+                    title={`Confirm`} 
+                    onClick={(e) => onClickEditModeIcon(e)}>
+                      &#10003;
+                  </button> : ''}
+                  
+                  { !isMessageFocused && !messageBeingEdited.content ? <button 
+                    className='hover:bg-slate-600 rounded-full' 
+                    data-action={`delete`} 
+                    title={`Delete`} 
+                    onClick={(e) => onClickEditModeIcon(e)}>
+                      &#128465;
+                  </button> : ''}
+                  
+                  <button 
+                    className='hover:bg-slate-600 rounded-full' 
+                    data-action={`cancel`} 
+                    title={`Cancel`}  
+                    onClick={(e) => onClickEditModeIcon(e)}>
+                      &#10005;
+                  </button>
+
                 </span>
 
                 <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-2 p-1 justify-end bg-transparent`}>
