@@ -439,7 +439,8 @@ const Chat = () => {
       socket?.connect()
     }
 
-    socket?.emit(`authList`)    
+    socket?.emit(`authList`)
+    socket?.emit(`inactiveList`)
 
     socket?.on('room', (msg : TChatMessage) => {
 
@@ -672,7 +673,7 @@ const Chat = () => {
       onMouseDown={() => handleUserActivity()}
       onKeyDown={() => {
         handleUserActivity()
-        if(!isTyping) {
+        if(!isTyping) {          
           setIsTyping(true)
         }
       }}
@@ -1024,17 +1025,17 @@ const Chat = () => {
 
       </section>      
              
-      <div className='flex absolute bg-tranparent top-auto bottom-0 m-8 gap-2'>   
+      <div className='flex absolute bg-tranparent top-auto bottom-0 m-8 gap-2'>
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
-          Render : {renderCounter}          
+          Render : {renderCounter}
         </h3>
-        <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>          
+        <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
           {isTyping ? `💬` : `〰️`}
         </h3>
-        <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>          
+        <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
           Inactive Users : {inactiveUsers.length}
         </h3>
-      </div>   
+      </div>
      
     </section>
     

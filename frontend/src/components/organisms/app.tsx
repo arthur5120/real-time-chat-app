@@ -52,7 +52,7 @@ const App = () => {
           const authRequest : TSocketAuthRequest = {user: {id : authInfo.id}, isConnecting : false}
           socket?.emit(`auth`, authRequest)
           socket?.emit(`authList`)
-          socket?.emit(`inactiveList`)
+          socket?.emit(`inactiveList`)          
           await authLogout({})
           //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
           return

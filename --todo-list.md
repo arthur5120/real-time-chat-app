@@ -39,9 +39,8 @@
 
 // Done yesterday
 
-Remove edit mode condition on onBlur to cancel the editing when clicking out of the message. Fix the inactivity state flickering due to the setTimout running multiple times.
+Add inactivity status indicator for current user. Implement logic to detect the current user typing status. Implement socket inactivity status update on page unload.
 
 // Done today
 
-Add inactivity status indicator for current user. Implement logic to detect the current user typing status. Implement socket inactivity status update on page unload.
 
