@@ -35,14 +35,13 @@
 # Not removing user from inactive list on logout and login. [DONE]
 # Missing the click on confirming the message edit makes the button disappear.[DONE]
 # Sending unnecessary inactive status requests to socket.
-# Inactivity status not working properly.
+# Inactivity status not loading sometimes when refreshing the page.
 
 // Done yesterday
 
-Change onBlur event for the messages to prevent it from triggering when clicking confirm button.
+Remove edit mode condition on onBlur to cancel the editing when clicking out of the message. Fix the inactivity state flickering due to the setTimout running multiple times.
 
 // Done today
 
-Remove edit mode condition on onBlur to cancel the editing when clicking out of the message. Fix the inactivity state flickering due to the setTimout running multiple times.
- 
+Add inactivity status indicator for current user. Implement logic to detect the current user typing status. Implement socket inactivity status update on page unload.
 

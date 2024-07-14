@@ -46,6 +46,7 @@ const Chat = () => {
   const [copiedToClipboard, setCopiedToClipboard] = useState(false)
   const [userActivity, setUserActivity] = useState(true)
   const [inactivityTimerId, setInactivityTimerId] = useState<NodeJS.Timeout | null>(null)
+  const [isTyping, setIsTyping] = useState(false)
 
   const isCurrentRoomIdValid = currentRoom.id == '0' || currentRoom.id == '-1'
 
@@ -517,34 +518,30 @@ const Chat = () => {
   useEffect(() => {
     scrollToLatest()
   }, [messages.length])
-
-  // useEffect(() => {     
-
-  //   const handleBeforeUnload = () => {
-  //     socket?.connect()
-  //     socket?.emit('inactive', {name : currentUser.name, inactive : true})    
-  //   }
-
-  //   window.addEventListener('beforeunload', handleBeforeUnload)  
-    
-  //   return () => {
-  //     window.removeEventListener('beforeunload', handleBeforeUnload)
-  //     socket?.off()
-  //     socket?.disconnect()
-  //   }
-
-  // }, [])
-
-  // useEffect(() => {
-  //   socket.on('disconnect', () => {
-  //     socket.emit('inactive', currentUser.name);
-  //   });
   
-  //   return () => {
-  //     socket.off('disconnect');
-  //   };
-  // }, []);
+  useEffect(() => {
 
+    console.log(`Running "handle before unload" useEffect.`)
+
+    if (currentUser.name != ``) {   
+         
+        const handleBeforeUnload = () => {
+          socket?.connect()
+          socket?.emit('inactive', {name : currentUser.name, inactive : true})
+        }
+
+        window.addEventListener('beforeunload', handleBeforeUnload)      
+
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload)
+        socket?.off()
+        socket?.disconnect()
+      }
+
+    }
+
+  }, [currentUser.name])
+  
   useEffect(() => { 
     if(!firstLoad) { // First load handled by retrieveCurrentUser
       setInactivityTimer()
@@ -571,7 +568,7 @@ const Chat = () => {
       socket?.connect()
       socket?.emit('inactive', { name: currentUser.name, inactive: false })
       inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
-    }    
+    }
   }
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {    
@@ -666,11 +663,27 @@ const Chat = () => {
 
   const buttonDivStyle = verticalView ? 
   `flex justify-between w-80 gap-3 my-2` : 
-  `flex flex-col justify-start h-80 gap-3 mx-2`
+  `flex flex-col justify-start h-80 gap-3 mx-2`  
 
   return (    
 
-    <section className={mainSectionStyle} onMouseDown={() => handleUserActivity()}>
+    <section 
+      className={mainSectionStyle} 
+      onMouseDown={() => handleUserActivity()}
+      onKeyDown={() => {
+        handleUserActivity()
+        if(!isTyping) {
+          setIsTyping(true)
+        }
+      }}
+      onKeyUp={() => {
+        if(isTyping) {          
+          setTimeout(() => {
+            setIsTyping(false)
+          }, 1000)
+        }
+      }}            
+    >
 
       <section className={usersOnlineSection}>
 
@@ -711,10 +724,15 @@ const Chat = () => {
 
       <section className={chatSectionStyle}>
 
-        <div className={`flex justify-between ${primaryDefault} rounded-lg w-80`}>
+        <div className={`flex justify-between ${primaryDefault} rounded-lg w-80`}>          
 
           <h3 className='bg-transparent justify-start m-2'>
-            {(auth && currentUser?.name) ? `Chatting as ${cropMessage(currentUser.name, 12)} ` : `Chatting as Guest`}
+            {
+            // 🔘 🔴 🟠 🟡 🟢 🔵 🟣 ⚫️ ⚪️ 🟤
+            (auth && currentUser?.name) ? 
+              `${userActivity ? `🟢` : `🟠`} Chatting as ${cropMessage(currentUser.name, 12)} ` : 
+              `🔴 Chatting as Guest`
+            }
           </h3>
         
           <span className='flex bg-tranparent m-2 cursor-pointer gap-1'>
@@ -1007,8 +1025,14 @@ const Chat = () => {
       </section>      
              
       <div className='flex absolute bg-tranparent top-auto bottom-0 m-8 gap-2'>   
-        <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
-          Render : {renderCounter}
+        <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
+          Render : {renderCounter}          
+        </h3>
+        <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>          
+          {isTyping ? `💬` : `〰️`}
+        </h3>
+        <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>          
+          Inactive Users : {inactiveUsers.length}
         </h3>
       </div>   
      

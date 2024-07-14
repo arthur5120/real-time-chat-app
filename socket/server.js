@@ -79,7 +79,7 @@ const disconnectUser = (userId) => {
 
 io.on('connection', (socket) => {  
     
-    socket?.on(`disconnect`, (reason) => {      
+    socket?.on(`disconnect`, (reason) => {
         if (reason == `client namespace disconnect`) {
             //console.log(`scheduled disconnect`)
         } else {
@@ -87,7 +87,7 @@ io.on('connection', (socket) => {
         }
     })
 
-    socket.on(`inactive`, (user) => { 
+    socket.on(`inactive`, (user) => {
                        
         const {name, inactive} = user
 
