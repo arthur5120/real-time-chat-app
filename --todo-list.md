@@ -33,14 +33,16 @@
 # Handle repeated names on the room user list.
 # Not loading inactive list on start. [DONE]
 # Not removing user from inactive list on logout and login. [DONE]
-# Missing the click on confirming the message edit makes the button disappear.[DONE]
+# Missing the click on confirming the message edit makes the button disappear. [DONE]
 # Sending unnecessary inactive status requests to socket.
 # Inactivity status not loading sometimes when refreshing the page.
-
-// Done yesterday
-
-Add inactivity status indicator for current user. Implement logic to detect the current user typing status. Implement socket inactivity status update on page unload.
+# When confirming an edit on a non freshly created message, the changes aren't applied. [DONE]
+# Entering edit mode and confirming without editing the message clears it. [DONE]
+# previous property on the messageBeingEdited state might not be updating correctly.
 
 // Done today
 
-
+Change incrementing method for the reload state.
+Change the onBlur event to handle null values and compare elements IDs instead elements themselves.
+Add a placeholder for empty chat messages and adjust the minimum size of the container.
+Add a flag property to track if message was actually edited.

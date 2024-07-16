@@ -12,5 +12,6 @@ export const messagePlaceholder = {
     content : '', 
     created_at : 0,
     updated_at : 0,
-    room : ''
+    room : '',
+    wasEdited : false
   }

@@ -18,6 +18,7 @@ const currentRoomPlaceHolder = {id : '-1', selectId : 0, name : ''}
 
 type TCurrentRoom = {id : string, selectId : number, name : string}
 type TRooms = {id : string, name : string}[]
+type TMessageBeingEdited = TChatMessage & {previous ? : string, wasEdited : boolean}
 
 const Chat = () => {
   
@@ -34,7 +35,7 @@ const Chat = () => {
   const [inactiveUsers, setInactiveUsers] = useState<string[]>([])
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
   const [messages, setMessages] = useState<TChatMessage[]>([])
-  const [messageBeingEdited, setMessageBeingEdited] = useState<TChatMessage & {previous ? : string}>(messagePlaceholder)
+  const [messageBeingEdited, setMessageBeingEdited] = useState<TMessageBeingEdited>(messagePlaceholder)
   const [hasErrors, setHasErrors] = useState(false)
   const [showNotifications, setShowNotifications] = useState(true)
   const [firstLoad, setFirstLoad] = useState(true)
@@ -97,7 +98,7 @@ const Chat = () => {
 
       if(!hasValidRooms) {
         await createChat()
-        setReload(reload + 1)
+        setReload((lastReload) => lastReload + 1)
       }
 
     } catch (e) {
@@ -137,7 +138,7 @@ const Chat = () => {
           selectId : updatedSelectId, 
           name : sortedLocalRooms[updatedSelectId].name
         })                
-        setReload(reload + 1)
+        setReload((lastReload) => lastReload + 1)
       }
 
       setRooms(sortedLocalRooms)
@@ -155,7 +156,7 @@ const Chat = () => {
       try {
 
         if(currentRoom.id == '-1') {          
-          setReload(reload + 1)
+          setReload((lastReload) => lastReload + 1)
           return
         }
 
@@ -305,7 +306,7 @@ const Chat = () => {
       socket?.emit(`change`, creationMessage)
       console.log(`Creating chat, socket connection : ${socket?.connected}`)
 
-      setReload(reload + 1)
+      setReload((lastReload) => lastReload + 1)
 
     } catch (e) {
       setHasErrors(true)
@@ -339,7 +340,7 @@ const Chat = () => {
       await deleteAllChats()
       await retrieveRooms()
                   
-      setReload(reload + 1)
+      setReload((lastReload) => lastReload + 1)
       setUseDelayOnEmit(true)
 
     } catch (e) {
@@ -362,7 +363,7 @@ const Chat = () => {
     const roomId = e.target[selectId].id
     const roomName = e.target[selectId].textContent
     setCurrentRoom({id : roomId, selectId : selectId, name : roomName ? roomName : 'Unknown Room'})
-    setReload(reload + 1)
+    setReload((lastReload) => lastReload + 1)
   }
 
   const onTextareaChange = (e : React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -460,7 +461,7 @@ const Chat = () => {
       }
 
       if(id != previousMessageId) {
-        setReload(reload + 1)
+        setReload((lastReload) => lastReload + 1)
       }      
 
     })
@@ -471,14 +472,14 @@ const Chat = () => {
         if(showNotifications) {
           notifyUser(msg, 'info')
         }
-        setReload(reload + 1)
+        setReload((lastReload) => lastReload + 1)
       }
     })
 
     socket?.on('change', (msg : string) => {
       console.log(`socket on change : ${currentRoom?.id}`)
       setUseDelayOnEmit(true)
-      setReload(reload + 1)
+      setReload((lastReload) => lastReload + 1)
       if (msg != ``) {
         notifyUser(msg, 'info')
       }
@@ -497,12 +498,12 @@ const Chat = () => {
     return () => {
                
       if (isCurrentRoomIdValid) {
-        setReload(reload + 1)
+        setReload((lastReload) => lastReload + 1)
       } else {        
         setReload(0)
       }       
 
-      setMessageBeingEdited({...messagePlaceholder, previous : ''})
+      setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
       clearTimeout(timer)
 
       if(!firstLoad) {        
@@ -586,11 +587,24 @@ const Chat = () => {
 
   }
 
-  const onInputEditableMessage = async (e : React.FormEvent<HTMLSpanElement>) => {
-    
+  const onInputEditableMessage = (e : React.FormEvent<HTMLSpanElement>) => {    
     const element = e.target as HTMLSpanElement
     const msg = element?.textContent ? element.textContent : ''
     setMessageBeingEdited({...messageBeingEdited, content : msg})
+  }
+
+  const onBlurEditableMessage = (e : React.FocusEvent<HTMLSpanElement, Element>) => {
+    const confirmButtonElement = confirmContainerRef?.current
+    const targetElement = e.relatedTarget as HTMLButtonElement
+    const areElementsValid = targetElement && confirmButtonElement
+    const areElementsTheSame = targetElement?.id == confirmButtonElement?.id
+    if (!areElementsValid || !areElementsTheSame) {
+      if (messageBeingEdited.wasEdited == true) {
+        messageContainerRef.current ? messageContainerRef.current.textContent = message.content : ''
+      }
+      setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
+      setReload((lastReload) => lastReload + 1)
+    }
   }
 
   const onClickEditModeIcon = async (e : React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
@@ -604,7 +618,7 @@ const Chat = () => {
         const selectedMessage = messageContainerRef.current as HTMLSpanElement
         const selectedMessageId = selectedMessage.dataset.id
         setMessageBeingEdited({
-          ...messageBeingEdited, 
+          ...messageBeingEdited,
           id : selectedMessageId
         })
         messageContainerRef.current?.focus()
@@ -615,26 +629,31 @@ const Chat = () => {
         messageBeingEdited.id ? await deleteMessage(messageBeingEdited.id) : ''
         const editedMessage = messageBeingEdited?.previous ?  messageBeingEdited.previous : ''
         socket?.emit('messageChange', `The message "${cropMessage(editedMessage)}" was deleted on ${currentRoom.name}`)
-        setMessageBeingEdited({...messagePlaceholder, previous : ''})
-        setReload(reload + 1)
+        setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
+        setReload((lastReload) => lastReload + 1)
         break
       }
 
-      case 'confirm' : {
-        messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
-        messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
-        const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
-        const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
-        socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)
-        setMessageBeingEdited({...messagePlaceholder, previous : ''})
-        setReload(reload + 1)
+      case 'confirm' : {        
+        if(messageBeingEdited.wasEdited == true) {
+          messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
+          messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
+          const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
+          const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
+          socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)
+        }
+        setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
+        setReload((lastReload) => lastReload + 1)
         break
       }
 
       case 'cancel' : {
         if (messageBeingEdited?.previous) {
-          messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.previous : ''
-          setMessageBeingEdited({...messagePlaceholder, previous : ''})
+          if(messageBeingEdited.wasEdited == true) {
+            notifyUser(`${messageBeingEdited.wasEdited == true}`)
+            messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.previous : ''
+          }
+          setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
         }
         break
       }
@@ -731,7 +750,7 @@ const Chat = () => {
             {
             // 🔘 🔴 🟠 🟡 🟢 🔵 🟣 ⚫️ ⚪️ 🟤
             (auth && currentUser?.name) ? 
-              `${userActivity ? `🟢` : `🟠`} Chatting as ${cropMessage(currentUser.name, 12)} ` : 
+              `${userActivity ? `🟢` : `🟠`} Chatting as ${cropMessage(currentUser.name, 8)} ` : 
               `🔴 Chatting as Guest`
             }
           </h3>
@@ -781,8 +800,8 @@ const Chat = () => {
                 <span // Editable component with `children` managed by React.
                   
                   data-id={message.id}
-                  ref={isMessageSelected ? messageContainerRef : null}
-                  className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 ${primaryDefault} rounded max-w-48 h-fit break-words cursor-pointer`}
+                  ref={isMessageSelected ? messageContainerRef : null}                  
+                  className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 ${primaryDefault} rounded max-w-48 h-fit break-words cursor-pointer min-h-[40px] ${message.content != '' || isMessageSelected ? '' : 'text-slate-400'}`}
                   suppressContentEditableWarning={true}
                   contentEditable={isUserSender && isMessageSelected}
 
@@ -793,26 +812,31 @@ const Chat = () => {
                       }
                     } else {
                       notifyUser(
-                        `Message wrote by ${message.user}, it was created ${getTime(message.updated_at)} ${message.updated_at == message.created_at ? `` : `and updated at ${getTime(message.updated_at)}`}`
+                        `Message wrote by ${message.user} ${getTime(message.updated_at)} ${message.updated_at == message.created_at ? `` : `and updated at ${getTime(message.updated_at)}`}`
                       )
                     }
-                  }}
+                  }}                  
 
                   onInput={(e) => {
                     onInputEditableMessage(e)
                   }}
 
-                  onBlur={(event) => {                    
-                    if (confirmContainerRef.current && event.relatedTarget != confirmContainerRef.current) {
-                      messageContainerRef.current ? messageContainerRef.current.textContent = message.content : ''
-                      setMessageBeingEdited({...messagePlaceholder, previous : ''})
-                      setReload(reload + 1)
-                    }                    
+                  onBlur={(e) => {
+                    onBlurEditableMessage(e)                    
+                  }}
+
+                  onKeyDown={() => {
+                    if(isMessageSelected && messageBeingEdited.wasEdited == false) {                      
+                      setMessageBeingEdited((values) => ({
+                        ...values,
+                        wasEdited : true
+                      }))
+                    }
                   }}
 
                 >                  
                   
-                  {message.content}
+                  {message.content != '' || isMessageSelected ? message.content : '...'}
 
                 </span>
               
@@ -827,7 +851,7 @@ const Chat = () => {
                   </button> : ''}
                   
                   { isMessageFocused ? <button
-                    name={`confirm`} 
+                    id={`btn-confirm`} 
                     ref={confirmContainerRef}
                     className='hover:bg-slate-600 rounded-full' 
                     data-action={`confirm`} 
@@ -845,9 +869,9 @@ const Chat = () => {
                   </button> : ''}
                   
                   <button 
-                    className='hover:bg-slate-600 rounded-full' 
-                    data-action={`cancel`} 
-                    title={`Cancel`}  
+                    className='hover:bg-slate-600 rounded-full'
+                    data-action={`cancel`}
+                    title={`Cancel`}
                     onClick={(e) => onClickEditModeIcon(e)}>
                       &#10005;
                   </button>
@@ -1001,13 +1025,15 @@ const Chat = () => {
             onClick={() => onResetRoomsClick()}
           />
 
-          {/* <CustomButton
+          <CustomButton
             value={`Get 🐜`}
             variationName='varthree'
-            className={`bg-orange-900 active:bg-orange-800 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
+            className={`bg-purple-900 active:bg-purple-800 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad}
-            onClick={() => notifyUser(`Button to get a bug.`)}
-          /> */}
+            onClick={() => {
+              notifyUser(`When confirming an edit on a non freshly created message, the changes aren't applied.`)
+            }}
+          />
           
           <CustomButton
             value={`Test 🦾`}
@@ -1016,7 +1042,7 @@ const Chat = () => {
             disabled={!!reload || firstLoad}
             title={`Currently showing nothing.`}
             onClick={ async () => {
-              notifyUser(`Button for testing.`)
+              setReload((lastReload) => lastReload + 1)
             }}
           />
 
@@ -1029,12 +1055,15 @@ const Chat = () => {
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
           Render : {renderCounter}
         </h3>
-        <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
-          {isTyping ? `💬` : `〰️`}
-        </h3>
         <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
           Inactive Users : {inactiveUsers.length}
         </h3>
+        <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
+          {isTyping ? `💬` : `〰️`}
+        </h3>
+        {/* <h3>
+          {messageBeingEdited.content}
+        </h3> */}
       </div>
      
     </section>
