@@ -15,6 +15,7 @@ import CustomButton from '../atoms/button'
 
 const roomsPlaceholder = [{id : '-1', name : ''}]
 const currentRoomPlaceHolder = {id : '-1', selectId : 0, name : ''}
+const editMenuButtonPrefix = `--em-btn--`
 
 type TCurrentRoom = {id : string, selectId : number, name : string}
 type TRooms = {id : string, name : string}[]
@@ -23,9 +24,8 @@ type TMessageBeingEdited = TChatMessage & {previous ? : string, wasEdited : bool
 const Chat = () => {
   
   let chatContainerRef = useRef<HTMLDivElement>(null)
-  let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)  
-  let messageContainerRef =  useRef<HTMLSpanElement>(null)  
-  let confirmContainerRef =  useRef<HTMLButtonElement>(null)
+  let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)
+  let messageContainerRef =  useRef<HTMLSpanElement>(null)
 
   const [rooms, setRooms] = useState<TRooms>(roomsPlaceholder)
   const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
@@ -98,7 +98,7 @@ const Chat = () => {
 
       if(!hasValidRooms) {
         await createChat()
-        setReload((lastReload) => lastReload + 1)
+        setReload(reload  + 1)
       }
 
     } catch (e) {
@@ -138,7 +138,7 @@ const Chat = () => {
           selectId : updatedSelectId, 
           name : sortedLocalRooms[updatedSelectId].name
         })                
-        setReload((lastReload) => lastReload + 1)
+        setReload(reload  + 1)
       }
 
       setRooms(sortedLocalRooms)
@@ -156,7 +156,7 @@ const Chat = () => {
       try {
 
         if(currentRoom.id == '-1') {          
-          setReload((lastReload) => lastReload + 1)
+          setReload(reload  + 1)
           return
         }
 
@@ -306,7 +306,7 @@ const Chat = () => {
       socket?.emit(`change`, creationMessage)
       console.log(`Creating chat, socket connection : ${socket?.connected}`)
 
-      setReload((lastReload) => lastReload + 1)
+      setReload(reload  + 1)
 
     } catch (e) {
       setHasErrors(true)
@@ -340,7 +340,7 @@ const Chat = () => {
       await deleteAllChats()
       await retrieveRooms()
                   
-      setReload((lastReload) => lastReload + 1)
+      setReload(reload  + 1)
       setUseDelayOnEmit(true)
 
     } catch (e) {
@@ -363,7 +363,7 @@ const Chat = () => {
     const roomId = e.target[selectId].id
     const roomName = e.target[selectId].textContent
     setCurrentRoom({id : roomId, selectId : selectId, name : roomName ? roomName : 'Unknown Room'})
-    setReload((lastReload) => lastReload + 1)
+    setReload(reload  + 1)
   }
 
   const onTextareaChange = (e : React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -461,7 +461,7 @@ const Chat = () => {
       }
 
       if(id != previousMessageId) {
-        setReload((lastReload) => lastReload + 1)
+        setReload(reload  + 1)
       }      
 
     })
@@ -472,14 +472,14 @@ const Chat = () => {
         if(showNotifications) {
           notifyUser(msg, 'info')
         }
-        setReload((lastReload) => lastReload + 1)
+        setReload(reload  + 1)
       }
     })
 
     socket?.on('change', (msg : string) => {
       console.log(`socket on change : ${currentRoom?.id}`)
       setUseDelayOnEmit(true)
-      setReload((lastReload) => lastReload + 1)
+      setReload(reload  + 1)
       if (msg != ``) {
         notifyUser(msg, 'info')
       }
@@ -498,7 +498,7 @@ const Chat = () => {
     return () => {
                
       if (isCurrentRoomIdValid) {
-        setReload((lastReload) => lastReload + 1)
+        setReload(reload  + 1)
       } else {        
         setReload(0)
       }       
@@ -520,6 +520,10 @@ const Chat = () => {
   useEffect(() => {
     scrollToLatest()
   }, [messages.length])
+
+  useEffect(() => {
+    setReload(reload + 1)
+  }, [auth])
   
   useEffect(() => {
 
@@ -573,7 +577,7 @@ const Chat = () => {
     }
   }
 
-  const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {    
+  const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
     const selectedMessage = e.target as HTMLSpanElement
     const selectedMessageId = selectedMessage.dataset.id
@@ -587,24 +591,33 @@ const Chat = () => {
 
   }
 
-  const onInputEditableMessage = (e : React.FormEvent<HTMLSpanElement>) => {    
+  const onInputEditableMessage = (e : React.FormEvent<HTMLSpanElement>) => {
     const element = e.target as HTMLSpanElement
     const msg = element?.textContent ? element.textContent : ''
     setMessageBeingEdited({...messageBeingEdited, content : msg})
   }
 
   const onBlurEditableMessage = (e : React.FocusEvent<HTMLSpanElement, Element>) => {
-    const confirmButtonElement = confirmContainerRef?.current
+
     const targetElement = e.relatedTarget as HTMLButtonElement
-    const areElementsValid = targetElement && confirmButtonElement
-    const areElementsTheSame = targetElement?.id == confirmButtonElement?.id
-    if (!areElementsValid || !areElementsTheSame) {
-      if (messageBeingEdited.wasEdited == true) {
-        messageContainerRef.current ? messageContainerRef.current.textContent = message.content : ''
+    const isButton = targetElement?.id.includes(editMenuButtonPrefix)
+    
+    if (!targetElement || !isButton) {
+
+      if (messageBeingEdited.wasEdited == true && messageContainerRef.current) {
+        messageContainerRef.current.textContent = message.content
       }
-      setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
-      setReload((lastReload) => lastReload + 1)
+
+      setMessageBeingEdited({
+        ...messagePlaceholder,
+        previous : '',
+        wasEdited : false
+      })
+
+      setReload(reload  + 1)
+
     }
+
   }
 
   const onClickEditModeIcon = async (e : React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
@@ -630,7 +643,7 @@ const Chat = () => {
         const editedMessage = messageBeingEdited?.previous ?  messageBeingEdited.previous : ''
         socket?.emit('messageChange', `The message "${cropMessage(editedMessage)}" was deleted on ${currentRoom.name}`)
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
-        setReload((lastReload) => lastReload + 1)
+        setReload(reload  + 1)
         break
       }
 
@@ -643,14 +656,13 @@ const Chat = () => {
           socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)
         }
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
-        setReload((lastReload) => lastReload + 1)
+        setReload(reload  + 1)
         break
       }
 
       case 'cancel' : {
-        if (messageBeingEdited?.previous) {
-          if(messageBeingEdited.wasEdited == true) {
-            notifyUser(`${messageBeingEdited.wasEdited == true}`)
+        if (messageBeingEdited?.previous || messageBeingEdited.previous == ``) {
+          if(messageBeingEdited.wasEdited == true) {            
             messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.previous : ''
           }
           setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
@@ -801,7 +813,7 @@ const Chat = () => {
                   
                   data-id={message.id}
                   ref={isMessageSelected ? messageContainerRef : null}                  
-                  className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 ${primaryDefault} rounded max-w-48 h-fit break-words cursor-pointer min-h-[40px] ${message.content != '' || isMessageSelected ? '' : 'text-slate-400'}`}
+                  className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 ${primaryDefault} flex-shrink-1 rounded max-w-48 h-fit h-min-10 break-words cursor-pointer ${message.content != '' || isMessageSelected ? '' : 'text-slate-400'}`}
                   suppressContentEditableWarning={true}
                   contentEditable={isUserSender && isMessageSelected}
 
@@ -842,7 +854,8 @@ const Chat = () => {
               
                 <span className={`flex items-end justify-end cursor-pointer mx-3 px-1 gap-1 ${(isUserSender && isMessageSelected) ? '' : 'hidden'}`}>
                   
-                  { !isMessageFocused && !messageBeingEdited.content ? <button                      
+                  { !isMessageFocused && !messageBeingEdited.content ? <button
+                    id={`${editMenuButtonPrefix}-edit`}
                     className='hover:bg-slate-600 rounded-full' 
                     data-action={`edit`} 
                     title={`Edit`} 
@@ -851,8 +864,7 @@ const Chat = () => {
                   </button> : ''}
                   
                   { isMessageFocused ? <button
-                    id={`btn-confirm`} 
-                    ref={confirmContainerRef}
+                    id={`${editMenuButtonPrefix}-confirm`}                    
                     className='hover:bg-slate-600 rounded-full' 
                     data-action={`confirm`} 
                     title={`Confirm`} 
@@ -861,6 +873,7 @@ const Chat = () => {
                   </button> : ''}
                   
                   { !isMessageFocused && !messageBeingEdited.content ? <button 
+                    id={`${editMenuButtonPrefix}-delete`}
                     className='hover:bg-slate-600 rounded-full' 
                     data-action={`delete`} 
                     title={`Delete`} 
@@ -869,6 +882,7 @@ const Chat = () => {
                   </button> : ''}
                   
                   <button 
+                    id={`${editMenuButtonPrefix}-cancel`}
                     className='hover:bg-slate-600 rounded-full'
                     data-action={`cancel`}
                     title={`Cancel`}
@@ -1042,7 +1056,7 @@ const Chat = () => {
             disabled={!!reload || firstLoad}
             title={`Currently showing nothing.`}
             onClick={ async () => {
-              setReload((lastReload) => lastReload + 1)
+              setReload(reload  + 1)
             }}
           />
 
