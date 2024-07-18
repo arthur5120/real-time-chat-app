@@ -11,8 +11,8 @@ import { authStatus, getUserById, authLogout } from "../../hooks/useAxios"
 const App = () => {
 
   const socket = useContext(socketContext)
-  const {auth, setAuth, setRole, getAuthTokenStatus} = useContext(authContext)
-  const {notifyUser} = useContext(toastContext)
+  const {notifyUser} = useContext(toastContext)  
+  const {auth, setAuth, setRole, userActivity, setUserActivity, getAuthTokenStatus} = useContext(authContext)
   
   const [checkAuthStatus, setCheckAuthStatus] = useState(false)
   const [previousAuth, setPreviousAuth] = useState(auth)
@@ -27,11 +27,11 @@ const App = () => {
 
         socket?.connect()
         
-        if(hasSessionExpired) { // Session Expired or the token was not found.          
+        if(hasSessionExpired) { // Session Expired or the token was not found.
           setRole ? setRole(authInfo.role) : ''
           const authRequest : TSocketAuthRequest = {user : {id : ``}, isConnecting : false}
           socket?.emit(`auth`, authRequest)
-          socket?.emit(`authList`)          
+          socket?.emit(`authList`)
           socket?.emit(`inactiveList`)
           setHasSessionExpired(false)
         }
@@ -114,7 +114,9 @@ const App = () => {
         alt='background image'
       />
 
-      <section className='flex flex-col absolute inset-0 min-h-screen min-w-screen w-full h-full'>
+      <section 
+        className='flex flex-col absolute inset-0 min-h-screen min-w-screen w-full h-full'        
+      >
 
         <header>
           <AuthBanner/>          

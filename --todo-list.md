@@ -41,20 +41,19 @@
 # previous property on the messageBeingEdited state might not be updating correctly.
 # chat style not updating when the session expires. [DONE]
 # Editing the message and cancelling afterwards makes it blank instead of returning to the last state. [DONE]
-# Clicking the area above the title doesn't remove the user inactive status.
+# Clicking the area above the title doesn't remove the user inactive status. [DONE]
 # Edited status not showing on the other chats when freshly editing a message for the first time.
+# Adding a message to local chat erroneously for a moment before the chat loads the correct messages.
+# Editing message and clicking off of it deletes the text content.
 
 // Done yesterday
-
-Change incrementing method for the reload state.
-Change the onBlur event to handle null values and compare elements IDs instead elements themselves.
-Add a placeholder for empty chat messages and adjust the minimum size of the container.
-Add a flag property to track if message was actually edited.
-
-// Done today
 
 Replace the onBlur event confirm button ref for a prefix to include the other ones.
 Place useEffect to update the chat style upon session expiration.
 Restore last method of incrementing to reload state due to problems on some browsers.
 Change the message container to include flex-shrink-1 so it adapts correctly.
 Change cancel button to allow blank text as a valid previous message.
+
+// Done today
+
+Add useEffect with an event listener monitoring the click to update the inactivity status.

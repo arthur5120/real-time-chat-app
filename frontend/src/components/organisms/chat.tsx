@@ -44,8 +44,7 @@ const Chat = () => {
   const [useDelayOnEmit, setUseDelayOnEmit] = useState(false)
   const [verticalView, setVerticalView] = useState(false)
   const [renderCounter, setRenderCounter] = useState(0)
-  const [copiedToClipboard, setCopiedToClipboard] = useState(false)
-  const [userActivity, setUserActivity] = useState(true)
+  const [copiedToClipboard, setCopiedToClipboard] = useState(false)  
   const [inactivityTimerId, setInactivityTimerId] = useState<NodeJS.Timeout | null>(null)
   const [isTyping, setIsTyping] = useState(false)
 
@@ -53,7 +52,13 @@ const Chat = () => {
 
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
-  const {auth, setAuth, role} = useContext(authContext)
+  const {
+    auth, 
+    setAuth, 
+    role, 
+    userActivity, 
+    setUserActivity
+  } = useContext(authContext)  
 
   const scrollToLatest = () => {
     if (chatContainerRef.current) {
@@ -250,7 +255,7 @@ const Chat = () => {
         ...newMessage
       }      
 
-      if(socket?.disconnected) {        
+      if(socket?.disconnected) {
         socket?.connect()
       }
 
@@ -413,6 +418,29 @@ const Chat = () => {
     resetMessageContent()
   }
 
+  const setInactivityTimer = (localUserName = null) => {
+    if (userActivity) {
+      //notifyUser(`Scheduled Inactivity Activation.`)
+      const name = localUserName ? localUserName : currentUser.name
+      const timerId = setTimeout(() => {
+        setUserActivity ? setUserActivity(false) : ''
+        socket?.connect()
+        socket?.emit('inactive', { name: name, inactive: true })
+      }, 15000) // Time until inactivity
+      setInactivityTimerId(timerId)
+    }
+  }
+
+  const handleUserActivity = () => {
+    if (!userActivity) {
+      //notifyUser(`Renewed Activity Status`)
+      setUserActivity ? setUserActivity(true) : ''
+      socket?.connect()
+      socket?.emit('inactive', { name: currentUser.name, inactive: false })
+      inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
+    }
+  }
+
   useEffect(() => {
 
     setRenderCounter(renderCounter + 1)
@@ -509,7 +537,7 @@ const Chat = () => {
       if(!firstLoad) {        
         socket?.off()
         socket?.disconnect()
-      } else {        
+      } else {                
         setFirstLoad(false)
       }      
 
@@ -517,14 +545,6 @@ const Chat = () => {
   
   }, [rooms.length, messages.length, currentRoom.id, reload, auth, showNotifications])
 
-  useEffect(() => {
-    scrollToLatest()
-  }, [messages.length])
-
-  useEffect(() => {
-    setReload(reload + 1)
-  }, [auth])
-  
   useEffect(() => {
 
     console.log(`Running "handle before unload" useEffect.`)
@@ -536,9 +556,10 @@ const Chat = () => {
           socket?.emit('inactive', {name : currentUser.name, inactive : true})
         }
 
-        window.addEventListener('beforeunload', handleBeforeUnload)      
+        window.addEventListener('beforeunload', handleBeforeUnload)
 
       return () => {
+        window.removeEventListener('click', handleUserActivity)        
         window.removeEventListener('beforeunload', handleBeforeUnload)
         socket?.off()
         socket?.disconnect()
@@ -546,36 +567,26 @@ const Chat = () => {
 
     }
 
-  }, [currentUser.name])
-  
-  useEffect(() => { 
+  }, [currentUser.name])  
+
+  useEffect(() => {
+    scrollToLatest()
+  }, [messages.length])
+
+  useEffect(() => {
+    setReload(reload + 1)
+  }, [auth])
+
+  useEffect(() => {
     if(!firstLoad) { // First load handled by retrieveCurrentUser
       setInactivityTimer()
     }
   }, [userActivity])
 
-  const setInactivityTimer = (localUserName = null) => {
-    if (userActivity) {
-      //notifyUser(`Scheduled Inactivity Activation.`)
-      const name = localUserName ? localUserName : currentUser.name          
-      const timerId = setTimeout(() => {
-        setUserActivity(false)
-        socket?.connect()
-        socket?.emit('inactive', { name: name, inactive: true })
-      }, 60000) // Time until inactivity      
-      setInactivityTimerId(timerId)
-    }
-  }
-
-  const handleUserActivity = () => {
-    if (!userActivity) {
-      //notifyUser(`Renewed Activity Status`)
-      setUserActivity(true)
-      socket?.connect()
-      socket?.emit('inactive', { name: currentUser.name, inactive: false })
-      inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
-    }
-  }
+  useEffect(() => {
+    window.removeEventListener('click', handleUserActivity)
+    window.addEventListener('click', handleUserActivity)
+  }, [])
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -700,26 +711,29 @@ const Chat = () => {
   return (    
 
     <section 
+
       className={mainSectionStyle} 
-      onMouseDown={() => handleUserActivity()}
+
       onKeyDown={() => {
         handleUserActivity()
-        if(!isTyping) {          
+        if(!isTyping) {
           setIsTyping(true)
         }
       }}
+
       onKeyUp={() => {
         if(isTyping) {          
           setTimeout(() => {
             setIsTyping(false)
           }, 1000)
         }
-      }}            
+      }}
+
     >
 
       <section className={usersOnlineSection}>
 
-        <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28 max-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center items select-none`}>
+        <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28 max-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center select-none`}>
           <h3 className={`bg-white text-black rounded p-1 w-full`}>Room Users</h3>
           <span className={`bg-transparent m-1 rounded-lg ${roomUsers.length >= 10 ? `overflow-y-scroll` : ``} w-full min-h-[20px] max-h-[312px]`}>
             {              
@@ -812,12 +826,12 @@ const Chat = () => {
                 <span // Editable component with `children` managed by React.
                   
                   data-id={message.id}
-                  ref={isMessageSelected ? messageContainerRef : null}                  
+                  ref={isMessageSelected ? messageContainerRef : null}
                   className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 ${primaryDefault} flex-shrink-1 rounded max-w-48 h-fit h-min-10 break-words cursor-pointer ${message.content != '' || isMessageSelected ? '' : 'text-slate-400'}`}
                   suppressContentEditableWarning={true}
                   contentEditable={isUserSender && isMessageSelected}
 
-                  onClick={(e) => {                     
+                  onClick={(e) => {
                     if (isUserSender) {
                       if (!messageBeingEdited.content) {
                         onEnterMessageEditMode(e)
@@ -1056,6 +1070,7 @@ const Chat = () => {
             disabled={!!reload || firstLoad}
             title={`Currently showing nothing.`}
             onClick={ async () => {
+              setUserActivity ? setUserActivity(!userActivity) : ''
               setReload(reload  + 1)
             }}
           />
