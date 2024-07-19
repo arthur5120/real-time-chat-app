@@ -371,11 +371,11 @@ const Chat = () => {
     setReload(reload  + 1)
   }
 
-  const onTextareaChange = (e : React.ChangeEvent<HTMLTextAreaElement>) => {
+  const onTextareaChange = (e : React.ChangeEvent<HTMLTextAreaElement>) => {    
     setMessage((rest : TChatMessage) => ({
-      ...rest,      
-      content : e.target.value,     
-    }))        
+      ...rest,
+      content : e.target.value,
+    }))
   }
 
   const onResetRoomsClick = async () => {
@@ -419,7 +419,7 @@ const Chat = () => {
   }
 
   const setInactivityTimer = (localUserName = null) => {
-    if (userActivity) {
+    if (userActivity) {      
       //notifyUser(`Scheduled Inactivity Activation.`)
       const name = localUserName ? localUserName : currentUser.name
       const timerId = setTimeout(() => {
@@ -432,7 +432,7 @@ const Chat = () => {
   }
 
   const handleUserActivity = () => {
-    if (!userActivity) {
+    if (!userActivity) {      
       //notifyUser(`Renewed Activity Status`)
       setUserActivity ? setUserActivity(true) : ''
       socket?.connect()
@@ -490,7 +490,7 @@ const Chat = () => {
 
       if(id != previousMessageId) {
         setReload(reload  + 1)
-      }      
+      }
 
     })
     
@@ -553,7 +553,7 @@ const Chat = () => {
          
         const handleBeforeUnload = () => {
           socket?.connect()
-          socket?.emit('inactive', {name : currentUser.name, inactive : true})
+          socket?.emit(`inactive`, {name: currentUser.name, inactive: true})
         }
 
         window.addEventListener('beforeunload', handleBeforeUnload)
@@ -567,7 +567,7 @@ const Chat = () => {
 
     }
 
-  }, [currentUser.name])  
+  }, [currentUser.name])
 
   useEffect(() => {
     scrollToLatest()
@@ -577,16 +577,13 @@ const Chat = () => {
     setReload(reload + 1)
   }, [auth])
 
-  useEffect(() => {
+  useEffect(() => {    
     if(!firstLoad) { // First load handled by retrieveCurrentUser
       setInactivityTimer()
     }
-  }, [userActivity])
-
-  useEffect(() => {
     window.removeEventListener('click', handleUserActivity)
     window.addEventListener('click', handleUserActivity)
-  }, [])
+  }, [userActivity])
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -615,8 +612,8 @@ const Chat = () => {
     
     if (!targetElement || !isButton) {
 
-      if (messageBeingEdited.wasEdited == true && messageContainerRef.current) {
-        messageContainerRef.current.textContent = message.content
+      if (messageContainerRef.current && messageBeingEdited.wasEdited == true) {
+        messageContainerRef.current.textContent = `${messageBeingEdited.previous}`
       }
 
       setMessageBeingEdited({
@@ -741,22 +738,43 @@ const Chat = () => {
                 roomUsers.map((user, id) => {
 
                   const isCurrentUserName = currentUser.name == user
-                  const inactiveUserId = inactiveUsers.findIndex((inactiveUser) => inactiveUser == user)
+                  const inactiveUserId = inactiveUsers.findIndex((iu) => iu == user)
                   const isUserInactive = inactiveUserId > -1
 
                   const isUserOnline = onlineUsers.find((onlineUser) => {
                     if (onlineUser == user) {
                       return onlineUser
                     }
-                  })       
+                  })
+                  
+                  let className = ''
+
+                  if (isUserOnline) { // changed from ternary, causing problems on firefox.
+                    if (isCurrentUserName) {
+                      if (!userActivity) {
+                        className = 'text-orange-400'
+                      } else {
+                        className = 'text-green-400'
+                      }
+                    } else {
+                      if (isUserInactive) {
+                        className = 'text-orange-400'
+                      } else {
+                        className = 'text-green-400'
+                      }
+                    }
+                  } else {
+                    className = 'text-gray-300'
+                  }
 
                   return <p 
                     title={isUserOnline ? `${user} is online.` : `${user} is offline.`} 
-                    className={
-                      `${isUserOnline ? (
-                          isCurrentUserName ? (!userActivity ? `text-orange-400` : `text-green-400`) : (isUserInactive ? `text-orange-400` : `text-green-400`)
-                        ) : `text-gray-300`}`
-                    }                    
+                    className={className}
+                    // className={
+                    //   `${isUserOnline ? (
+                    //       isCurrentUserName ? (!userActivity ? `text-orange-400` : `text-green-400`) : (isUserInactive ? `text-orange-400` : `text-green-400`)
+                    //     ) : `text-gray-300`}`
+                    // }                    
                     key={`roomUser-${id}`}>{cropMessage(user, 8)}
                   </p>
 
@@ -841,7 +859,7 @@ const Chat = () => {
                         `Message wrote by ${message.user} ${getTime(message.updated_at)} ${message.updated_at == message.created_at ? `` : `and updated at ${getTime(message.updated_at)}`}`
                       )
                     }
-                  }}                  
+                  }}
 
                   onInput={(e) => {
                     onInputEditableMessage(e)
@@ -1008,9 +1026,9 @@ const Chat = () => {
               }
             </button>
             
-          </span>       
+          </span>
 
-        </div>              
+        </div>
       
       </section> 
 
@@ -1024,7 +1042,7 @@ const Chat = () => {
               <span className={`flex flex-col gap-1`}>
                 <h3 className='text-slate-100 group-hover:text-white'>
                   New Room
-                </h3>                
+                </h3>
               </span>
             }
 
@@ -1090,9 +1108,9 @@ const Chat = () => {
         <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
           {isTyping ? `💬` : `〰️`}
         </h3>
-        {/* <h3>
-          {messageBeingEdited.content}
-        </h3> */}
+        <h3 className={`flex mb-5 ${userActivity ? `bg-green-600` : `bg-red-600` } rounded-lg p-3`}>
+          {userActivity ? `active` : `inactive`}
+        </h3>
       </div>
      
     </section>
