@@ -12,7 +12,7 @@ const App = () => {
 
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)  
-  const {auth, setAuth, setRole, userActivity, setUserActivity, getAuthTokenStatus} = useContext(authContext)
+  const {auth, setAuth, setRole, getAuthTokenStatus} = useContext(authContext)
   
   const [checkAuthStatus, setCheckAuthStatus] = useState(false)
   const [previousAuth, setPreviousAuth] = useState(auth)

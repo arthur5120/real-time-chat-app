@@ -45,13 +45,17 @@
 # Edited status not showing on the other chats when freshly editing a message for the first time.
 # Adding a message to local chat erroneously for a moment before the chat loads the correct messages.
 # Editing message and clicking off of it deletes the text content. [DONE]
+# Sending inactivity update without changes at every click.
+# useEffect stopping prematurely, locking the user from interacting with the UI.
+# Editing is cancelled when receiving a new message.
 
 // Done yesterday
 
-Change editable message onBlur event to fix the text being deleted when clicking off of it during edit mode.
-Move inactivity event listener to a different useEffect to prevent it from not running at times.
-Convert ternary operators to if statements for user activity status styling for compatibility with some browsers.
+Remove constant boolean for room ID validation. Remove message length dependency from useEffect to prevent unnecessary re-renders. Change socket emission to broadcast to prevent unnecessary re-renders for the sender. Minor socket changes to reduce disconnections.
 
 // Done today
 
-Remove constant boolean for room ID validation. Remove message length dependency from useEffect to prevent unnecessary re-renders. Change socket emission to broadcast to prevent unnecessary re-renders for the sender. Minor socket changes to reduce disconnections.
+Moved userActivity state from auth-provider to chat component so it would update correctly.
+Use ref for handleUserActivity function in click event listener to make sure the values are up to date.
+Add cleanup function to userActivity useEffect to prevent multiple socket calls.
+Change socket and scrollToLatest useEffect to check if the user is writing/editing a message before scrolling to prevent text loss.

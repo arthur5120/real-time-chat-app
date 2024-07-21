@@ -14,9 +14,7 @@ type TAuth = {
   auth ? : boolean,
   setAuth ? : Dispatch<SetStateAction<boolean>>
   role ? : string,
-  setRole ? : Dispatch<SetStateAction<string>>
-  userActivity ? : boolean,
-  setUserActivity ? : Dispatch<SetStateAction<boolean>>,
+  setRole ? : Dispatch<SetStateAction<string>>  
   getAuthTokenStatus ? : Function
 }
 
@@ -25,8 +23,7 @@ export const authContext = createContext<TAuth>({})
 const AuthProvider : FC<{children : ReactElement}> = ({children}) => {  
 
   const [auth, setAuth] = useState(false)
-  const [role, setRole] = useState('none')  
-  const [userActivity, setUserActivity] = useState(true)
+  const [role, setRole] = useState('none')
 
   const getAuthTokenStatus = async () => {    
     try {
@@ -51,7 +48,7 @@ const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
   }, [auth])
 
   return (
-    <authContext.Provider value={{auth, setAuth, role, setRole, userActivity, setUserActivity, getAuthTokenStatus}}>
+    <authContext.Provider value={{auth, setAuth, role, setRole, getAuthTokenStatus}}>
       {children}
     </authContext.Provider>
   )

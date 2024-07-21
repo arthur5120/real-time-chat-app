@@ -22,10 +22,6 @@ type TRooms = {id : string, name : string}[]
 type TMessageBeingEdited = TChatMessage & {previous ? : string, wasEdited : boolean}
 
 const Chat = () => {
-  
-  let chatContainerRef = useRef<HTMLDivElement>(null)
-  let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)
-  let messageContainerRef =  useRef<HTMLSpanElement>(null)
 
   const [rooms, setRooms] = useState<TRooms>(roomsPlaceholder)
   const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
@@ -33,6 +29,7 @@ const Chat = () => {
   const [roomUsers, setRoomUsers] = useState<string[]>([])
   const [onlineUsers, setOnlineUsers] = useState<string[]>([])
   const [inactiveUsers, setInactiveUsers] = useState<string[]>([])
+  const [userActivity, setUserActivity] = useState(true)
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
   const [messages, setMessages] = useState<TChatMessage[]>([])
   const [messageBeingEdited, setMessageBeingEdited] = useState<TMessageBeingEdited>(messagePlaceholder)
@@ -47,17 +44,16 @@ const Chat = () => {
   const [copiedToClipboard, setCopiedToClipboard] = useState(false)  
   const [inactivityTimerId, setInactivityTimerId] = useState<NodeJS.Timeout | null>(null)
   const [isTyping, setIsTyping] = useState(false)
-  const [spam, setSpam] = useState(false)
+  const [spam, setSpam] = useState(false)  
+
+  let chatContainerRef = useRef<HTMLDivElement>(null)
+  let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)
+  let messageContainerRef =  useRef<HTMLSpanElement>(null)  
+  let handleUserActivityRef = useRef<() => void>(() => {})
 
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
-  const {
-    auth, 
-    setAuth, 
-    role, 
-    userActivity, 
-    setUserActivity
-  } = useContext(authContext)  
+  const {auth, setAuth, role} = useContext(authContext)  
 
   const scrollToLatest = () => {
     if (chatContainerRef.current) {
@@ -425,25 +421,25 @@ const Chat = () => {
       //notifyUser(`Scheduled Inactivity Activation.`)
       const name = localUserName ? localUserName : currentUser.name
       const timerId = setTimeout(() => {
-        setUserActivity ? setUserActivity(false) : ''
+        setUserActivity(false)
         socket?.connect()
-        socket?.emit('inactive', { name: name, inactive: true })
+        socket?.emit(`inactive`, { name: name, inactive: true })
       }, 60000) // Time until inactivity
       setInactivityTimerId(timerId)
     }
   }
 
-  const handleUserActivity = () => {
-    if (!userActivity) {      
-      //notifyUser(`Renewed Activity Status`)
-      setUserActivity ? setUserActivity(true) : ''
+  const handleUserActivity = () => {          
+    if (!userActivity) {
+      //notifyUser(`Renewed Activity Status ${userActivity}`)
+      setUserActivity(true)
       socket?.connect()
-      socket?.emit('inactive', { name: currentUser.name, inactive: false })
+      socket?.emit(`inactive`, { name: currentUser.name, inactive: false })
       inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
-    }
+    }   
   }
 
-  useEffect(() => {   
+  useEffect(() => {     
 
     setRenderCounter(renderCounter + 1)
     
@@ -482,17 +478,17 @@ const Chat = () => {
       
       if (room == currentRoom.id) {
         if (id != firstMessageId) {
-          addMessage(msg)          
+          addMessage(msg)
         }
       } else {
         if(showNotifications) {
-          notifyMessageInRoom(room)          
+          notifyMessageInRoom(room)
         }
       }
 
-      if(id != firstMessageId) {
-        setReload(reload + 1)
-      }
+      //if(id != firstMessageId) {
+      //  setReload(reload + 1)
+      //}
 
     })
       
@@ -560,8 +556,7 @@ const Chat = () => {
 
         window.addEventListener('beforeunload', handleBeforeUnload)
 
-      return () => {
-        window.removeEventListener('click', handleUserActivity)        
+      return () => {        
         window.removeEventListener('beforeunload', handleBeforeUnload)
         socket?.off()
         socket?.disconnect()
@@ -571,40 +566,44 @@ const Chat = () => {
 
   }, [currentUser.name])
 
-  useEffect(() => {
-    scrollToLatest()
-  }, [messages.length])
-
-  useEffect(() => {
-    setReload(reload + 1)
-  }, [auth])
-
   useEffect(() => {    
+    handleUserActivityRef.current = handleUserActivity
     if(!firstLoad) { // First load handled by retrieveCurrentUser
       setInactivityTimer()
+    }    
+    window.addEventListener('click', handleUserActivityRef.current)
+    return () => {
+      window.removeEventListener('click', handleUserActivityRef.current)
     }
-    window.removeEventListener('click', handleUserActivity)
-    window.addEventListener('click', handleUserActivity)
   }, [userActivity])
 
   useEffect(() => {  
 
-    const spamInterval = setInterval(() => {      
+    const spamInterval = setInterval(() => {
       if(spam) {
-        //notifyUser(`Spamming!`)
         sendMessage(`Spamming!`)
       }
-    }, 200)
+    }, 1000)
 
     if(!spam) {
       clearInterval(spamInterval)
     }    
 
     return () => {
-      clearInterval(spamInterval)  
+      clearInterval(spamInterval)
     }
 
   }, [spam])
+
+  useEffect(() => {
+    if (!messageBeingEdited.id) {
+      scrollToLatest()
+    }
+  }, [messages.length])
+
+  useEffect(() => {
+    setReload(reload + 1)
+  }, [auth])
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -1135,7 +1134,7 @@ const Chat = () => {
         </h3>
         <h3 className={`flex mb-5 bg-black rounded-lg p-3`}>
           {`Reload : ${reload}`}
-        </h3>
+        </h3>        
       </div>
      
     </section>
