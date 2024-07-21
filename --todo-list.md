@@ -27,7 +27,7 @@
 # Allow both first and last name when creating user. [DONE]
 # Handle room/online user list overflow on x axis. [DONE]
 # Make room/online a single list, but highlighting who's online. [DONE]
-# Update the room users when the session expires. 
+# Update the room users when the session expires.
 # Handle name with spaces on the online user list. [DONE]
 # Save user preferences in cookies.
 # Handle repeated names on the room user list.
@@ -48,10 +48,10 @@
 
 // Done yesterday
 
-Add useEffect with an event listener monitoring the click to update the inactivity status.
-
-// Done today
-
 Change editable message onBlur event to fix the text being deleted when clicking off of it during edit mode.
 Move inactivity event listener to a different useEffect to prevent it from not running at times.
 Convert ternary operators to if statements for user activity status styling for compatibility with some browsers.
+
+// Done today
+
+Remove constant boolean for room ID validation. Remove message length dependency from useEffect to prevent unnecessary re-renders. Change socket emission to broadcast to prevent unnecessary re-renders for the sender. Minor socket changes to reduce disconnections.

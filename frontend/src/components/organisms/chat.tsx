@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef, useState, Fragment } from 'react'
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
-import { convertDatetimeToMilliseconds, cropMessage, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
+import { convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
@@ -47,8 +47,7 @@ const Chat = () => {
   const [copiedToClipboard, setCopiedToClipboard] = useState(false)  
   const [inactivityTimerId, setInactivityTimerId] = useState<NodeJS.Timeout | null>(null)
   const [isTyping, setIsTyping] = useState(false)
-
-  const isCurrentRoomIdValid = currentRoom.id == '0' || currentRoom.id == '-1'
+  const [spam, setSpam] = useState(false)
 
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
@@ -103,7 +102,7 @@ const Chat = () => {
 
       if(!hasValidRooms) {
         await createChat()
-        setReload(reload  + 1)
+        setReload(reload + 1)
       }
 
     } catch (e) {
@@ -143,7 +142,7 @@ const Chat = () => {
           selectId : updatedSelectId, 
           name : sortedLocalRooms[updatedSelectId].name
         })                
-        setReload(reload  + 1)
+        setReload(reload + 1)
       }
 
       setRooms(sortedLocalRooms)
@@ -161,7 +160,7 @@ const Chat = () => {
       try {
 
         if(currentRoom.id == '-1') {          
-          setReload(reload  + 1)
+          setReload(reload + 1)
           return
         }
 
@@ -214,21 +213,21 @@ const Chat = () => {
     }))
   }
 
-  const sendMessage = async () => { 
+  const sendMessage = async (messageContent = '') => { 
     
     const dateTimeNow = Date.now()
     
-    try {
+    try {      
 
       const newMessage : TChatMessage = {
         user : currentUser?.name ? currentUser.name : '',
-        content : message.content,
+        content : messageContent == '' ? message.content : messageContent,
         created_at : dateTimeNow,
         updated_at : dateTimeNow,
         room : currentRoom.id,
       }
   
-      if(newMessage.content.trim() == '') { // Out of place validation.
+      if(newMessage.content.trim() == '') { // Validation out of place.
         notifyUser('Write something first!')
         return
       }
@@ -251,7 +250,7 @@ const Chat = () => {
       ) as string
 
       const savedMessage = {
-        id : savedMessageId, 
+        id : savedMessageId,        
         ...newMessage
       }      
 
@@ -259,12 +258,12 @@ const Chat = () => {
         socket?.connect()
       }
 
-      const delay = useDelayOnEmit ? 500 : 0 // Prevents the socket from being disconnected too early.
+      const delay = useDelayOnEmit ? 500 : 0 // Prevents the socket from being disconnected too early.      
 
       setTimeout(() => {
         socket?.emit(`room`, savedMessage, (response : boolean) => {
           if (response) {
-            console.log(`Message Sent Successfully : ${response}`)          
+            console.log(`Message Sent Successfully : ${response}`)
           } else {
             console.log(`Failed to Send the Message`)
             setHasErrors(true)
@@ -279,7 +278,10 @@ const Chat = () => {
       setUseDelayOnEmit(false)
           
       const isUserOnList = roomUsers.find((name) => name == currentUser.name) // Short List
-      currentUser?.name && !isUserOnList ? setRoomUsers([...roomUsers, currentUser.name]) : ''
+
+      if(currentUser?.name && !isUserOnList) {
+        setRoomUsers([...roomUsers, currentUser.name])        
+      }
       
     } catch (e) {
       setHasErrors(true)
@@ -311,7 +313,7 @@ const Chat = () => {
       socket?.emit(`change`, creationMessage)
       console.log(`Creating chat, socket connection : ${socket?.connected}`)
 
-      setReload(reload  + 1)
+      setReload(reload + 1)
 
     } catch (e) {
       setHasErrors(true)
@@ -345,7 +347,7 @@ const Chat = () => {
       await deleteAllChats()
       await retrieveRooms()
                   
-      setReload(reload  + 1)
+      setReload(reload + 1)
       setUseDelayOnEmit(true)
 
     } catch (e) {
@@ -363,15 +365,15 @@ const Chat = () => {
     }, 3000)
   }
 
-  const onSelectChange = (e : React.ChangeEvent<HTMLSelectElement>) => {    
+  const onSelectChange = (e : React.ChangeEvent<HTMLSelectElement>) => {
     const selectId = e.target.selectedIndex
     const roomId = e.target[selectId].id
     const roomName = e.target[selectId].textContent
     setCurrentRoom({id : roomId, selectId : selectId, name : roomName ? roomName : 'Unknown Room'})
-    setReload(reload  + 1)
+    setReload(reload + 1)
   }
 
-  const onTextareaChange = (e : React.ChangeEvent<HTMLTextAreaElement>) => {    
+  const onTextareaChange = (e : React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage((rest : TChatMessage) => ({
       ...rest,
       content : e.target.value,
@@ -426,7 +428,7 @@ const Chat = () => {
         setUserActivity ? setUserActivity(false) : ''
         socket?.connect()
         socket?.emit('inactive', { name: name, inactive: true })
-      }, 15000) // Time until inactivity
+      }, 60000) // Time until inactivity
       setInactivityTimerId(timerId)
     }
   }
@@ -441,7 +443,7 @@ const Chat = () => {
     }
   }
 
-  useEffect(() => {
+  useEffect(() => {   
 
     setRenderCounter(renderCounter + 1)
     
@@ -466,48 +468,48 @@ const Chat = () => {
 
     if(socket?.disconnected) {
       socket?.connect()
-    }
-
+    }  
+    
     socket?.emit(`authList`)
     socket?.emit(`inactiveList`)
 
-    socket?.on('room', (msg : TChatMessage) => {
+    socket?.on('room', (msg : TChatMessage) => {      
 
       console.log(`socket on room : ${currentRoom?.id}`)
 
       const {id, room} = msg
-      const previousMessageId = messages?.length > 0 ? messages[0].id : -1
+      const firstMessageId = messages?.length > 0 ? messages[0].id : -1    
       
       if (room == currentRoom.id) {
-        if (id != previousMessageId) {
-          addMessage(msg)
+        if (id != firstMessageId) {
+          addMessage(msg)          
         }
       } else {
         if(showNotifications) {
-          notifyMessageInRoom(room)
+          notifyMessageInRoom(room)          
         }
       }
 
-      if(id != previousMessageId) {
-        setReload(reload  + 1)
+      if(id != firstMessageId) {
+        setReload(reload + 1)
       }
 
     })
-    
+      
     socket?.on('messageChange', (msg : string) => {
       console.log(`socket on messageChange : ${currentRoom?.id}`)
       if(msg) {
         if(showNotifications) {
           notifyUser(msg, 'info')
         }
-        setReload(reload  + 1)
+        setReload(reload + 1)
       }
     })
 
     socket?.on('change', (msg : string) => {
       console.log(`socket on change : ${currentRoom?.id}`)
       setUseDelayOnEmit(true)
-      setReload(reload  + 1)
+      setReload(reload + 1)
       if (msg != ``) {
         notifyUser(msg, 'info')
       }
@@ -524,32 +526,32 @@ const Chat = () => {
     })
 
     return () => {
-               
-      if (isCurrentRoomIdValid) {
-        setReload(reload  + 1)
-      } else {        
+      
+      if(currentRoom.id == '-1' || currentRoom.id == '0') {
+        setReload(reload + 1)
+      } else {
         setReload(0)
-      }       
+      }      
 
       setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
-      clearTimeout(timer)
-
+      clearTimeout(timer)  
+      
       if(!firstLoad) {        
         socket?.off()
         socket?.disconnect()
-      } else {                
+      } else {
         setFirstLoad(false)
       }      
 
     }
-  
-  }, [rooms.length, messages.length, currentRoom.id, reload, auth, showNotifications])
+  //}, [rooms.length, messages.length, currentRoom.id, reload, auth, showNotifications])
+  }, [rooms.length, currentRoom.id, reload, auth, showNotifications])
 
   useEffect(() => {
 
     console.log(`Running "handle before unload" useEffect.`)
 
-    if (currentUser.name != ``) {   
+    if (currentUser.name != ``) {
          
         const handleBeforeUnload = () => {
           socket?.connect()
@@ -584,6 +586,25 @@ const Chat = () => {
     window.removeEventListener('click', handleUserActivity)
     window.addEventListener('click', handleUserActivity)
   }, [userActivity])
+
+  useEffect(() => {  
+
+    const spamInterval = setInterval(() => {      
+      if(spam) {
+        //notifyUser(`Spamming!`)
+        sendMessage(`Spamming!`)
+      }
+    }, 200)
+
+    if(!spam) {
+      clearInterval(spamInterval)
+    }    
+
+    return () => {
+      clearInterval(spamInterval)  
+    }
+
+  }, [spam])
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -622,7 +643,7 @@ const Chat = () => {
         wasEdited : false
       })
 
-      setReload(reload  + 1)
+      //setReload(reload + 1)
 
     }
 
@@ -651,7 +672,7 @@ const Chat = () => {
         const editedMessage = messageBeingEdited?.previous ?  messageBeingEdited.previous : ''
         socket?.emit('messageChange', `The message "${cropMessage(editedMessage)}" was deleted on ${currentRoom.name}`)
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
-        setReload(reload  + 1)
+        setReload(reload + 1)
         break
       }
 
@@ -664,7 +685,7 @@ const Chat = () => {
           socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)
         }
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
-        setReload(reload  + 1)
+        //setReload(reload + 1)
         break
       }
 
@@ -866,11 +887,11 @@ const Chat = () => {
                   }}
 
                   onBlur={(e) => {
-                    onBlurEditableMessage(e)                    
+                    onBlurEditableMessage(e)
                   }}
 
                   onKeyDown={() => {
-                    if(isMessageSelected && messageBeingEdited.wasEdited == false) {                      
+                    if(isMessageSelected && messageBeingEdited.wasEdited == false) {
                       setMessageBeingEdited((values) => ({
                         ...values,
                         wasEdited : true
@@ -1084,12 +1105,13 @@ const Chat = () => {
           <CustomButton
             value={`Test 🦾`}
             variationName='varthree'
-            className={`bg-black active:bg-gray-900 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
+            className={`${spam ? `bg-yellow-500` : `bg-black`} active:bg-gray-900 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad}
             title={`Currently showing nothing.`}
             onClick={ async () => {
-              setUserActivity ? setUserActivity(!userActivity) : ''
-              setReload(reload  + 1)
+              setSpam((lastSpam) => !lastSpam)
+              //setUserActivity ? setUserActivity(!userActivity) : ''
+              //setReload(reload + 1)
             }}
           />
 
@@ -1102,14 +1124,17 @@ const Chat = () => {
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
           Render : {renderCounter}
         </h3>
-        <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
+        {/* <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
           Inactive Users : {inactiveUsers.length}
-        </h3>
-        <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
+        </h3> */}
+        {/* <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
           {isTyping ? `💬` : `〰️`}
+        </h3> */}
+        <h3 className={`flex mb-5 ${socket?.connected ? `bg-green-600` : `bg-red-600` } rounded-lg p-3`}>          
+          socket {socket?.connected ? 'on' : 'off'}
         </h3>
-        <h3 className={`flex mb-5 ${userActivity ? `bg-green-600` : `bg-red-600` } rounded-lg p-3`}>
-          {userActivity ? `active` : `inactive`}
+        <h3 className={`flex mb-5 bg-black rounded-lg p-3`}>
+          {`Reload : ${reload}`}
         </h3>
       </div>
      

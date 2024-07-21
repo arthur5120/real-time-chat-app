@@ -83,7 +83,7 @@ const App = () => {
 
   useEffect(() => {     
 
-    const delay = setTimeout(() => { // avoids flicking on the UI      
+    const delay = setTimeout(() => { // avoids flicking on the UI
       handleSessionExpiration()      
     }, 200)
 

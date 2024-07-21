@@ -104,25 +104,33 @@ io.on('connection', (socket) => {
             if(inactiveUserId == -1) {                
                 console.log(`${name} went inactive.`)
                 inactiveUsersNames.push(name)
-                io.emit('inactive', inactiveUsersNames)
+                socket.broadcast.emit(`inactive`, inactiveUsersNames)
+                //io.emit('inactive', inactiveUsersNames)
             }
         } else {
             if(inactiveUserId > -1) {                
                 console.log(`${name} went active.`)
                 inactiveUsersNames.splice(inactiveUserId, 1)
-                io.emit('inactive', inactiveUsersNames)
+                socket.broadcast.emit(`inactive`, inactiveUsersNames)
+                //io.emit('inactive', inactiveUsersNames)
             }
         }    
 
     })    
 
     socket.on('room', (message, callback = null) => { // Listening to Room
+
         console.log(`${message.user} says "${message.content}".`)
+        
         if (callback != null) {
             callback(true)
         }
-        io.emit('room', message)
+
+        socket.broadcast.emit('room', message)
+        
+        //io.emit(`room`. message)
         //io.to(socket.id).emit('room', messages) // Sends String, Objects etc...
+
     })
 
     socket.on('change', (message, callback = null) => {
@@ -130,12 +138,14 @@ io.on('connection', (socket) => {
         if (callback != null) {
             callback(true)
         }
-        io.emit('change', message)
+        socket.broadcast.emit(`change`, message)
+        //io.emit('change', message)
     })
 
     socket.on('messageChange', (message) => {
         console.log(message.trim().replace(/\s+/g, ' '))
-        io.emit('messageChange', message)
+        socket.broadcast.emit(`messageChange`, message)
+        //io.emit('messageChange', message)
     })   
 
     socket.on('auth', (authRequest) => {           
@@ -164,10 +174,16 @@ io.on('connection', (socket) => {
 
     socket.on(`authList`, () => {
         io.emit(`auth`, onlineUsersNames)
+        //socket.broadcast.emit(`auth`, onlineUsersNames)
     })
 
     socket.on(`inactiveList`, () => {
         io.emit('inactive', inactiveUsersNames)
+        //socket.broadcast.emit(`inactive`, inactiveUsersNames)
+    })
+    
+    socket.on(``, () => {
+        
     })
 
 })
