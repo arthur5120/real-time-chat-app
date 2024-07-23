@@ -17,6 +17,18 @@ const roomsPlaceholder = [{id : '-1', name : ''}]
 const currentRoomPlaceHolder = {id : '-1', selectId : 0, name : ''}
 const editMenuButtonPrefix = `--em-btn--`
 
+const bugsToFix = [
+  `When server is out and comes back, the user can't logout due to the token and gets stuck on the chat screen.`,
+  `Room user list not updating in real time.`,
+  `Editing the message fails sometimes.`,
+  `Editing a message cancelled when a message is edited on the other end. (getMessageById on confirming to solve it.)`,
+  `useEffect rarely stops prematurely, locking the user from interacting with the UI.`,
+  `A message is being added to the local chat erroneously for a moment before the chat loads the correct messages.`,
+  `Edited status not showing on the other chats when freshly editing a message for the first time.`,
+  `previous property on the messageBeingEdited state might not be updating correctly.`,
+  `Inactivity status not loading sometimes when refreshing the page.`,
+]
+
 type TCurrentRoom = {id : string, selectId : number, name : string}
 type TRooms = {id : string, name : string}[]
 type TMessageBeingEdited = TChatMessage & {previous ? : string, wasEdited : boolean}
@@ -33,18 +45,19 @@ const Chat = () => {
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
   const [messages, setMessages] = useState<TChatMessage[]>([])
   const [messageBeingEdited, setMessageBeingEdited] = useState<TMessageBeingEdited>(messagePlaceholder)
-  const [hasErrors, setHasErrors] = useState(false)
   const [showNotifications, setShowNotifications] = useState(true)
-  const [firstLoad, setFirstLoad] = useState(true)
-  const [reload, setReload] = useState(1)
+  const [verticalView, setVerticalView] = useState(false)
+  const [copiedToClipboard, setCopiedToClipboard] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
+  const [inactivityTimerId, setInactivityTimerId] = useState<NodeJS.Timeout | null>(null)
+  const [renderCounter, setRenderCounter] = useState(0)
+  const [spam, setSpam] = useState(false)
   const [cooldown, setCooldown] = useState(0)
   const [useDelayOnEmit, setUseDelayOnEmit] = useState(false)
-  const [verticalView, setVerticalView] = useState(false)
-  const [renderCounter, setRenderCounter] = useState(0)
-  const [copiedToClipboard, setCopiedToClipboard] = useState(false)  
-  const [inactivityTimerId, setInactivityTimerId] = useState<NodeJS.Timeout | null>(null)
-  const [isTyping, setIsTyping] = useState(false)
-  const [spam, setSpam] = useState(false)  
+  const [firstLoad, setFirstLoad] = useState(true)
+  const [reload, setReload] = useState(1)
+  const [hasErrors, setHasErrors] = useState(false)
+  const [isServerOnline, setIsServerOnline] = useState(true)  
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)
@@ -412,7 +425,7 @@ const Chat = () => {
     await retrieveCurrentUser()
     await createRoomIfNoneAreFound()
     await retrieveRooms()
-    await retrieveMessages()    
+    await retrieveMessages()
     resetMessageContent()
   }
 
@@ -439,7 +452,11 @@ const Chat = () => {
     }   
   }
 
-  useEffect(() => {     
+  useEffect(() => {   
+    
+    if(!isServerOnline) {
+      return
+    }
 
     setRenderCounter(renderCounter + 1)
     
@@ -460,7 +477,7 @@ const Chat = () => {
 
     if(reload > 0) {
       initializeAppData()
-    }
+    }    
 
     if(socket?.disconnected) {
       socket?.connect()
@@ -485,10 +502,6 @@ const Chat = () => {
           notifyMessageInRoom(room)
         }
       }
-
-      //if(id != firstMessageId) {
-      //  setReload(reload + 1)
-      //}
 
     })
       
@@ -519,20 +532,27 @@ const Chat = () => {
     socket?.on(`inactive`, (currentInactiveUsers : string[]) => {
       console.log(`socket on auth : ${currentRoom?.id}`)
       setInactiveUsers(currentInactiveUsers)
-    })
+    })    
 
     return () => {
-      
+
       if(currentRoom.id == '-1' || currentRoom.id == '0') {
-        setReload(reload + 1)
+        if(reload < 100) { // Prevents infinite loops.
+          setReload(reload + 1)
+        } else {
+          notifyUser(`Something Went Wrong, please try again later`, `warning`)
+          setIsServerOnline(false)
+          setHasErrors(false)
+          setReload(0)        
+        }
       } else {
         setReload(0)
-      }      
+      } 
 
       setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
       clearTimeout(timer)  
       
-      if(!firstLoad) {        
+      if(!firstLoad) {
         socket?.off()
         socket?.disconnect()
       } else {
@@ -544,6 +564,10 @@ const Chat = () => {
   }, [rooms.length, currentRoom.id, reload, auth, showNotifications])
 
   useEffect(() => {
+
+    if(!isServerOnline) {
+      return
+    }
 
     console.log(`Running "handle before unload" useEffect.`)
 
@@ -566,18 +590,31 @@ const Chat = () => {
 
   }, [currentUser.name])
 
-  useEffect(() => {    
+  useEffect(() => {  
+    
+    if(!isServerOnline) {
+      return
+    }
+    
     handleUserActivityRef.current = handleUserActivity
+
     if(!firstLoad) { // First load handled by retrieveCurrentUser
       setInactivityTimer()
     }    
+
     window.addEventListener('click', handleUserActivityRef.current)
+
     return () => {
       window.removeEventListener('click', handleUserActivityRef.current)
     }
+
   }, [userActivity])
 
   useEffect(() => {  
+
+    if(!isServerOnline) {
+      return
+    }
 
     const spamInterval = setInterval(() => {
       if(spam) {
@@ -595,13 +632,19 @@ const Chat = () => {
 
   }, [spam])
 
-  useEffect(() => {
+  useEffect(() => {    
+    if(!isServerOnline) {
+      return
+    }
     if (!messageBeingEdited.id) {
       scrollToLatest()
     }
   }, [messages.length])
 
   useEffect(() => {
+    if(!isServerOnline) {
+      return
+    }
     setReload(reload + 1)
   }, [auth])
 
@@ -676,12 +719,16 @@ const Chat = () => {
       }
 
       case 'confirm' : {        
+        // BUG : Editing a message triggers a re-rendering on the other end, if the user is editing a message
+        // The text will be lost. use getMessageById to retrieve the edited message and update it separately
+        // Instead of triggering a new re-render to retrieve the whole chat.
         if(messageBeingEdited.wasEdited == true) {
           messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
           messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
           const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
           const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
-          socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)
+          socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)          
+          setReload(reload + 1)
         }
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
         //setReload(reload + 1)
@@ -812,10 +859,10 @@ const Chat = () => {
 
           <h3 className='bg-transparent justify-start m-2'>
             {
-            // 🔘 🔴 🟠 🟡 🟢 🔵 🟣 ⚫️ ⚪️ 🟤
+            // 🔘 🔴 🟠 🟡 🟢 🔵 🟣 ⚫️ ⚪️ 🟤      
             (auth && currentUser?.name) ? 
               `${userActivity ? `🟢` : `🟠`} Chatting as ${cropMessage(currentUser.name, 8)} ` : 
-              `🔴 Chatting as Guest`
+              isServerOnline ? `🔴 Chatting as Guest` : `🔘 Offline`
             }
           </h3>
         
@@ -823,7 +870,7 @@ const Chat = () => {
 
             <button 
               title={`Room info`} 
-              disabled={!!reload || firstLoad}
+              disabled={!!reload || firstLoad || !isServerOnline}
               onClick={() => notifyUser(`Messages : ${messages.length}, Users : ${roomUsers.length}`)} 
               className='bg-[#050D20] hover:bg-black rounded-lg disabled:cursor-not-allowed'>
               <FontAwesomeIcon icon={faCircleInfo} width={48} height={48}/>
@@ -831,7 +878,7 @@ const Chat = () => {
             
             <button 
                 title={`Toggle hide/show message notifications from other chats`} 
-                disabled={!!reload || firstLoad}
+                disabled={!!reload || firstLoad || !isServerOnline}
                 onClick={() => setShowNotifications(!showNotifications)} 
                 className='bg-[#050D20] hover:bg-black rounded-lg disabled:cursor-not-allowed'>
                 {!showNotifications ? 
@@ -992,7 +1039,7 @@ const Chat = () => {
               </span>
             }
             className='p-2 bg-[#aa5a95] text-white rounded-lg m-1 active:bg-[#bd64a5] group'
-            disabled={!!reload || firstLoad}
+            disabled={!!reload || firstLoad || !isServerOnline}
             onClick={() => sendMessage()}
             title={`Post a message to current chat (Ctrl + Enter)`}
           />
@@ -1014,7 +1061,7 @@ const Chat = () => {
                 name='current-chat-room'
                 createLabel={false}
                 ref={chatRoomContainerRef}
-                disabled={!!reload || firstLoad}
+                disabled={!!reload || firstLoad || !isServerOnline}
                 onChange={(e) => onSelectChange(e)}
                 className={`bg-slate-900 text-center hover:bg-black w-full h-full`}
                 title={`Messages : ${messages.length}, Users : ${roomUsers.length}`}
@@ -1029,7 +1076,7 @@ const Chat = () => {
                 /> : 
               <CustomSelect
                 name=''
-                disabled={!!reload || firstLoad}
+                disabled={!!reload || firstLoad || !isServerOnline}
                 className={`bg-slate-900 text-center hover:bg-black w-full h-full`}
                 values={[{name : '...'}]}
               />
@@ -1037,7 +1084,7 @@ const Chat = () => {
             }  
 
             <button title={`Copy room name to clipboard`} onClick={() => copyRoomNameToClipboard()}
-              disabled={!!reload || firstLoad}
+              disabled={!!reload || firstLoad || !isServerOnline}
                 className={`${copiedToClipboard ? `bg-green-700 hover:bg-green-600` : `bg-[#050D20] hover:bg-black`} rounded-lg disabled:cursor-not-allowed h-full w-[48px]`}
               >
               {copiedToClipboard ? 
@@ -1068,7 +1115,7 @@ const Chat = () => {
 
             variationName='varthree'
             className={`w-20 h-full max-h-28 m-0 flex items-center justify-center group`}
-            disabled={!!reload || firstLoad}
+            disabled={!!reload || firstLoad || !isServerOnline}
             title={`Create a new room`}
             onClick={() => onNewRoomClick()}
 
@@ -1086,7 +1133,7 @@ const Chat = () => {
 
             variationName='vartwo'
             className={`w-20 h-full max-h-28 m-0 flex items-center justify-center group`}
-            disabled={!!reload || firstLoad}
+            disabled={!!reload || firstLoad || !isServerOnline}
             title={`Delete all rooms`}
             onClick={() => onResetRoomsClick()}
           />
@@ -1095,9 +1142,12 @@ const Chat = () => {
             value={`Get 🐜`}
             variationName='varthree'
             className={`bg-purple-900 active:bg-purple-800 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
-            disabled={!!reload || firstLoad}
+            disabled={!!reload || firstLoad || !isServerOnline}
             onClick={() => {
-              notifyUser(`When confirming an edit on a non freshly created message, the changes aren't applied.`)
+              const length = bugsToFix.length - 1
+              const randomNumber = Math.random()
+              const i = randomNumber * length | 0
+              notifyUser(`${bugsToFix[i]}`)
             }}
           />
           
@@ -1105,7 +1155,7 @@ const Chat = () => {
             value={`Test 🦾`}
             variationName='varthree'
             className={`${spam ? `bg-yellow-500` : `bg-black`} active:bg-gray-900 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
-            disabled={!!reload || firstLoad}
+            disabled={!!reload || firstLoad || !isServerOnline || !isServerOnline}
             title={`Currently showing nothing.`}
             onClick={ async () => {
               setSpam((lastSpam) => !lastSpam)
@@ -1134,7 +1184,7 @@ const Chat = () => {
         </h3>
         <h3 className={`flex mb-5 bg-black rounded-lg p-3`}>
           {`Reload : ${reload}`}
-        </h3>        
+        </h3>    
       </div>
      
     </section>

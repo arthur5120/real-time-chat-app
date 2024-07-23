@@ -28,6 +28,7 @@ const App = () => {
         socket?.connect()
         
         if(hasSessionExpired) { // Session Expired or the token was not found.
+          //notifyUser(`Session Expired.`)
           setRole ? setRole(authInfo.role) : ''
           const authRequest : TSocketAuthRequest = {user : {id : ``}, isConnecting : false}
           socket?.emit(`auth`, authRequest)
@@ -37,17 +38,19 @@ const App = () => {
         }
   
         if (auth && authInfo.id != `none`) { // Login
+          //notifyUser(`Login.`)
           const user = await getUserById(authInfo.id)
           setRole ? setRole(authInfo.role) : ''
           const authRequest : TSocketAuthRequest = {user : {id : authInfo.id, name : user.name}, isConnecting : true}
           socket?.emit(`auth`, authRequest)
-          socket?.emit(`authList`) 
+          socket?.emit(`authList`)
           socket?.emit(`inactiveList`)
           //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
           return
         }
     
-        if (!auth && authInfo.id != `none`) { // Logout          
+        if (!auth && authInfo.id != `none`) { // Logout   
+          //notifyUser(`Logout.`)
           setRole ? setRole('none') : ''
           const authRequest : TSocketAuthRequest = {user: {id : authInfo.id}, isConnecting : false}
           socket?.emit(`auth`, authRequest)
