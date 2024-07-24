@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
-import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
+import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getMessageById, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
@@ -20,13 +20,13 @@ const editMenuButtonPrefix = `--em-btn--`
 const bugsToFix = [
   `When server is out and comes back, the user can't logout due to the token and gets stuck on the chat screen.`,
   `Room user list not updating in real time.`,
-  `Editing the message fails sometimes.`,
-  `Editing a message cancelled when a message is edited on the other end. (getMessageById on confirming to solve it.)`,
+  `Editing the message fails sometimes.`,  
   `useEffect rarely stops prematurely, locking the user from interacting with the UI.`,
   `A message is being added to the local chat erroneously for a moment before the chat loads the correct messages.`,
   `Edited status not showing on the other chats when freshly editing a message for the first time.`,
   `previous property on the messageBeingEdited state might not be updating correctly.`,
   `Inactivity status not loading sometimes when refreshing the page.`,
+  `Reload not resetting when the data is fetched, locking the user out of the UI.`
 ]
 
 type TCurrentRoom = {id : string, selectId : number, name : string}
@@ -44,6 +44,7 @@ const Chat = () => {
   const [userActivity, setUserActivity] = useState(true)
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
   const [messages, setMessages] = useState<TChatMessage[]>([])
+  const [refreshChat, setRefreshChat] = useState(false)
   const [messageBeingEdited, setMessageBeingEdited] = useState<TMessageBeingEdited>(messagePlaceholder)
   const [showNotifications, setShowNotifications] = useState(true)
   const [verticalView, setVerticalView] = useState(false)
@@ -160,6 +161,17 @@ const Chat = () => {
       setHasErrors(true)
     }
     
+  }  
+
+  const convertRawMessage = (m: TMessage, userName : string = ``): TChatMessage => {
+    return {
+        id: m.id,
+        user: userName != `` ? userName : m.senderName,
+        content: m.content,
+        created_at: convertDatetimeToMilliseconds(m.created_at),
+        updated_at: convertDatetimeToMilliseconds(m.updated_at),
+        room: m.chatId
+    }
   }
 
   const retrieveMessages = async () => {  
@@ -184,7 +196,7 @@ const Chat = () => {
           if(!uniqueIdList.has(m.senderId)) {
             uniqueIdList.add(m.senderId)
             userNameList.push(m.senderName)
-          } 
+          }
 
           return {
             id : m.id,
@@ -511,7 +523,8 @@ const Chat = () => {
         if(showNotifications) {
           notifyUser(msg, 'info')
         }
-        setReload(reload + 1)
+        setRefreshChat(true)
+        //setReload(reload + 1)
       }
     })
 
@@ -532,7 +545,11 @@ const Chat = () => {
     socket?.on(`inactive`, (currentInactiveUsers : string[]) => {
       console.log(`socket on auth : ${currentRoom?.id}`)
       setInactiveUsers(currentInactiveUsers)
-    })    
+    })
+
+    if(currentRoom.id != '-1' && currentRoom.id != '0' && reload > 0) {
+      setReload(0)
+    }
 
     return () => {
 
@@ -542,10 +559,10 @@ const Chat = () => {
         } else {
           notifyUser(`Something Went Wrong, please try again later`, `warning`)
           setIsServerOnline(false)
-          setHasErrors(false)
-          setReload(0)        
+          setHasErrors(false)          
+          setReload(0)
         }
-      } else {
+      } else {        
         setReload(0)
       } 
 
@@ -557,7 +574,7 @@ const Chat = () => {
         socket?.disconnect()
       } else {
         setFirstLoad(false)
-      }      
+      }
 
     }
   //}, [rooms.length, messages.length, currentRoom.id, reload, auth, showNotifications])
@@ -638,8 +655,16 @@ const Chat = () => {
     }
     if (!messageBeingEdited.id) {
       scrollToLatest()
-    }
+    }        
   }, [messages.length])
+
+  useEffect(() => {
+    if (refreshChat) {
+      //notifyUser(`refreshing messages.`)
+      retrieveMessages()
+      setRefreshChat(false)
+    }
+  }, [refreshChat])
 
   useEffect(() => {
     if(!isServerOnline) {
@@ -714,11 +739,11 @@ const Chat = () => {
         const editedMessage = messageBeingEdited?.previous ?  messageBeingEdited.previous : ''
         socket?.emit('messageChange', `The message "${cropMessage(editedMessage)}" was deleted on ${currentRoom.name}`)
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
-        setReload(reload + 1)
+        setRefreshChat(true)
         break
       }
 
-      case 'confirm' : {        
+      case 'confirm' : {       
         // BUG : Editing a message triggers a re-rendering on the other end, if the user is editing a message
         // The text will be lost. use getMessageById to retrieve the edited message and update it separately
         // Instead of triggering a new re-render to retrieve the whole chat.
@@ -727,11 +752,10 @@ const Chat = () => {
           messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
           const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
           const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
-          socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)          
-          setReload(reload + 1)
+          socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)
+          setRefreshChat(true)
         }
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
-        //setReload(reload + 1)
         break
       }
 
@@ -841,7 +865,7 @@ const Chat = () => {
                     //   `${isUserOnline ? (
                     //       isCurrentUserName ? (!userActivity ? `text-orange-400` : `text-green-400`) : (isUserInactive ? `text-orange-400` : `text-green-400`)
                     //     ) : `text-gray-300`}`
-                    // }                    
+                    // }
                     key={`roomUser-${id}`}>{cropMessage(user, 8)}
                   </p>
 
@@ -1155,8 +1179,8 @@ const Chat = () => {
             value={`Test 🦾`}
             variationName='varthree'
             className={`${spam ? `bg-yellow-500` : `bg-black`} active:bg-gray-900 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
-            disabled={!!reload || firstLoad || !isServerOnline || !isServerOnline}
-            title={`Currently showing nothing.`}
+            disabled={!!reload || firstLoad || !isServerOnline}
+            title={`Currently spamming the chat.`}
             onClick={ async () => {
               setSpam((lastSpam) => !lastSpam)
               //setUserActivity ? setUserActivity(!userActivity) : ''
@@ -1183,8 +1207,11 @@ const Chat = () => {
           socket {socket?.connected ? 'on' : 'off'}
         </h3>
         <h3 className={`flex mb-5 bg-black rounded-lg p-3`}>
+          {`First Load : ${firstLoad ? `T` : `F`}`}
+        </h3>
+        <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
           {`Reload : ${reload}`}
-        </h3>    
+        </h3>
       </div>
      
     </section>

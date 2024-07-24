@@ -47,22 +47,19 @@
 # Editing message and clicking off of it deletes the text content. [DONE]
 # useEffect rarely stops prematurely, locking the user from interacting with the UI.
 # Editing is cancelled when receiving a new message. [DONE]
-# Editing a message cancelled when a message is edited on the other end. (getMessageById on confirming to solve it.)
+# Editing a message cancelled when a message is edited on the other end. [DONE]
 # Editing the message fails sometimes.
 # Room user list not updating in real time.
 # Handle infinite loops when the server is out. [DONE]
 # When server is out and comes back, the user can't logout due to the token and gets stuck on the chat screen.
 # When confirming an edit on a non freshly created message, the changes aren't applied. [DONE]
+# Reload not resetting when the data is fetched, locking the user out of the UI.
+# Maybe separate the socket operations into their own useEffect and use a useRef hook to not get stale states in a function.
 
 // Done yesterday
 
-Moved userActivity state from auth-provider to chat component so it would update correctly.
-Use ref for handleUserActivity function in click event listener to make sure the values are up to date.
-Add cleanup function to userActivity useEffect to prevent multiple socket calls.
-Change socket and scrollToLatest useEffect to check if the user is writing/editing a message before scrolling to prevent text loss.
+Add server down handling to useEffect hooks and UI Elements. Add limit to reload state to prevent infinite loops. Add reload when confirming editing the message so the edited flag would show.
 
 // Done today
 
-Add server down handling to useEffect hooks and UI Elements.
-Add limit to reload state to prevent infinite loops
-Add reload when confirming editing the message so the edited flag would show.
+Update the main useEffect to redundantly set the reload state to zero, ensuring it resets after data fetching. Add a dedicated state and useEffect to refresh the chat on message changes, preventing full reloads and avoiding text loss during edits.

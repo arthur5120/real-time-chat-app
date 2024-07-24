@@ -1,3 +1,5 @@
+//import { TUser, TChatMessage } from './types'
+
 export const userPlaceholder = {
     name : '',
     username : '',
@@ -13,5 +15,5 @@ export const messagePlaceholder = {
     created_at : 0,
     updated_at : 0,
     room : '',
-    wasEdited : false
+    wasEdited : false,    
   }
