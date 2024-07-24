@@ -8,7 +8,10 @@ import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
 import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faEyeSlash, faCircleInfo, faClipboard, faClipboardCheck } from '@fortawesome/free-solid-svg-icons'
+import { 
+  faEye, faEyeSlash, faCircleInfo, faStop, faPause, faPlay, faAngleDoubleDown, 
+  faArrowsRotate, faArrowsSpin, faClipboard, faClipboardCheck, faUpDown, 
+} from '@fortawesome/free-solid-svg-icons'
 
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
@@ -18,8 +21,7 @@ const currentRoomPlaceHolder = {id : '-1', selectId : 0, name : ''}
 const editMenuButtonPrefix = `--em-btn--`
 
 const bugsToFix = [
-  `When server is out and comes back, the user can't logout due to the token and gets stuck on the chat screen.`,
-  `Room user list not updating in real time.`,
+  `When server is out and comes back, the user can't logout due to the token and gets stuck on the chat screen.`,  
   `Editing the message fails sometimes.`,  
   `useEffect rarely stops prematurely, locking the user from interacting with the UI.`,
   `A message is being added to the local chat erroneously for a moment before the chat loads the correct messages.`,
@@ -47,6 +49,7 @@ const Chat = () => {
   const [refreshChat, setRefreshChat] = useState(false)
   const [messageBeingEdited, setMessageBeingEdited] = useState<TMessageBeingEdited>(messagePlaceholder)
   const [showNotifications, setShowNotifications] = useState(true)
+  const [autoScroll, setAutoScroll] = useState(true)
   const [verticalView, setVerticalView] = useState(false)
   const [copiedToClipboard, setCopiedToClipboard] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
@@ -58,7 +61,7 @@ const Chat = () => {
   const [firstLoad, setFirstLoad] = useState(true)
   const [reload, setReload] = useState(1)
   const [hasErrors, setHasErrors] = useState(false)
-  const [isServerOnline, setIsServerOnline] = useState(true)  
+  const [isServerOnline, setIsServerOnline] = useState(true)
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)
@@ -67,10 +70,10 @@ const Chat = () => {
 
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
-  const {auth, setAuth, role} = useContext(authContext)  
+  const {auth, setAuth, role} = useContext(authContext)
 
   const scrollToLatest = () => {
-    if (chatContainerRef.current) {
+    if (autoScroll && chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
     }
   }
@@ -301,12 +304,13 @@ const Chat = () => {
       const isUserOnList = roomUsers.find((name) => name == currentUser.name) // Short List
 
       if(currentUser?.name && !isUserOnList) {
-        setRoomUsers([...roomUsers, currentUser.name])        
+        setRoomUsers([...roomUsers, currentUser.name])
+        socket?.emit('messageChange', `${currentUser.name} has entered the chat room`)
       }
-      
+                  
     } catch (e) {
       setHasErrors(true)
-      setUseDelayOnEmit(false)
+      setUseDelayOnEmit(false)      
     }
 
   }
@@ -540,11 +544,13 @@ const Chat = () => {
     socket?.on(`auth`, (currentOnlineUsers : string[]) => {
       console.log(`socket on auth : ${currentRoom?.id}`)
       setOnlineUsers(currentOnlineUsers)
+      setRefreshChat(true)
     })
 
     socket?.on(`inactive`, (currentInactiveUsers : string[]) => {
       console.log(`socket on auth : ${currentRoom?.id}`)
       setInactiveUsers(currentInactiveUsers)
+      setRefreshChat(true)
     })
 
     if(currentRoom.id != '-1' && currentRoom.id != '0' && reload > 0) {
@@ -890,24 +896,39 @@ const Chat = () => {
             }
           </h3>
         
-          <span className='flex bg-tranparent m-2 cursor-pointer gap-1'>
+          <span className='flex bg-transparent m-2 cursor-pointer gap-1'>
 
             <button 
-              title={`Room info`} 
+              title={`Toggle auto-scrolling : ${autoScroll ? `on` : `off`}`} 
               disabled={!!reload || firstLoad || !isServerOnline}
-              onClick={() => notifyUser(`Messages : ${messages.length}, Users : ${roomUsers.length}`)} 
-              className='bg-[#050D20] hover:bg-black rounded-lg disabled:cursor-not-allowed'>
-              <FontAwesomeIcon icon={faCircleInfo} width={48} height={48}/>
+              className={ 
+                ` ${autoScroll ? `bg-[#050D20] hover:bg-black` : `bg-[#050D20] hover:bg-black`}
+                rounded-lg disabled:cursor-not-allowed`
+              }              
+              onClick={() => {
+                // notifyUser(`Messages : ${messages.length}, Users : ${roomUsers.length}`)
+                setAutoScroll((prev) => !prev)
+              }}
+            >   
+              {
+                autoScroll ? 
+                  <FontAwesomeIcon icon={faArrowsRotate} width={48} height={48}/> 
+                    : 
+                  <FontAwesomeIcon icon={faPause} width={48} height={48}/>
+                }
             </button>
             
             <button 
-                title={`Toggle hide/show message notifications from other chats`} 
-                disabled={!!reload || firstLoad || !isServerOnline}
-                onClick={() => setShowNotifications(!showNotifications)} 
-                className='bg-[#050D20] hover:bg-black rounded-lg disabled:cursor-not-allowed'>
-                {!showNotifications ? 
-                <FontAwesomeIcon icon={faEyeSlash} width={48} height={48}/> : 
-                <FontAwesomeIcon icon={faEye} width={48} height={48}/>}
+              title={`Toggle hide/show message notifications from other chats`} 
+              disabled={!!reload || firstLoad || !isServerOnline}
+              className='bg-[#050D20] hover:bg-black rounded-lg disabled:cursor-not-allowed'
+              onClick={() => {
+                setShowNotifications(!showNotifications)
+              }}
+            >
+              {!showNotifications ? 
+              <FontAwesomeIcon icon={faEyeSlash} width={48} height={48}/> : 
+              <FontAwesomeIcon icon={faEye} width={48} height={48}/>}
             </button>
             
           </span>

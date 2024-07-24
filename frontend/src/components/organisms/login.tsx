@@ -52,7 +52,11 @@ const Login = () => {
   }
 
   useEffect(() => {
-    auth ? navigate('/chat-rooms') : navigate('/login')
+    if (auth) {
+      navigate('/chat-rooms')
+    } else {
+      navigate('/login')
+    }
   }, [auth])
 
   return (

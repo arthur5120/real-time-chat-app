@@ -3,15 +3,18 @@ import { Link } from 'react-router-dom'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser, faComment, faSignIn, faSignOut } from '@fortawesome/free-solid-svg-icons'
+import { authLogout } from '../../hooks/useAxios'
 
 const LinkStyle = `flex flex-col gap-1 bg-slate-900 text-white rounded-xl p-3 my-2 active:bg-black select-none`
 
 const Navbar = () => {
 
-  const {auth, setAuth} = useContext(authContext)    
+  const {auth, setRole, setAuth} = useContext(authContext)    
 
-  const logout = async () => {            
+  const logout = async () => {     
+    setRole ? setRole('none') : ''
     setAuth ? setAuth(false) : ''
+    await authLogout({})
   }
 
   return (

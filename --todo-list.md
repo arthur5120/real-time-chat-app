@@ -42,14 +42,14 @@
 # chat style not updating when the session expires. [DONE]
 # Editing the message and cancelling afterwards makes it blank instead of returning to the last state. [DONE]
 # Clicking the area above the title doesn't remove the user inactive status. [DONE]
-# Edited status not showing on the other chats when freshly editing a message for the first time.
+# Edited status not showing on the other chats when freshly editing a message for the first time. [DONE]
 # A message is being added to the local chat erroneously for a moment before the chat loads the correct messages.
 # Editing message and clicking off of it deletes the text content. [DONE]
 # useEffect rarely stops prematurely, locking the user from interacting with the UI.
 # Editing is cancelled when receiving a new message. [DONE]
 # Editing a message cancelled when a message is edited on the other end. [DONE]
 # Editing the message fails sometimes.
-# Room user list not updating in real time.
+# Room user list not updating in real time. [DONE]
 # Handle infinite loops when the server is out. [DONE]
 # When server is out and comes back, the user can't logout due to the token and gets stuck on the chat screen.
 # When confirming an edit on a non freshly created message, the changes aren't applied. [DONE]
@@ -58,8 +58,8 @@
 
 // Done yesterday
 
-Add server down handling to useEffect hooks and UI Elements. Add limit to reload state to prevent infinite loops. Add reload when confirming editing the message so the edited flag would show.
+Update the main useEffect to redundantly set the reload state to zero, ensuring it resets after data fetching. Add a dedicated state and useEffect to refresh the chat on message changes, preventing full reloads and avoiding text loss during edits.
 
 // Done today
 
-Update the main useEffect to redundantly set the reload state to zero, ensuring it resets after data fetching. Add a dedicated state and useEffect to refresh the chat on message changes, preventing full reloads and avoiding text loss during edits.
+Update the main useEffect and sendMessage function to allow real-time updates of room users via the socket. Ensure the logout button redundantly removes the auth token to prevent incorrect user redirection. Add a button to toggle the auto-scrolling feature in the chat.
