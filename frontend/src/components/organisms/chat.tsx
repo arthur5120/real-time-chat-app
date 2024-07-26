@@ -34,6 +34,7 @@ const bugsToFix = [
 type TCurrentRoom = {id : string, selectId : number, name : string}
 type TRooms = {id : string, name : string}[]
 type TMessageBeingEdited = TChatMessage & {previous ? : string, wasEdited : boolean}
+type TSocketPayload = Partial<{content : string, notification : string, room : string, notifyRoomOnly : boolean}>
 
 const Chat = () => {
 
@@ -293,6 +294,15 @@ const Chat = () => {
             setHasErrors(true)
           }
         })
+        if(currentUser?.name && !isUserOnList) {
+          const socketPayload : TSocketPayload = {
+            notification : `${currentUser.name} has entered `,
+            room : currentRoom.id,
+            notifyRoomOnly : true
+          }
+          setRoomUsers([...roomUsers, currentUser.name])
+          socket?.emit('messageChange', socketPayload)
+        }
       }, delay)
 
       console.log(`Sending message : ${JSON.stringify(savedMessage)}, socket connection : ${socket?.connected}`)
@@ -303,14 +313,9 @@ const Chat = () => {
           
       const isUserOnList = roomUsers.find((name) => name == currentUser.name) // Short List
 
-      if(currentUser?.name && !isUserOnList) {
-        setRoomUsers([...roomUsers, currentUser.name])
-        socket?.emit('messageChange', `${currentUser.name} has entered the chat room`)
-      }
-                  
     } catch (e) {
       setHasErrors(true)
-      setUseDelayOnEmit(false)      
+      setUseDelayOnEmit(false)
     }
 
   }
@@ -346,10 +351,10 @@ const Chat = () => {
 
   }
 
-  const notifyMessageInRoom = async (id : string) => {
+  const notifyUserInRoom = async (id : string, roomMessage : string = ``) => {
     try {
       const selectedRoom = await getChatById(id)      
-      notifyUser(`New message in ${selectedRoom.name}`)
+      notifyUser(`${roomMessage != `` ? roomMessage : `New message in `}${selectedRoom.name}`)
     } catch (e) {
       setHasErrors(true)    
     }
@@ -437,7 +442,7 @@ const Chat = () => {
     }
   }
 
-  const initializeAppData = async () => {     
+  const initializeAppData = async () => {
     await retrieveCurrentUser()
     await createRoomIfNoneAreFound()
     await retrieveRooms()
@@ -446,7 +451,7 @@ const Chat = () => {
   }
 
   const setInactivityTimer = (localUserName = null) => {
-    if (userActivity) {      
+    if (userActivity) {
       //notifyUser(`Scheduled Inactivity Activation.`)
       const name = localUserName ? localUserName : currentUser.name
       const timerId = setTimeout(() => {
@@ -458,17 +463,17 @@ const Chat = () => {
     }
   }
 
-  const handleUserActivity = () => {          
+  const handleUserActivity = () => {
     if (!userActivity) {
       //notifyUser(`Renewed Activity Status ${userActivity}`)
       setUserActivity(true)
       socket?.connect()
       socket?.emit(`inactive`, { name: currentUser.name, inactive: false })
       inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
-    }   
+    }
   }
 
-  useEffect(() => {   
+  useEffect(() => {
     
     if(!isServerOnline) {
       return
@@ -493,11 +498,11 @@ const Chat = () => {
 
     if(reload > 0) {
       initializeAppData()
-    }    
+    }
 
     if(socket?.disconnected) {
       socket?.connect()
-    }  
+    }
     
     socket?.emit(`authList`)
     socket?.emit(`inactiveList`)
@@ -515,17 +520,22 @@ const Chat = () => {
         }
       } else {
         if(showNotifications) {
-          notifyMessageInRoom(room)
+          notifyUserInRoom(room)
         }
       }
 
     })
       
-    socket?.on('messageChange', (msg : string) => {
-      console.log(`socket on messageChange : ${currentRoom?.id}`)
-      if(msg) {
-        if(showNotifications) {
-          notifyUser(msg, 'info')
+    socket?.on('messageChange', (msg : TSocketPayload) => {      
+      const {notification, room, notifyRoomOnly} = msg
+      console.log(`socket on messageChange : ${room}`)
+      if(notification && showNotifications) {
+        if(room) {
+          if (room == currentRoom.id || !notifyRoomOnly) {
+            notifyUserInRoom(room, notification)
+          }
+        } else {
+          notifyUser(notification, `info`)
         }
         setRefreshChat(true)
         //setReload(reload + 1)
@@ -539,7 +549,7 @@ const Chat = () => {
       if (msg != ``) {
         notifyUser(msg, 'info')
       }
-    })    
+    })
 
     socket?.on(`auth`, (currentOnlineUsers : string[]) => {
       console.log(`socket on auth : ${currentRoom?.id}`)
@@ -565,20 +575,20 @@ const Chat = () => {
         } else {
           notifyUser(`Something Went Wrong, please try again later`, `warning`)
           setIsServerOnline(false)
-          setHasErrors(false)          
+          setHasErrors(false)
           setReload(0)
         }
-      } else {        
+      } else {
         setReload(0)
-      } 
+      }
 
       setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
-      clearTimeout(timer)  
+      clearTimeout(timer)
       
       if(!firstLoad) {
         socket?.off()
         socket?.disconnect()
-      } else {
+      } else {        
         setFirstLoad(false)
       }
 
@@ -603,7 +613,7 @@ const Chat = () => {
 
         window.addEventListener('beforeunload', handleBeforeUnload)
 
-      return () => {        
+      return () => {
         window.removeEventListener('beforeunload', handleBeforeUnload)
         socket?.off()
         socket?.disconnect()
@@ -743,7 +753,10 @@ const Chat = () => {
       case 'delete' : {   
         messageBeingEdited.id ? await deleteMessage(messageBeingEdited.id) : ''
         const editedMessage = messageBeingEdited?.previous ?  messageBeingEdited.previous : ''
-        socket?.emit('messageChange', `The message "${cropMessage(editedMessage)}" was deleted on ${currentRoom.name}`)
+        const socketPayload : TSocketPayload = {
+          notification : `The message "${cropMessage(editedMessage)}" was deleted on ${currentRoom.name}`
+        }
+        socket?.emit('messageChange', socketPayload)
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
         setRefreshChat(true)
         break
@@ -758,7 +771,10 @@ const Chat = () => {
           messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
           const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
           const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
-          socket?.emit('messageChange', `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`)
+          const socketPayload : TSocketPayload = {
+            notification : `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`
+          }
+          socket?.emit('messageChange', socketPayload)
           setRefreshChat(true)
         }
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
@@ -910,20 +926,17 @@ const Chat = () => {
                 setAutoScroll((prev) => !prev)
               }}
             >   
-              {
-                autoScroll ? 
-                  <FontAwesomeIcon icon={faArrowsRotate} width={48} height={48}/> 
-                    : 
-                  <FontAwesomeIcon icon={faPause} width={48} height={48}/>
-                }
+              {autoScroll ?
+              <FontAwesomeIcon icon={faArrowsRotate} width={48} height={48}/> :
+              <FontAwesomeIcon icon={faPause} width={48} height={48}/>}
             </button>
             
-            <button 
-              title={`Toggle hide/show message notifications from other chats`} 
+            <button
+              title={`Toggle hide/show message notifications from other chats`}
               disabled={!!reload || firstLoad || !isServerOnline}
-              className='bg-[#050D20] hover:bg-black rounded-lg disabled:cursor-not-allowed'
+              className={`bg-[#050D20] hover:bg-black rounded-lg disabled:cursor-not-allowed`}
               onClick={() => {
-                setShowNotifications(!showNotifications)
+                setShowNotifications((prev) => !prev)
               }}
             >
               {!showNotifications ? 
@@ -1203,9 +1216,10 @@ const Chat = () => {
             disabled={!!reload || firstLoad || !isServerOnline}
             title={`Currently spamming the chat.`}
             onClick={ async () => {
-              setSpam((lastSpam) => !lastSpam)
+              //setSpam((lastSpam) => !lastSpam)
               //setUserActivity ? setUserActivity(!userActivity) : ''
               //setReload(reload + 1)
+              setRefreshChat(true)
             }}
           />
 

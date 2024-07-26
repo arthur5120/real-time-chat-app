@@ -142,8 +142,8 @@ io.on('connection', (socket) => {
         //io.emit('change', message)
     })
 
-    socket.on('messageChange', (message) => {
-        console.log(message.trim().replace(/\s+/g, ' '))
+    socket.on('messageChange', (message) => { // content, notification, room (id)
+        console.log(message.notification.trim().replace(/\s+/g, ' '))
         socket.broadcast.emit(`messageChange`, message)
         //io.emit('messageChange', message)
     })   

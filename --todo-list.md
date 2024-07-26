@@ -53,13 +53,14 @@
 # Handle infinite loops when the server is out. [DONE]
 # When server is out and comes back, the user can't logout due to the token and gets stuck on the chat screen.
 # When confirming an edit on a non freshly created message, the changes aren't applied. [DONE]
-# Reload not resetting when the data is fetched, locking the user out of the UI.
+# Reload not resetting when the data is fetched, locking the user out of the UI. [DONE]
+# Make list of silenced rooms
 # Maybe separate the socket operations into their own useEffect and use a useRef hook to not get stale states in a function.
 
 // Done yesterday
 
-Update the main useEffect to redundantly set the reload state to zero, ensuring it resets after data fetching. Add a dedicated state and useEffect to refresh the chat on message changes, preventing full reloads and avoiding text loss during edits.
+Update the main useEffect and sendMessage function to allow real-time updates of room users via the socket. Ensure the logout button redundantly removes the auth token to prevent incorrect user redirection. Add a button to toggle the auto-scrolling feature in the chat.
 
 // Done today
 
-Update the main useEffect and sendMessage function to allow real-time updates of room users via the socket. Ensure the logout button redundantly removes the auth token to prevent incorrect user redirection. Add a button to toggle the auto-scrolling feature in the chat.
+Modify notifyUserInRoom to allow custom notification text. Change the string on the socket messageChange to an object for better control of the room notifications. Update main useEffect to conditionally display message change notifications based on current room.
