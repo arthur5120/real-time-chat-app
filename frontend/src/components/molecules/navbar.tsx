@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser, faComment, faSignIn, faSignOut } from '@fortawesome/free-solid-svg-icons'
@@ -9,12 +9,16 @@ const LinkStyle = `flex flex-col gap-1 bg-slate-900 text-white rounded-xl p-3 my
 
 const Navbar = () => {
 
+  const location = useLocation()
+  const navigate = useNavigate()
+
   const {auth, setRole, setAuth} = useContext(authContext)    
 
   const logout = async () => {     
     setRole ? setRole('none') : ''
     setAuth ? setAuth(false) : ''
     await authLogout({})
+    navigate(`/login`)    
   }
 
   return (
@@ -46,7 +50,7 @@ const Navbar = () => {
           {
             auth ? 
               <li>                
-                <Link className={LinkStyle} to={`/login`} onClick={async () => logout()} draggable={false}>
+                <Link className={LinkStyle} to={location.pathname} onClick={async () => logout()} draggable={false}>
                   <FontAwesomeIcon icon={faSignOut} /> Sign out
                 </Link>              
               </li> : 

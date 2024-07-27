@@ -45,22 +45,23 @@
 # Edited status not showing on the other chats when freshly editing a message for the first time. [DONE]
 # A message is being added to the local chat erroneously for a moment before the chat loads the correct messages.
 # Editing message and clicking off of it deletes the text content. [DONE]
-# useEffect rarely stops prematurely, locking the user from interacting with the UI.
+# useEffect rarely stops prematurely, locking the user from interacting with the UI. [DONE]
 # Editing is cancelled when receiving a new message. [DONE]
 # Editing a message cancelled when a message is edited on the other end. [DONE]
 # Editing the message fails sometimes.
 # Room user list not updating in real time. [DONE]
 # Handle infinite loops when the server is out. [DONE]
-# When server is out and comes back, the user can't logout due to the token and gets stuck on the chat screen.
+# When server is out and comes back, the user can't logout due to the token and gets stuck on the chat screen. [DONE]
 # When confirming an edit on a non freshly created message, the changes aren't applied. [DONE]
 # Reload not resetting when the data is fetched, locking the user out of the UI. [DONE]
 # Make list of silenced rooms
 # Maybe separate the socket operations into their own useEffect and use a useRef hook to not get stale states in a function.
+# Make onlineUsers array a Set instead.
 
 // Done yesterday
 
-Update the main useEffect and sendMessage function to allow real-time updates of room users via the socket. Ensure the logout button redundantly removes the auth token to prevent incorrect user redirection. Add a button to toggle the auto-scrolling feature in the chat.
+Modify notifyUserInRoom to allow custom notification text. Change the string on the socket messageChange to an object for better control of the room notifications. Update main useEffect to conditionally display message change notifications based on current room.
 
 // Done today
 
-Modify notifyUserInRoom to allow custom notification text. Change the string on the socket messageChange to an object for better control of the room notifications. Update main useEffect to conditionally display message change notifications based on current room.
+Implement a function to redundantly add the user to the socket online list, triggered with a slight delay in useEffect using the current user name as a dependency, to fix the list update issue. Update the navbar logout option to redirect the user only after the authentication token is removed. Reduce the delay on the authentication banner transition for improved fluidity.

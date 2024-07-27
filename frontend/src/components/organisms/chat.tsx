@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getMessageById, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
-import { TUser, TMessage, TChatMessage, TChatRoom, TRes } from '../../utils/types'
+import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
@@ -79,14 +79,30 @@ const Chat = () => {
     }
   }
 
+  const addUserToOnlineList = async (localId : string = '') => {
+    const isUserOnList = onlineUsers.find((u) => u == currentUser.name)
+    if(!isUserOnList) {      
+      const authInfo : TRes = localId == '' ? await authStatus({}) : {id : localId}
+      const userInfo = await getUserById(authInfo.id)      
+      const authRequest : TSocketAuthRequest = {
+        user : {id : authInfo.id, name : userInfo.name}, 
+        isConnecting : true
+      }      
+      socket?.emit(`auth`, authRequest)
+      socket?.emit(`authList`)      
+    } else {
+      return
+    }
+  }
+
   const retrieveCurrentUser = async () => {
 
     console.log(`FUNCTION : Retrieving current user.`)
 
-    try {      
+    try {
 
       const authInfo : TRes = await authStatus({})
-      const user = await getUserById(authInfo.id)      
+      const user = await getUserById(authInfo.id)
   
       setCurrentUser({
         name : user.name,
@@ -97,7 +113,7 @@ const Chat = () => {
 
       if(firstLoad) {
         setInactivityTimer(user.name)
-      }
+      }      
 
     } catch(e) {
       setHasErrors(true)
@@ -176,7 +192,7 @@ const Chat = () => {
         updated_at: convertDatetimeToMilliseconds(m.updated_at),
         room: m.chatId
     }
-  }
+  }  
 
   const retrieveMessages = async () => {  
     
@@ -443,7 +459,7 @@ const Chat = () => {
   }
 
   const initializeAppData = async () => {
-    await retrieveCurrentUser()
+    await retrieveCurrentUser()    
     await createRoomIfNoneAreFound()
     await retrieveRooms()
     await retrieveMessages()
@@ -502,7 +518,7 @@ const Chat = () => {
 
     if(socket?.disconnected) {
       socket?.connect()
-    }
+    }    
     
     socket?.emit(`authList`)
     socket?.emit(`inactiveList`)
@@ -604,19 +620,28 @@ const Chat = () => {
 
     console.log(`Running "handle before unload" useEffect.`)
 
-    if (currentUser.name != ``) {
-         
-        const handleBeforeUnload = () => {
-          socket?.connect()
-          socket?.emit(`inactive`, {name: currentUser.name, inactive: true})
-        }
+    if (currentUser.name != ``) {        
 
-        window.addEventListener('beforeunload', handleBeforeUnload)
+      if(socket?.disconnected) {
+        socket?.connect()
+      }
+
+      const localDelay = setTimeout(() => {
+        addUserToOnlineList()
+      }, 200)
+         
+      const handleBeforeUnload = () => {
+        socket?.connect()
+        socket?.emit(`inactive`, {name: currentUser.name, inactive: true})
+      }
+
+      window.addEventListener('beforeunload', handleBeforeUnload)
 
       return () => {
         window.removeEventListener('beforeunload', handleBeforeUnload)
         socket?.off()
         socket?.disconnect()
+        clearTimeout(localDelay)
       }
 
     }
@@ -1219,7 +1244,8 @@ const Chat = () => {
               //setSpam((lastSpam) => !lastSpam)
               //setUserActivity ? setUserActivity(!userActivity) : ''
               //setReload(reload + 1)
-              setRefreshChat(true)
+              //setRefreshChat(true)
+              setReload(reload + 1)
             }}
           />
 

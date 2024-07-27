@@ -34,10 +34,10 @@ const connectUser = (user) => {
 
         const isUserOnline = onlineUsers.find((u) => u.id == user.id)
 
-        if (!isUserOnline) {                        
+        if (!isUserOnline) {
             onlineUsers.push(user)
             onlineUsersNames.push(user.name)
-        }  
+        }
         
         const inactiveUserId = inactiveUsersNames.findIndex((u) => u == user.name)
 
@@ -148,7 +148,7 @@ io.on('connection', (socket) => {
         //io.emit('messageChange', message)
     })   
 
-    socket.on('auth', (authRequest) => {           
+    socket.on('auth', (authRequest) => {
 
         try {
 
@@ -156,13 +156,13 @@ io.on('connection', (socket) => {
             const dateNow = Date.now()
             const expirationTime = dateNow + (1000 * 60 * 15)
 
-            if (user?.id && isConnecting == true) {                
-                connectUser({...user, expirationTime : expirationTime})                
+            if (user?.id && isConnecting == true) {
+                connectUser({...user, expirationTime : expirationTime})
                 return
             }
             
             if (user?.id && isConnecting == false) {
-                disconnectUser(user.id)                
+                disconnectUser(user.id)
                 return
             }
 

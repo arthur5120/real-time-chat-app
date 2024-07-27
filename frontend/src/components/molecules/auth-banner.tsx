@@ -22,7 +22,7 @@ const AuthBanner = () => {
           setAuthColor('bg-red-600')
         }
 
-      }, 200)
+      }, 50)
   
       return () => {
         clearTimeout(intervalId)
