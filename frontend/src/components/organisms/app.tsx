@@ -11,17 +11,17 @@ import { authStatus, getUserById, authLogout } from "../../hooks/useAxios"
 const App = () => {
 
   const socket = useContext(socketContext)
-  const {notifyUser} = useContext(toastContext)  
-  const {auth, setAuth, setRole, getAuthTokenStatus} = useContext(authContext)
+  const {notifyUser} = useContext(toastContext)
+  const {auth, setAuth, setRole, getAuthTokenStatus, clickedToLogout, setClickedToLogout} = useContext(authContext)
   
   const [checkAuthStatus, setCheckAuthStatus] = useState(false)
   const [previousAuth, setPreviousAuth] = useState(auth)
   const [hasSessionExpired, setHasSessionExpired] = useState(false)
   const location = useLocation()
 
-  const handleSocketOnlineList = async () => {    
+  const handleSocketOnlineList = async () => {        
 
-    const authInfo : TRes = await authStatus({})  
+    const authInfo : TRes = await authStatus({})
     
       try {
 
@@ -37,7 +37,8 @@ const App = () => {
           setHasSessionExpired(false)
         }
   
-        if (auth && authInfo.id != `none`) { // Login
+        if (auth && authInfo.id != `none` && !clickedToLogout) { // Login
+          setClickedToLogout ? setClickedToLogout(false) : ''
           //notifyUser(`Login.`)
           const user = await getUserById(authInfo.id)
           setRole ? setRole(authInfo.role) : ''
@@ -45,7 +46,7 @@ const App = () => {
           socket?.emit(`auth`, authRequest)
           socket?.emit(`authList`)
           socket?.emit(`inactiveList`)
-          //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
+          //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)          
           return
         }
     

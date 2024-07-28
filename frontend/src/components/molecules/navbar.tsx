@@ -1,24 +1,20 @@
 import { useContext } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser, faComment, faSignIn, faSignOut } from '@fortawesome/free-solid-svg-icons'
-import { authLogout } from '../../hooks/useAxios'
 
 const LinkStyle = `flex flex-col gap-1 bg-slate-900 text-white rounded-xl p-3 my-2 active:bg-black select-none`
 
 const Navbar = () => {
 
-  const location = useLocation()
-  const navigate = useNavigate()
+  const location = useLocation()  
+  const {auth, logout} = useContext(authContext)
 
-  const {auth, setRole, setAuth} = useContext(authContext)    
-
-  const logout = async () => {     
-    setRole ? setRole('none') : ''
-    setAuth ? setAuth(false) : ''
-    await authLogout({})
-    navigate(`/login`)    
+  const onClickToLogout = () => {
+    if(logout) {
+      logout()
+    }
   }
 
   return (
@@ -50,7 +46,7 @@ const Navbar = () => {
           {
             auth ? 
               <li>                
-                <Link className={LinkStyle} to={location.pathname} onClick={async () => logout()} draggable={false}>
+                <Link className={LinkStyle} to={location.pathname} onClick={async () => onClickToLogout()} draggable={false}>
                   <FontAwesomeIcon icon={faSignOut} /> Sign out
                 </Link>              
               </li> : 

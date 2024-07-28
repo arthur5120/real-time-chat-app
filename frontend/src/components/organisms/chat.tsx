@@ -62,7 +62,7 @@ const Chat = () => {
   const [firstLoad, setFirstLoad] = useState(true)
   const [reload, setReload] = useState(1)
   const [hasErrors, setHasErrors] = useState(false)
-  const [isServerOnline, setIsServerOnline] = useState(true)
+  const [isServerOnline, setIsServerOnline] = useState(true)  
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)
@@ -528,7 +528,7 @@ const Chat = () => {
       console.log(`socket on room : ${currentRoom?.id}`)
 
       const {id, room} = msg
-      const firstMessageId = messages?.length > 0 ? messages[0].id : -1    
+      const firstMessageId = messages?.length > 0 ? messages[0].id : -1
       
       if (room == currentRoom.id) {
         if (id != firstMessageId) {
@@ -1240,7 +1240,7 @@ const Chat = () => {
             className={`${spam ? `bg-yellow-500` : `bg-black`} active:bg-gray-900 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad || !isServerOnline}
             title={`Currently spamming the chat.`}
-            onClick={ async () => {
+            onClick={ async () => {                                                    
               //setSpam((lastSpam) => !lastSpam)
               //setUserActivity ? setUserActivity(!userActivity) : ''
               //setReload(reload + 1)
