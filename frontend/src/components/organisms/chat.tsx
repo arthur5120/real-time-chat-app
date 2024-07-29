@@ -113,7 +113,7 @@ const Chat = () => {
 
       if(firstLoad) {
         setInactivityTimer(user.name)
-      }      
+      }
 
     } catch(e) {
       setHasErrors(true)

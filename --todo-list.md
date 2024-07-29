@@ -30,7 +30,6 @@
 # Update the room users when the session expires.
 # Handle name with spaces on the online user list. [DONE]
 # Save user preferences in cookies.
-# Handle repeated names on the room user list.
 # Not loading inactive list on start. [DONE]
 # Not removing user from inactive list on logout and login. [DONE]
 # Missing the click on confirming the message edit makes the button disappear. [DONE]
@@ -57,11 +56,17 @@
 # Make list of silenced rooms.
 # Maybe separate the socket operations into their own useEffect and use a useRef hook to not get stale states in a function.
 # Make onlineUsers array a Set instead.
+# Not removing user from socket online list during logout. [DONE]
+# Handle repeated names on the chat/socket room user list. (Maybe use a set with their ids/names)
+# Adding null to the socket online list when auto-logout is performed due to duplicated sessions.
 
 // Done yesterday
 
-Implement a function to redundantly add the user to the socket online list, triggered with a slight delay in useEffect using the current user name as a dependency, to fix the list update issue. Update the navbar logout option to redirect the user only after the authentication token is removed. Reduce the delay on the authentication banner transition for improved fluidity.
+Add clickedLogoutButton flag and move logout function to auth context state, checking it on auto-login to prevent it from happening after logout button click.
 
 // Done today
 
-Add clickedLogoutButton flag and move logout function to auth context state, checking it on auto-login to prevent it from happening after logout button click.
+Remove redundant auth token deletion from the logout function, fixing socket list not updating on logout.
+Move the user redirect function back to the navbar.
+
+//navigate(`/login`)

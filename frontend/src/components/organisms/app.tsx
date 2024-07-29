@@ -26,6 +26,7 @@ const App = () => {
       try {
 
         socket?.connect()
+        setClickedToLogout ? setClickedToLogout(false) : ''
         
         if(hasSessionExpired) { // Session Expired or the token was not found.
           //notifyUser(`Session Expired.`)
@@ -38,7 +39,7 @@ const App = () => {
         }
   
         if (auth && authInfo.id != `none` && !clickedToLogout) { // Login
-          setClickedToLogout ? setClickedToLogout(false) : ''
+          
           //notifyUser(`Login.`)
           const user = await getUserById(authInfo.id)
           setRole ? setRole(authInfo.role) : ''
@@ -46,7 +47,7 @@ const App = () => {
           socket?.emit(`auth`, authRequest)
           socket?.emit(`authList`)
           socket?.emit(`inactiveList`)
-          //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)          
+          // notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)          
           return
         }
     
@@ -58,7 +59,7 @@ const App = () => {
           socket?.emit(`authList`)
           socket?.emit(`inactiveList`)          
           await authLogout({})
-          //notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
+          // notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
           return
         }         
 

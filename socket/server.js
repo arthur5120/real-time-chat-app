@@ -95,7 +95,7 @@ io.on('connection', (socket) => {
 
         const inactiveUserId = inactiveUsersNames.findIndex((u) => u == name)
         
-        if(!name || name == ``) {
+        if(!name || name == `` || name == null) {
             console.log(`invalid name`)
             return
         }

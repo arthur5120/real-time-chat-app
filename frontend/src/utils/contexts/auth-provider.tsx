@@ -8,8 +8,7 @@ import {
   useEffect,  
 } from 'react';
 
-import { authLogout, authStatus } from '../../hooks/useAxios';
-import { useNavigate } from 'react-router-dom';
+import { authStatus } from '../../hooks/useAxios';
 
 type TAuth = {
   auth ? : boolean,
@@ -28,15 +27,12 @@ const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
   
   const [auth, setAuth] = useState(false)
   const [role, setRole] = useState('none')
-  const [clickedToLogout, setClickedToLogout] = useState(false)
-  const navigate = useNavigate()
+  const [clickedToLogout, setClickedToLogout] = useState(false)  
 
   const logout = async () => {
     setClickedToLogout(true)
     setRole ? setRole('none') : ''
-    setAuth ? setAuth(false) : ''
-    await authLogout({})
-    navigate(`/login`)
+    setAuth ? setAuth(false) : ''    
   }
 
   const getAuthTokenStatus = async () => {    
