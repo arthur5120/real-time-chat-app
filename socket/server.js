@@ -30,13 +30,20 @@ setInterval(() => {
 
 const connectUser = (user) => {
     
-    try {        
+    try { 
+        
+        if(!user?.id || user?.id == `` || user?.id == null || user?.id == `none`) {
+            console.log(`invalid id while connecting`)
+            return
+        }
 
         const isUserOnline = onlineUsers.find((u) => u.id == user.id)
 
         if (!isUserOnline) {
             onlineUsers.push(user)
             onlineUsersNames.push(user.name)
+        } else {
+            return
         }
         
         const inactiveUserId = inactiveUsersNames.findIndex((u) => u == user.name)
@@ -55,7 +62,12 @@ const connectUser = (user) => {
 
 const disconnectUser = (userId) => {
     
-   try {       
+   try { 
+    
+        if(!userId || userId == `` || userId == null || userId == `none`) {
+            console.log(`invalid id while disconnecting`)
+            return
+        }        
 
        const onlineUserId = onlineUsers.findIndex((u) => u.id == userId)
        const inactiveUserId = onlineUserId != -1 ?  
@@ -64,6 +76,8 @@ const disconnectUser = (userId) => {
         if (onlineUserId != -1) {
             onlineUsers.splice(onlineUserId, 1)
             onlineUsersNames.splice(onlineUserId, 1)
+        } else {
+            return
         }
 
         if(inactiveUserId != -1) {
@@ -93,13 +107,13 @@ io.on('connection', (socket) => {
 
         console.log(`inactivity status change to ${inactive} for ${name}...`)
 
-        const inactiveUserId = inactiveUsersNames.findIndex((u) => u == name)
-        
         if(!name || name == `` || name == null) {
             console.log(`invalid name`)
             return
-        }
+        }        
 
+        const inactiveUserId = inactiveUsersNames.findIndex((u) => u == name)
+                
         if (inactive == true) {
             if(inactiveUserId == -1) {                
                 console.log(`${name} went inactive.`)

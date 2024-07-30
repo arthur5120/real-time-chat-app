@@ -466,7 +466,7 @@ const Chat = () => {
     resetMessageContent()
   }
 
-  const setInactivityTimer = (localUserName = null) => {
+  const setInactivityTimer = (localUserName = null) => {        
     if (userActivity) {
       //notifyUser(`Scheduled Inactivity Activation.`)
       const name = localUserName ? localUserName : currentUser.name

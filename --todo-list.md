@@ -62,11 +62,11 @@
 
 // Done yesterday
 
-Add clickedLogoutButton flag and move logout function to auth context state, checking it on auto-login to prevent it from happening after logout button click.
-
-// Done today
-
 Remove redundant auth token deletion from the logout function, fixing socket list not updating on logout.
 Move the user redirect function back to the navbar.
 
-//navigate(`/login`)
+// Done today
+
+Add check to socket connections to prevent invalid entries on the online list when disconnecting users due to multiple sessions.
+
+Add validation to socket to prevent invalid entries in the online List on user disconnection due to multiple sessions.

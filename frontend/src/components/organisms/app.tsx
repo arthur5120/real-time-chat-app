@@ -69,12 +69,12 @@ const App = () => {
     
   }
 
-  const handleSessionExpiration = async () => {            
+  const handleSessionExpiration = async () => {
     const authenticated = getAuthTokenStatus ? await getAuthTokenStatus() : ''
     if (!authenticated) {
       setAuth ? setAuth(false) : ''
       if (auth) {
-        notifyUser(`Logged out`)     
+        notifyUser(`Logged out`)
         setHasSessionExpired(true)
       }      
     } else if (!auth) {
