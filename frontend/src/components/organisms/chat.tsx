@@ -42,7 +42,7 @@ const Chat = () => {
   const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
   const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
   const [roomUsers, setRoomUsers] = useState<string[]>([])
-  const [onlineUsers, setOnlineUsers] = useState<string[]>([])
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]) // Update to use Unique Names
   const [inactiveUsers, setInactiveUsers] = useState<string[]>([])
   const [userActivity, setUserActivity] = useState(true)
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
@@ -209,13 +209,21 @@ const Chat = () => {
         const rawMessages = await getMessages() // Getting all messages to filter them based on room, change this later.
         const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)
         const uniqueIdList = new Set<string>()
-        const userNameList : string[] = []
+        const uniqueNameList = new Set<string>()
+        const userNameList : string[] = []        
     
         const convertedMessages = filteredMessages.map((m : TMessage) => {
 
-          if(!uniqueIdList.has(m.senderId)) {
+          if(!uniqueIdList.has(m.senderId)) {            
             uniqueIdList.add(m.senderId)
-            userNameList.push(m.senderName)
+            if(!uniqueNameList.has(m.senderName)) {
+              uniqueNameList.add(m.senderName)
+              userNameList.push(m.senderName)
+            } else {
+              const uuid = generateUniqueId()
+              uniqueNameList.add(`${m.senderName} ${uuid}`)
+              userNameList.push(`${m.senderName} ${uuid}`)
+            }
           }
 
           return {
@@ -316,7 +324,13 @@ const Chat = () => {
             room : currentRoom.id,
             notifyRoomOnly : true
           }
-          setRoomUsers([...roomUsers, currentUser.name])
+          const isDuplicate = roomUsers.find((rm) => rm == currentUser.name)
+          if(!isDuplicate) {
+            setRoomUsers([...roomUsers, currentUser.name])
+          } else {
+            const uuid = generateUniqueId()
+            setRoomUsers([...roomUsers, `${currentUser.name} ${uuid}`])
+          }
           socket?.emit('messageChange', socketPayload)
         }
       }, delay)
@@ -466,25 +480,28 @@ const Chat = () => {
     resetMessageContent()
   }
 
-  const setInactivityTimer = (localUserName = null) => {        
+  const setInactivityTimer =  async (localUserName = null) => {        
     if (userActivity) {
       //notifyUser(`Scheduled Inactivity Activation.`)
       const name = localUserName ? localUserName : currentUser.name
-      const timerId = setTimeout(() => {
+      const timerId = setTimeout(async () => {                        
+        //notifyUser(`Going Inactive`)
         setUserActivity(false)
+        const authInfo : TRes = await authStatus({})
         socket?.connect()
-        socket?.emit(`inactive`, { name: name, inactive: true })
+        socket?.emit(`inactive`, { id : authInfo.id, name: name, inactive: true })
       }, 60000) // Time until inactivity
       setInactivityTimerId(timerId)
     }
   }
 
-  const handleUserActivity = () => {
+  const handleUserActivity = async () => {
     if (!userActivity) {
       //notifyUser(`Renewed Activity Status ${userActivity}`)
       setUserActivity(true)
+      const authInfo : TRes = await authStatus({})
       socket?.connect()
-      socket?.emit(`inactive`, { name: currentUser.name, inactive: false })
+      socket?.emit(`inactive`, { id : authInfo.id, name: currentUser.name, inactive: false })
       inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
     }
   }
@@ -620,7 +637,7 @@ const Chat = () => {
 
     console.log(`Running "handle before unload" useEffect.`)
 
-    if (currentUser.name != ``) {        
+    if (currentUser.name != ``) {
 
       if(socket?.disconnected) {
         socket?.connect()
@@ -630,9 +647,10 @@ const Chat = () => {
         addUserToOnlineList()
       }, 200)
          
-      const handleBeforeUnload = () => {
+      const handleBeforeUnload =  async () => { 
+        const authInfo : TRes = await authStatus({})        
         socket?.connect()
-        socket?.emit(`inactive`, {name: currentUser.name, inactive: true})
+        socket?.emit(`inactive`, {id : authInfo.id, name: currentUser.name, inactive: true})
       }
 
       window.addEventListener('beforeunload', handleBeforeUnload)
@@ -841,7 +859,7 @@ const Chat = () => {
 
   const buttonDivStyle = verticalView ? 
   `flex justify-between w-80 gap-3 my-2` : 
-  `flex flex-col justify-start h-80 gap-3 mx-2`  
+  `flex flex-col justify-start h-80 gap-3 mx-2`
 
   return (    
 
@@ -998,7 +1016,7 @@ const Chat = () => {
                   className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 ${primaryDefault} flex-shrink-1 rounded max-w-48 h-fit h-min-10 break-words cursor-pointer ${message.content != '' || isMessageSelected ? '' : 'text-slate-400'}`}
                   suppressContentEditableWarning={true}
                   contentEditable={isUserSender && isMessageSelected}
-
+                  title={`Click to edit/delete a message.`}
                   onClick={(e) => {
                     if (isUserSender) {
                       if (!messageBeingEdited.content) {
@@ -1267,12 +1285,15 @@ const Chat = () => {
         <h3 className={`flex mb-5 ${socket?.connected ? `bg-green-600` : `bg-red-600` } rounded-lg p-3`}>          
           socket {socket?.connected ? 'on' : 'off'}
         </h3>
-        <h3 className={`flex mb-5 bg-black rounded-lg p-3`}>
+        {/* <h3 className={`flex mb-5 bg-black rounded-lg p-3`}>
           {`First Load : ${firstLoad ? `T` : `F`}`}
+        </h3> */}
+        <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
+          {roomUsers.length}
         </h3>
         <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
           {`Reload : ${reload}`}
-        </h3>
+        </h3>        
       </div>
      
     </section>

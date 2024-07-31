@@ -6,6 +6,7 @@ const io = new Server({
 
 let onlineUsers = []
 let onlineUsersNames = []
+let inactiveUsers = []
 let inactiveUsersNames = []
 let nextExpirationCheck = -1
 
@@ -46,9 +47,11 @@ const connectUser = (user) => {
             return
         }
         
-        const inactiveUserId = inactiveUsersNames.findIndex((u) => u == user.name)
+        //const inactiveUserId = inactiveUsersNames.findIndex((u) => u == user.name)        
+        const inactiveUserId = inactiveUsers.findIndex((u) => u.id == user.id)
 
-        if(inactiveUserId > -1) {
+        if(inactiveUserId > -1) {            
+            inactiveUsers.splice(inactiveUserId, 1)
             inactiveUsersNames.splice(inactiveUserId, 1)
         }
 
@@ -71,7 +74,8 @@ const disconnectUser = (userId) => {
 
        const onlineUserId = onlineUsers.findIndex((u) => u.id == userId)
        const inactiveUserId = onlineUserId != -1 ?  
-       inactiveUsersNames.findIndex((u) => u == onlineUsersNames[onlineUserId]) : -1
+       //inactiveUsersNames.findIndex((u) => u == onlineUsersNames[onlineUserId]) : -1
+       inactiveUsers.findIndex((u) => u.id == userId) : -1
 
         if (onlineUserId != -1) {
             onlineUsers.splice(onlineUserId, 1)
@@ -81,6 +85,7 @@ const disconnectUser = (userId) => {
         }
 
         if(inactiveUserId != -1) {
+            inactiveUsers.splice(inactiveUserId, 1)
             inactiveUsersNames.splice(inactiveUserId, 1)
         }
 
@@ -103,30 +108,31 @@ io.on('connection', (socket) => {
 
     socket.on(`inactive`, (user) => {
                        
-        const {name, inactive} = user
+        const {id, name, inactive} = user
 
         console.log(`inactivity status change to ${inactive} for ${name}...`)
 
-        if(!name || name == `` || name == null) {
-            console.log(`invalid name`)
+        if(!name || name == `` || name == null || !id) {
+            console.log(`invalid name or id`)
             return
-        }        
+        }
 
-        const inactiveUserId = inactiveUsersNames.findIndex((u) => u == name)
+        //const inactiveUserId = inactiveUsersNames.findIndex((u) => u == name)
+        const inactiveUserId = inactiveUsers.findIndex((u) => u.id == id)
                 
         if (inactive == true) {
-            if(inactiveUserId == -1) {                
+            if(inactiveUserId == -1) {
                 console.log(`${name} went inactive.`)
+                inactiveUsers.push({id : id, name : name, inactive : inactive})                
                 inactiveUsersNames.push(name)
                 socket.broadcast.emit(`inactive`, inactiveUsersNames)
-                //io.emit('inactive', inactiveUsersNames)
             }
         } else {
-            if(inactiveUserId > -1) {                
+            if(inactiveUserId > -1) {
                 console.log(`${name} went active.`)
+                inactiveUsers.splice(inactiveUserId, 1)
                 inactiveUsersNames.splice(inactiveUserId, 1)
                 socket.broadcast.emit(`inactive`, inactiveUsersNames)
-                //io.emit('inactive', inactiveUsersNames)
             }
         }    
 
@@ -188,12 +194,10 @@ io.on('connection', (socket) => {
 
     socket.on(`authList`, () => {
         io.emit(`auth`, onlineUsersNames)
-        //socket.broadcast.emit(`auth`, onlineUsersNames)
     })
 
     socket.on(`inactiveList`, () => {
         io.emit('inactive', inactiveUsersNames)
-        //socket.broadcast.emit(`inactive`, inactiveUsersNames)
     })
     
     socket.on(``, () => {

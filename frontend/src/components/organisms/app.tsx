@@ -99,7 +99,7 @@ const App = () => {
 
   }, [location, checkAuthStatus])
   
-  useEffect(() => { 
+  useEffect(() => {
     
     if (auth != previousAuth) {            
       handleSocketOnlineList()

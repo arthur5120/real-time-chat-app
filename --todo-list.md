@@ -58,15 +58,16 @@
 # Make onlineUsers array a Set instead.
 # Not removing user from socket online list during logout. [DONE]
 # Handle repeated names on the chat/socket room user list. (Maybe use a set with their ids/names)
-# Adding null to the socket online list when auto-logout is performed due to duplicated sessions.
+# Adding null to the socket online list when auto-logout is performed due to duplicated sessions. [DONE]
+# Chat flickering, maybe due to too many messages. (Limit the number of messages rendered, use lazy loading.)
+# Sending inactivity status change erroneously.
+# User going inactive even when clicking. Scheduling is not resetting properly.
 
 // Done yesterday
 
-Remove redundant auth token deletion from the logout function, fixing socket list not updating on logout.
-Move the user redirect function back to the navbar.
+Add check to socket connections to prevent invalid entries on the online list when disconnecting users due to multiple sessions. Add validation to socket to prevent invalid entries in the online List on user disconnection due to multiple sessions.
 
 // Done today
 
-Add check to socket connections to prevent invalid entries on the online list when disconnecting users due to multiple sessions.
+Make the socket use user ids to check the user inactivity status. Change the roomUsers state operations to handle repeated names.
 
-Add validation to socket to prevent invalid entries in the online List on user disconnection due to multiple sessions.
