@@ -40,12 +40,13 @@ export type TMessage = {
 }
   
 export type TChatMessage = {
-    id ? : string
+    id ? : string,
     user : string,  
-    content : string    
-    created_at : number
-    updated_at : number
-    room : string
+    content : string,
+    created_at : number,
+    updated_at : number,
+    room : string,
+    isUserSender ? : boolean
 }
 
 export type TRes = {

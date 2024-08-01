@@ -65,9 +65,10 @@
 
 // Done yesterday
 
-Make the socket use user ids to check the user inactivity status. Change the roomUsers state operations to handle repeated names.
+Change retrieveRooms function to check if the user is in the current room using their IDs and update the state.
+Update UI separating the current user inactivity state from users.
 
 // Done today
 
-Change retrieveRooms function to check if the user is in the current room using their IDs and update the state.
-Update UI separating the current user inactivity state from users.
+Update the chat component and the socket to use objects with both the users ids and names to handle repeated names.
+Add check to retrieveRooms function to prevent it from searching an empty array.

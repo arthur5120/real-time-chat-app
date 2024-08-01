@@ -23,7 +23,9 @@ setInterval(() => {
         if(onlineUsers.length > 0) {
             const newList = onlineUsers.filter((user) => !expirationCheck(user.expirationTime))
             onlineUsers = newList
-            onlineUsersNames = newList.map((user) => user.name)
+            onlineUsersNames = newList.map((user) => {
+                return {id : user.id, name : user.name}
+            })
         }
     }
     console.log(`Online : ${JSON.stringify(onlineUsersNames)}, next check in ${(((nextExpirationCheck - hereNow) / (1000 * 60)) | 0)}m.`)
@@ -42,12 +44,11 @@ const connectUser = (user) => {
 
         if (!isUserOnline) {
             onlineUsers.push(user)
-            onlineUsersNames.push(user.name)
+            onlineUsersNames.push({id : user.id, name : user.name})
         } else {
             return
         }
-        
-        //const inactiveUserId = inactiveUsersNames.findIndex((u) => u == user.name)        
+                
         const inactiveUserId = inactiveUsers.findIndex((u) => u.id == user.id)
 
         if(inactiveUserId > -1) {            
@@ -73,8 +74,7 @@ const disconnectUser = (userId) => {
         }        
 
        const onlineUserId = onlineUsers.findIndex((u) => u.id == userId)
-       const inactiveUserId = onlineUserId != -1 ?  
-       //inactiveUsersNames.findIndex((u) => u == onlineUsersNames[onlineUserId]) : -1
+       const inactiveUserId = onlineUserId != -1 ?         
        inactiveUsers.findIndex((u) => u.id == userId) : -1
 
         if (onlineUserId != -1) {
@@ -117,14 +117,13 @@ io.on('connection', (socket) => {
             return
         }
 
-        //const inactiveUserId = inactiveUsersNames.findIndex((u) => u == name)
         const inactiveUserId = inactiveUsers.findIndex((u) => u.id == id)
                 
         if (inactive == true) {
             if(inactiveUserId == -1) {
                 console.log(`${name} went inactive.`)
                 inactiveUsers.push({id : id, name : name, inactive : inactive})                
-                inactiveUsersNames.push(name)
+                inactiveUsersNames.push({id : id, name : name})
                 socket.broadcast.emit(`inactive`, inactiveUsersNames)
             }
         } else {

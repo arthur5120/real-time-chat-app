@@ -41,10 +41,10 @@ const Chat = () => {
   const [rooms, setRooms] = useState<TRooms>(roomsPlaceholder)
   const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
   const [isUserInRoom, setIsUserInroom] = useState(false)
-  const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
-  const [roomUsers, setRoomUsers] = useState<string[]>([])
-  const [onlineUsers, setOnlineUsers] = useState<string[]>([]) // Update to use Unique Names
-  const [inactiveUsers, setInactiveUsers] = useState<string[]>([])
+  const [currentUser, setCurrentUser] = useState<{id ? : string} & TUser>(userPlaceholder)
+  const [roomUsers, setRoomUsers] = useState<{id : string, name : string}[]>([])
+  const [onlineUsers, setOnlineUsers] = useState<{id : string, name : string}[]>([]) // Update to use Unique Names
+  const [inactiveUsers, setInactiveUsers] = useState<{id : string, name : string}[]>([])
   const [userActivity, setUserActivity] = useState(true)
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
   const [messages, setMessages] = useState<TChatMessage[]>([])
@@ -63,8 +63,7 @@ const Chat = () => {
   const [firstLoad, setFirstLoad] = useState(true)
   const [reload, setReload] = useState(1)
   const [hasErrors, setHasErrors] = useState(false)
-  const [isServerOnline, setIsServerOnline] = useState(true)
-  const [nickname, setNickname] = useState<any>(null)
+  const [isServerOnline, setIsServerOnline] = useState(true)  
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)
@@ -81,11 +80,11 @@ const Chat = () => {
     }
   }
 
-  const addUserToOnlineList = async (localId : string = '') => {
-    const isUserOnList = onlineUsers.find((u) => u == currentUser.name)
-    if(!isUserOnList) {      
-      const authInfo : TRes = localId == '' ? await authStatus({}) : {id : localId}
-      const userInfo = await getUserById(authInfo.id)      
+  const addUserToOnlineList = async () => {   
+    const authInfo = await authStatus({})
+    const isUserOnList = onlineUsers.find((u) => u.id == authInfo.id)
+    if(!isUserOnList) {            
+      const userInfo = await getUserById(authInfo.id)
       const authRequest : TSocketAuthRequest = {
         user : {id : authInfo.id, name : userInfo.name},
         isConnecting : true
@@ -107,11 +106,12 @@ const Chat = () => {
       const user = await getUserById(authInfo.id)
   
       setCurrentUser({
+        id : authInfo.id, // Added later
         name : user.name,
         username : user.username,
         email : user.email,
         role : authInfo.role,
-      })
+      })              
 
       if(firstLoad) {
         setInactivityTimer(user.name)
@@ -119,6 +119,7 @@ const Chat = () => {
 
     } catch(e) {
       setHasErrors(true)
+      console.log(`error : retrieving the current user.`)
     }
 
   }
@@ -139,6 +140,7 @@ const Chat = () => {
 
     } catch (e) {
       setHasErrors(true)
+      console.log(`error : creating room if none are found.`)
     }
 
   }
@@ -152,7 +154,7 @@ const Chat = () => {
       const sortedLocalRooms = sortByAlphabeticalOrder(unsortedLocalRooms)
       const hasValidRooms = !!sortedLocalRooms[0]    
       const authInfo : TRes = await authStatus({})   
-      const chats : {userId : string, chatId : string}[] = await getChatsByUserId(authInfo.id)   
+      const chats : {userId : string, chatId : string}[] = await getChatsByUserId(authInfo.id)
 
       if(!hasValidRooms) {
         return
@@ -168,7 +170,7 @@ const Chat = () => {
           selectId : 0,
           name : sortedLocalRooms[0].name
         })        
-        const foundUserInChat = chats.find((chat) => chat.chatId == sortedLocalRooms[0].id)
+        const foundUserInChat = chats.length > 0 ? chats.find((c) => c.chatId == sortedLocalRooms[0].id) : ''
         setIsUserInroom(!!foundUserInChat)
       } else if (!isNumberOfRoomsTheSame!) {        
         const updatedSelectId = sortedLocalRooms.findIndex((room) => room.id.trim() == currentRoom.id.trim())      
@@ -177,7 +179,7 @@ const Chat = () => {
           selectId : updatedSelectId, 
           name : sortedLocalRooms[updatedSelectId].name
         })
-        const foundUserInChat = chats.find((chat) => chat.chatId == sortedLocalRooms[updatedSelectId].id)
+        const foundUserInChat = chats.length > 0 ? chats.find((c) => c.chatId == sortedLocalRooms[updatedSelectId].id) : ''
         setIsUserInroom(!!foundUserInChat)
         setReload(reload + 1)
       }
@@ -186,6 +188,7 @@ const Chat = () => {
 
     } catch (e) {      
       setHasErrors(true)
+      console.log(`error : retrieving rooms.`)
     }
     
   }  
@@ -215,23 +218,14 @@ const Chat = () => {
         const authInfo = await authStatus({})
         const rawMessages = await getMessages() // Getting all messages to filter them based on room, change this later.
         const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)
-        const uniqueIdList = new Set<string>()
-        //const uniqueNameList = new Set<string>()
-        const userNameList : string[] = []        
+        const uniqueIdList = new Set<string>()                
+        const roomUserList :{id : string, name : string}[] = []
     
         const convertedMessages = filteredMessages.map((m : TMessage) => {
 
-          if(!uniqueIdList.has(m.senderId)) {
+          if(!uniqueIdList.has(m.senderId)) {            
             uniqueIdList.add(m.senderId)
-            userNameList.push(m.senderName)
-            // if(!uniqueNameList.has(m.senderName)) {
-            //   uniqueNameList.add(m.senderName)
-            //   userNameList.push(m.senderName)
-            // } else {
-            //   const uuid = generateUniqueId()
-            //   uniqueNameList.add(`${m.senderName} ${uuid}`)
-            //   userNameList.push(`${m.senderName} ${uuid}`)
-            // }
+            roomUserList.push({id : m.senderId, name : m.senderName})
           }
 
           return {
@@ -241,17 +235,19 @@ const Chat = () => {
             created_at: convertDatetimeToMilliseconds(m.created_at),
             updated_at: convertDatetimeToMilliseconds(m.updated_at),
             room: m.chatId,
+            isUserSender : m.senderId == authInfo.id
           }
 
         })
             
         const sortedMessages = sortByMilliseconds(convertedMessages)
 
-        setRoomUsers(userNameList)
+        setRoomUsers(roomUserList)
         setMessages(sortedMessages)
 
       } catch (e) {
         setHasErrors(true)
+        console.log(`error : retrieving messages.`)
       }
 
   }
@@ -259,7 +255,7 @@ const Chat = () => {
   const addMessage = async (newMessage : TChatMessage) => { // Removed Async    
     setMessages((rest) => ([
       ...rest, 
-      newMessage
+      newMessage,       
     ]))
   }
 
@@ -289,26 +285,26 @@ const Chat = () => {
         return
       }
   
-      const userInfo = await authStatus({})
+      const authInfo = await authStatus({})
 
-      if (!userInfo.authenticated) {              
+      if (!authInfo.authenticated) {              
         notifyUser('Not Allowed!', 'error')
         resetMessageContent()
         return
       }
 
-      await addUserToChat(userInfo.id, currentRoom.id) // Adding user to chat without checking.
+      await addUserToChat(authInfo.id, currentRoom.id) // Adding user to chat without checking.
   
       const savedMessageId = await createMessage(
-        userInfo.id,
+        authInfo.id,
         currentRoom.id,
         newMessage.content,
-        newMessage.user
+        newMessage.user,        
       ) as string
 
       const savedMessage = {
-        id : savedMessageId,        
-        ...newMessage
+        id : savedMessageId,
+        ...newMessage,         
       }      
 
       if(socket?.disconnected) {
@@ -318,12 +314,12 @@ const Chat = () => {
       const delay = useDelayOnEmit ? 500 : 0 // Prevents the socket from being disconnected too early.       
 
       setTimeout(() => {
-        socket?.emit(`room`, savedMessage, (response : boolean) => {
+        socket?.emit(`room`, {...savedMessage, isUserSender : false}, (response : boolean) => {
           if (response) {
             console.log(`Message Sent Successfully : ${response}`)
           } else {
-            console.log(`Failed to Send the Message`)
             setHasErrors(true)
+            console.log(`error : failed when sending message to socket.`)
           }
         })
         if(currentUser?.name && !isUserInRoom) {
@@ -332,14 +328,7 @@ const Chat = () => {
             room : currentRoom.id,
             notifyRoomOnly : true
           }
-          setRoomUsers([...roomUsers, currentUser.name])
-          // const isDuplicate = roomUsers.find((rm) => rm == currentUser.name)
-          // if(!isDuplicate) {
-          //   setRoomUsers([...roomUsers, currentUser.name])
-          // } else {
-          //   const uuid = generateUniqueId()
-          //   setRoomUsers([...roomUsers, `${currentUser.name} ${uuid}`])
-          // }
+          setRoomUsers([...roomUsers, {id : authInfo.id, name : currentUser.name}])          
           setIsUserInroom(true)
           socket?.emit('messageChange', socketPayload)
         }
@@ -347,12 +336,13 @@ const Chat = () => {
 
       console.log(`Sending message : ${JSON.stringify(savedMessage)}, socket connection : ${socket?.connected}`)
 
-      addMessage(savedMessage)
+      addMessage({...savedMessage, isUserSender : true})
       resetMessageContent()
       setUseDelayOnEmit(false)
 
     } catch (e) {
       setHasErrors(true)
+      console.log(`error : when sending message.`)
       setUseDelayOnEmit(false)
     }
 
@@ -385,6 +375,7 @@ const Chat = () => {
 
     } catch (e) {
       setHasErrors(true)
+      console.log(`error : when creating a new room.`)
     }
 
   }
@@ -395,6 +386,7 @@ const Chat = () => {
       notifyUser(`${roomMessage != `` ? roomMessage : `New message in `}${selectedRoom.name}`)
     } catch (e) {
       setHasErrors(true)    
+      console.log(`error : when notifying the user in room.`)
     }
   }
 
@@ -420,6 +412,7 @@ const Chat = () => {
 
     } catch (e) {
       setHasErrors(true)
+      console.log(`error : when deleting all rooms.`)
     }
 
   }
@@ -592,13 +585,13 @@ const Chat = () => {
       }
     })
 
-    socket?.on(`auth`, (currentOnlineUsers : string[]) => {
+    socket?.on(`auth`, (currentOnlineUsers : {id : string, name : string}[]) => {
       console.log(`socket on auth : ${currentRoom?.id}`)
       setOnlineUsers(currentOnlineUsers)
       setRefreshChat(true)
     })
 
-    socket?.on(`inactive`, (currentInactiveUsers : string[]) => {
+    socket?.on(`inactive`, (currentInactiveUsers : {id : string, name : string}[]) => {
       console.log(`socket on auth : ${currentRoom?.id}`)
       setInactiveUsers(currentInactiveUsers)
       setRefreshChat(true)
@@ -616,7 +609,7 @@ const Chat = () => {
         } else {
           notifyUser(`Something Went Wrong, please try again later`, `warning`)
           setIsServerOnline(false)
-          setHasErrors(false)
+          setHasErrors(false)          
           setReload(0)
         }
       } else {
@@ -738,11 +731,7 @@ const Chat = () => {
       return
     }
     setReload(reload + 1)
-  }, [auth])
-
-  useEffect(() => {
-    setNickname(null)
-  }, [roomUsers.length])
+  }, [auth])  
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -903,55 +892,38 @@ const Chat = () => {
           <span className={`bg-transparent m-1 rounded-lg ${roomUsers.length >= 10 ? `overflow-y-scroll` : ``} w-full min-h-[20px] max-h-[312px]`}>
             {isUserInRoom ? <p 
               title={currentUser.name ? `You are online.` : `You are offline.`} 
-              className={!userActivity ? `text-orange-400 font-bold` : `text-green-400 font-bold`}                    
+              className={userActivity ? `text-green-400 font-bold` : `text-orange-400 font-bold`}
               >{currentUser.name}
             </p> : ''}
             {    
               roomUsers.length > 0 ? 
-                roomUsers.map((user, id) => {
-                  
-                  if(id == nickname) {
-                    return <></>
+                roomUsers.map((user : {id : string ,name : string}, id : number) => {   
+
+                  const isCurrentUser = currentUser.id == user.id
+
+                  if(isCurrentUser) {
+                    return
                   }
 
-                  const isCurrentUserName = currentUser.name == user
-
-                  if(isCurrentUserName && nickname == null) {
-                    setNickname(id)
-                  }
-
-                  const isUserInactive = inactiveUsers.find((iu) => iu == user)
-
-                  const isUserOnline = onlineUsers.find((onlineUser) => {
-                    if (onlineUser == user) {
-                      return onlineUser
-                    }
-                  })
+                  const isUserOnline = onlineUsers.find((ou) => ou.id == user.id)
+                  const isUserInactive = isUserOnline ? inactiveUsers.find((iu) => iu.id == user.id) : null          
                   
                   let className = ''
 
                   if (isUserOnline) { // changed from ternary, causing problems on firefox.
-                    if (isCurrentUserName && id == nickname) {
-                      if (!userActivity) {
-                        className = 'text-pink-400'
-                      } else {
-                        className = 'text-purple-400'
-                      }
+                    if (isUserInactive) {
+                      className = 'text-orange-400'
                     } else {
-                      if (isUserInactive) {
-                        className = 'text-orange-400'
-                      } else {
-                        className = 'text-green-400'
-                      }
+                      className = 'text-green-400'
                     }
                   } else {
                     className = 'text-gray-300'
-                  }
+                  }                  
 
                   return <p 
-                    title={isUserOnline ? `${user} is online.` : `${user} is offline.`} 
+                    title={isUserOnline ? `${user.name} is online.` : `${user.name} is offline.`} 
                     className={className}                    
-                    key={`roomUser-${id}`}>{cropMessage(`${user}`, 8)}
+                    key={`roomUser-${id}`}>{cropMessage(`${user.name}`, 8)}
                   </p>
 
                 }) : 
@@ -984,8 +956,7 @@ const Chat = () => {
                 ` ${autoScroll ? `bg-[#050D20] hover:bg-black` : `bg-[#050D20] hover:bg-black`}
                 rounded-lg disabled:cursor-not-allowed`
               }              
-              onClick={() => {
-                // notifyUser(`Messages : ${messages.length}, Users : ${roomUsers.length}`)
+              onClick={() => {                
                 setAutoScroll((prev) => !prev)
               }}
             >   
@@ -1013,9 +984,9 @@ const Chat = () => {
 
         <div className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll`} ref={chatContainerRef}> 
 
-          {messages?.map((message, id) => {
+          {messages?.map((message : TChatMessage, id : number) => {
 
-            const isUserSender = currentUser.name == message.user
+            const isUserSender = message.isUserSender
             const isMessageSelected = message.id == messageBeingEdited.id
             const isMessageFocused = document.activeElement == messageContainerRef.current
 
@@ -1279,11 +1250,11 @@ const Chat = () => {
             disabled={!!reload || firstLoad || !isServerOnline}
             title={`Currently spamming the chat.`}
             onClick={ async () => {                                                    
-              //setSpam((lastSpam) => !lastSpam)
+              setSpam((lastSpam) => !lastSpam)
               //setUserActivity ? setUserActivity(!userActivity) : ''
               //setReload(reload + 1)
               //setRefreshChat(true)
-              setReload(reload + 1)
+              //setReload(reload + 1)
             }}
           />
 
@@ -1295,19 +1266,13 @@ const Chat = () => {
       <div className='flex absolute bg-tranparent top-auto bottom-0 m-8 gap-2'>
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
           Render : {renderCounter}
-        </h3>
-        {/* <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
-          Inactive Users : {inactiveUsers.length}
-        </h3> */}
+        </h3>        
         {/* <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
           {isTyping ? `💬` : `〰️`}
         </h3> */}
         <h3 className={`flex mb-5 ${socket?.connected ? `bg-green-600` : `bg-red-600` } rounded-lg p-3`}>          
           socket {socket?.connected ? 'on' : 'off'}
-        </h3>
-        {/* <h3 className={`flex mb-5 bg-black rounded-lg p-3`}>
-          {`First Load : ${firstLoad ? `T` : `F`}`}
-        </h3> */}
+        </h3>        
         <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
           {roomUsers.length}
         </h3>
