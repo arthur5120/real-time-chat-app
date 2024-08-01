@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
-import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getMessageById, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
+import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessageById, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
@@ -9,8 +9,8 @@ import { toastContext } from '../../utils/contexts/toast-provider'
 import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { 
-  faEye, faEyeSlash, faCircleInfo, faStop, faPause, faPlay, faAngleDoubleDown, 
-  faArrowsRotate, faArrowsSpin, faClipboard, faClipboardCheck, faUpDown, 
+  faEye, faEyeSlash, faCircleInfo, faStop, faPause, faPlay, faAngleDoubleDown,
+  faArrowsRotate, faArrowsSpin, faClipboard, faClipboardCheck, faUpDown,
 } from '@fortawesome/free-solid-svg-icons'
 
 import CustomSelect from '../atoms/select'
@@ -39,8 +39,9 @@ type TSocketPayload = Partial<{content : string, notification : string, room : s
 const Chat = () => {
 
   const [rooms, setRooms] = useState<TRooms>(roomsPlaceholder)
-  const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
   const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
+  const [isUserInRoom, setIsUserInroom] = useState(false)
+  const [currentUser, setCurrentUser] = useState<TUser>(userPlaceholder)
   const [roomUsers, setRoomUsers] = useState<string[]>([])
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]) // Update to use Unique Names
   const [inactiveUsers, setInactiveUsers] = useState<string[]>([])
@@ -62,7 +63,8 @@ const Chat = () => {
   const [firstLoad, setFirstLoad] = useState(true)
   const [reload, setReload] = useState(1)
   const [hasErrors, setHasErrors] = useState(false)
-  const [isServerOnline, setIsServerOnline] = useState(true)  
+  const [isServerOnline, setIsServerOnline] = useState(true)
+  const [nickname, setNickname] = useState<any>(null)
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)
@@ -85,11 +87,11 @@ const Chat = () => {
       const authInfo : TRes = localId == '' ? await authStatus({}) : {id : localId}
       const userInfo = await getUserById(authInfo.id)      
       const authRequest : TSocketAuthRequest = {
-        user : {id : authInfo.id, name : userInfo.name}, 
+        user : {id : authInfo.id, name : userInfo.name},
         isConnecting : true
-      }      
+      }
       socket?.emit(`auth`, authRequest)
-      socket?.emit(`authList`)      
+      socket?.emit(`authList`)
     } else {
       return
     }
@@ -145,15 +147,16 @@ const Chat = () => {
 
     console.log(`FUNCTION : Retrieving rooms.`)
 
-    try {
-      
+    try {            
       const unsortedLocalRooms = await getChats() as TChatRoom[]
       const sortedLocalRooms = sortByAlphabeticalOrder(unsortedLocalRooms)
-      const hasValidRooms = !!sortedLocalRooms[0]
+      const hasValidRooms = !!sortedLocalRooms[0]    
+      const authInfo : TRes = await authStatus({})   
+      const chats : {userId : string, chatId : string}[] = await getChatsByUserId(authInfo.id)   
 
       if(!hasValidRooms) {
         return
-      }
+      }      
 
       const isRoomIdEmpty = parseInt(currentRoom.id) <= 0
       const isRoomIdValid = !isRoomIdEmpty ? sortedLocalRooms.some((room : TChatRoom) => room.id.trim() == currentRoom.id.trim()) : false
@@ -164,14 +167,18 @@ const Chat = () => {
           id : sortedLocalRooms[0].id,
           selectId : 0,
           name : sortedLocalRooms[0].name
-        })
+        })        
+        const foundUserInChat = chats.find((chat) => chat.chatId == sortedLocalRooms[0].id)
+        setIsUserInroom(!!foundUserInChat)
       } else if (!isNumberOfRoomsTheSame!) {        
         const updatedSelectId = sortedLocalRooms.findIndex((room) => room.id.trim() == currentRoom.id.trim())      
         setCurrentRoom({
           id : sortedLocalRooms[updatedSelectId].id,
           selectId : updatedSelectId, 
           name : sortedLocalRooms[updatedSelectId].name
-        })                
+        })
+        const foundUserInChat = chats.find((chat) => chat.chatId == sortedLocalRooms[updatedSelectId].id)
+        setIsUserInroom(!!foundUserInChat)
         setReload(reload + 1)
       }
 
@@ -192,7 +199,7 @@ const Chat = () => {
         updated_at: convertDatetimeToMilliseconds(m.updated_at),
         room: m.chatId
     }
-  }  
+  }
 
   const retrieveMessages = async () => {  
     
@@ -209,21 +216,22 @@ const Chat = () => {
         const rawMessages = await getMessages() // Getting all messages to filter them based on room, change this later.
         const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)
         const uniqueIdList = new Set<string>()
-        const uniqueNameList = new Set<string>()
+        //const uniqueNameList = new Set<string>()
         const userNameList : string[] = []        
     
         const convertedMessages = filteredMessages.map((m : TMessage) => {
 
-          if(!uniqueIdList.has(m.senderId)) {            
+          if(!uniqueIdList.has(m.senderId)) {
             uniqueIdList.add(m.senderId)
-            if(!uniqueNameList.has(m.senderName)) {
-              uniqueNameList.add(m.senderName)
-              userNameList.push(m.senderName)
-            } else {
-              const uuid = generateUniqueId()
-              uniqueNameList.add(`${m.senderName} ${uuid}`)
-              userNameList.push(`${m.senderName} ${uuid}`)
-            }
+            userNameList.push(m.senderName)
+            // if(!uniqueNameList.has(m.senderName)) {
+            //   uniqueNameList.add(m.senderName)
+            //   userNameList.push(m.senderName)
+            // } else {
+            //   const uuid = generateUniqueId()
+            //   uniqueNameList.add(`${m.senderName} ${uuid}`)
+            //   userNameList.push(`${m.senderName} ${uuid}`)
+            // }
           }
 
           return {
@@ -307,7 +315,7 @@ const Chat = () => {
         socket?.connect()
       }
 
-      const delay = useDelayOnEmit ? 500 : 0 // Prevents the socket from being disconnected too early.      
+      const delay = useDelayOnEmit ? 500 : 0 // Prevents the socket from being disconnected too early.       
 
       setTimeout(() => {
         socket?.emit(`room`, savedMessage, (response : boolean) => {
@@ -318,19 +326,21 @@ const Chat = () => {
             setHasErrors(true)
           }
         })
-        if(currentUser?.name && !isUserOnList) {
+        if(currentUser?.name && !isUserInRoom) {
           const socketPayload : TSocketPayload = {
             notification : `${currentUser.name} has entered `,
             room : currentRoom.id,
             notifyRoomOnly : true
           }
-          const isDuplicate = roomUsers.find((rm) => rm == currentUser.name)
-          if(!isDuplicate) {
-            setRoomUsers([...roomUsers, currentUser.name])
-          } else {
-            const uuid = generateUniqueId()
-            setRoomUsers([...roomUsers, `${currentUser.name} ${uuid}`])
-          }
+          setRoomUsers([...roomUsers, currentUser.name])
+          // const isDuplicate = roomUsers.find((rm) => rm == currentUser.name)
+          // if(!isDuplicate) {
+          //   setRoomUsers([...roomUsers, currentUser.name])
+          // } else {
+          //   const uuid = generateUniqueId()
+          //   setRoomUsers([...roomUsers, `${currentUser.name} ${uuid}`])
+          // }
+          setIsUserInroom(true)
           socket?.emit('messageChange', socketPayload)
         }
       }, delay)
@@ -340,8 +350,6 @@ const Chat = () => {
       addMessage(savedMessage)
       resetMessageContent()
       setUseDelayOnEmit(false)
-          
-      const isUserOnList = roomUsers.find((name) => name == currentUser.name) // Short List
 
     } catch (e) {
       setHasErrors(true)
@@ -732,6 +740,10 @@ const Chat = () => {
     setReload(reload + 1)
   }, [auth])
 
+  useEffect(() => {
+    setNickname(null)
+  }, [roomUsers.length])
+
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
     const selectedMessage = e.target as HTMLSpanElement
@@ -889,13 +901,26 @@ const Chat = () => {
         <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28 max-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center select-none`}>
           <h3 className={`bg-white text-black rounded p-1 w-full`}>Room Users</h3>
           <span className={`bg-transparent m-1 rounded-lg ${roomUsers.length >= 10 ? `overflow-y-scroll` : ``} w-full min-h-[20px] max-h-[312px]`}>
-            {              
+            {isUserInRoom ? <p 
+              title={currentUser.name ? `You are online.` : `You are offline.`} 
+              className={!userActivity ? `text-orange-400 font-bold` : `text-green-400 font-bold`}                    
+              >{currentUser.name}
+            </p> : ''}
+            {    
               roomUsers.length > 0 ? 
                 roomUsers.map((user, id) => {
+                  
+                  if(id == nickname) {
+                    return <></>
+                  }
 
                   const isCurrentUserName = currentUser.name == user
-                  const inactiveUserId = inactiveUsers.findIndex((iu) => iu == user)
-                  const isUserInactive = inactiveUserId > -1
+
+                  if(isCurrentUserName && nickname == null) {
+                    setNickname(id)
+                  }
+
+                  const isUserInactive = inactiveUsers.find((iu) => iu == user)
 
                   const isUserOnline = onlineUsers.find((onlineUser) => {
                     if (onlineUser == user) {
@@ -906,11 +931,11 @@ const Chat = () => {
                   let className = ''
 
                   if (isUserOnline) { // changed from ternary, causing problems on firefox.
-                    if (isCurrentUserName) {
+                    if (isCurrentUserName && id == nickname) {
                       if (!userActivity) {
-                        className = 'text-orange-400'
+                        className = 'text-pink-400'
                       } else {
-                        className = 'text-green-400'
+                        className = 'text-purple-400'
                       }
                     } else {
                       if (isUserInactive) {
@@ -925,13 +950,8 @@ const Chat = () => {
 
                   return <p 
                     title={isUserOnline ? `${user} is online.` : `${user} is offline.`} 
-                    className={className}
-                    // className={
-                    //   `${isUserOnline ? (
-                    //       isCurrentUserName ? (!userActivity ? `text-orange-400` : `text-green-400`) : (isUserInactive ? `text-orange-400` : `text-green-400`)
-                    //     ) : `text-gray-300`}`
-                    // }
-                    key={`roomUser-${id}`}>{cropMessage(user, 8)}
+                    className={className}                    
+                    key={`roomUser-${id}`}>{cropMessage(`${user}`, 8)}
                   </p>
 
                 }) : 
@@ -1292,7 +1312,7 @@ const Chat = () => {
           {roomUsers.length}
         </h3>
         <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
-          {`Reload : ${reload}`}
+          {`User in Room : ${isUserInRoom}`}
         </h3>        
       </div>
      

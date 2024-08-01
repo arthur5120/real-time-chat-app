@@ -31,7 +31,7 @@ setInterval(() => {
 
 const connectUser = (user) => {
     
-    try { 
+    try {
         
         if(!user?.id || user?.id == `` || user?.id == null || user?.id == `none`) {
             console.log(`invalid id while connecting`)

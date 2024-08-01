@@ -65,9 +65,9 @@
 
 // Done yesterday
 
-Add check to socket connections to prevent invalid entries on the online list when disconnecting users due to multiple sessions. Add validation to socket to prevent invalid entries in the online List on user disconnection due to multiple sessions.
+Make the socket use user ids to check the user inactivity status. Change the roomUsers state operations to handle repeated names.
 
 // Done today
 
-Make the socket use user ids to check the user inactivity status. Change the roomUsers state operations to handle repeated names.
-
+Change retrieveRooms function to check if the user is in the current room using their IDs and update the state.
+Update UI separating the current user inactivity state from users.
