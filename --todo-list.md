@@ -62,13 +62,13 @@
 # Chat flickering, maybe due to too many messages. (Limit the number of messages rendered, use lazy loading.)
 # Sending inactivity status change erroneously.
 # User going inactive even when clicking. Scheduling is not resetting properly.
+# Maybe change the user diff on the retrieveMessages to a uuid and use it instead of the database id?
 
 // Done yesterday
 
-Change retrieveRooms function to check if the user is in the current room using their IDs and update the state.
-Update UI separating the current user inactivity state from users.
+Update the chat component and the socket to use objects with both the users ids and names to handle repeated names.
+Add check to retrieveRooms function to prevent it from searching an empty array.
 
 // Done today
 
-Update the chat component and the socket to use objects with both the users ids and names to handle repeated names.
-Add check to retrieveRooms function to prevent it from searching an empty array.
+Implement a method to generate a consistent emoji for each user based on their ID, to distinguish users with the same name. Fix name undefined on room user list during auto-logout.

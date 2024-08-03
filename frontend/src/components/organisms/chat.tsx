@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef, useState, Fragment } from 'react'
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessageById, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
-import { convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
+import { convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getItemFromString, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
@@ -31,20 +31,24 @@ const bugsToFix = [
   `Reload not resetting when the data is fetched, locking the user out of the UI.`
 ]
 
+const colors = ['red','green','blue','yellow','orange','purple','pink','cyan','magenta','lime',]  
+const emojis = [`🥗`, `🌮`, `🍙`, `🍘`, `🍥`, `🍨`, `☕️`, `🎂`, `🥡`, `🍵`, `🍢`, `🍡`]
+
 type TCurrentRoom = {id : string, selectId : number, name : string}
-type TRooms = {id : string, name : string}[]
+type TRoom = {id : string, name : string}
+type TRoomUser = {id : string, name : string, diff ? : {nameEmoji ? : string, nameColor ? : string}}
 type TMessageBeingEdited = TChatMessage & {previous ? : string, wasEdited : boolean}
 type TSocketPayload = Partial<{content : string, notification : string, room : string, notifyRoomOnly : boolean}>
 
 const Chat = () => {
 
-  const [rooms, setRooms] = useState<TRooms>(roomsPlaceholder)
+  const [rooms, setRooms] = useState<TRoom[]>(roomsPlaceholder)
   const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
   const [isUserInRoom, setIsUserInroom] = useState(false)
   const [currentUser, setCurrentUser] = useState<{id ? : string} & TUser>(userPlaceholder)
-  const [roomUsers, setRoomUsers] = useState<{id : string, name : string}[]>([])
-  const [onlineUsers, setOnlineUsers] = useState<{id : string, name : string}[]>([]) // Update to use Unique Names
-  const [inactiveUsers, setInactiveUsers] = useState<{id : string, name : string}[]>([])
+  const [roomUsers, setRoomUsers] = useState<TRoomUser[]>([])
+  const [onlineUsers, setOnlineUsers] = useState<TRoomUser[]>([]) // Update to use Unique Names
+  const [inactiveUsers, setInactiveUsers] = useState<TRoomUser[]>([])
   const [userActivity, setUserActivity] = useState(true)
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
   const [messages, setMessages] = useState<TChatMessage[]>([])
@@ -103,7 +107,9 @@ const Chat = () => {
     try {
 
       const authInfo : TRes = await authStatus({})
-      const user = await getUserById(authInfo.id)
+      const user = await getUserById(authInfo.id)      
+      const emoji = getItemFromString(`${authInfo.id}`, emojis)          
+      const color = getItemFromString(`${authInfo.id}`, colors)
   
       setCurrentUser({
         id : authInfo.id, // Added later
@@ -111,6 +117,7 @@ const Chat = () => {
         username : user.username,
         email : user.email,
         role : authInfo.role,
+        diff : {nameEmoji : emoji, nameColor : color}
       })              
 
       if(firstLoad) {
@@ -204,7 +211,7 @@ const Chat = () => {
     }
   }
 
-  const retrieveMessages = async () => {  
+  const retrieveMessages = async () => {
     
     console.log(`FUNCTION : Retrieving messages.`)
     
@@ -219,18 +226,25 @@ const Chat = () => {
         const rawMessages = await getMessages() // Getting all messages to filter them based on room, change this later.
         const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)
         const uniqueIdList = new Set<string>()                
-        const roomUserList :{id : string, name : string}[] = []
+        const roomUserList : TRoomUser[] = []           
     
         const convertedMessages = filteredMessages.map((m : TMessage) => {
 
-          if(!uniqueIdList.has(m.senderId)) {            
-            uniqueIdList.add(m.senderId)
-            roomUserList.push({id : m.senderId, name : m.senderName})
+          const emoji = getItemFromString(`${m.senderId}`, emojis)
+          const color = getItemFromString(`${m.senderId}`, colors)
+
+          if(!uniqueIdList.has(m.senderId)) {
+            uniqueIdList.add(m.senderId)            
+            roomUserList.push({
+              id : m.senderId, 
+              name : m.senderName, 
+              diff : {nameColor : color, nameEmoji : emoji}
+            })
           }
 
           return {
             id : m.id,
-            user: m.senderId == authInfo.id ? currentUser.name : m.senderName,
+            user: m.senderId == authInfo.id ? `${emoji} ${currentUser.name}` : `${emoji} ${m.senderName}`,
             content: m.content,
             created_at: convertDatetimeToMilliseconds(m.created_at),
             updated_at: convertDatetimeToMilliseconds(m.updated_at),
@@ -303,8 +317,9 @@ const Chat = () => {
       ) as string
 
       const savedMessage = {
-        id : savedMessageId,
-        ...newMessage,         
+        id : savedMessageId, 
+        ...newMessage, 
+        user : currentUser?.name ? `${currentUser.diff?.nameEmoji} ${currentUser.name}` : ''
       }      
 
       if(socket?.disconnected) {
@@ -719,8 +734,7 @@ const Chat = () => {
   }, [messages.length])
 
   useEffect(() => {
-    if (refreshChat) {
-      //notifyUser(`refreshing messages.`)
+    if (refreshChat) {      
       retrieveMessages()
       setRefreshChat(false)
     }
@@ -888,16 +902,18 @@ const Chat = () => {
       <section className={usersOnlineSection}>
 
         <div className={`flex ${verticalView ? `justify-start gap-2 rounded-lg w-80` : `justify-center gap-1 flex-col mx-2 min-w-28 max-w-28`} bg-slate-900 rounded-lg p-2 text-center items-center select-none`}>
-          <h3 className={`bg-white text-black rounded p-1 w-full`}>Room Users</h3>
+          <h3 className={`bg-white text-black rounded p-1 w-full`}>
+            Room Users
+          </h3>
           <span className={`bg-transparent m-1 rounded-lg ${roomUsers.length >= 10 ? `overflow-y-scroll` : ``} w-full min-h-[20px] max-h-[312px]`}>
             {isUserInRoom ? <p 
-              title={currentUser.name ? `You are online.` : `You are offline.`} 
+              title={currentUser.name ? `You are online.` : `You are offline.`}
               className={userActivity ? `text-green-400 font-bold` : `text-orange-400 font-bold`}
-              >{currentUser.name}
+              > {`${currentUser?.name ? currentUser.name : ``}`}
             </p> : ''}
             {    
               roomUsers.length > 0 ? 
-                roomUsers.map((user : {id : string ,name : string}, id : number) => {   
+                roomUsers.map((user : TRoomUser, id : number) => {
 
                   const isCurrentUser = currentUser.id == user.id
 
@@ -908,22 +924,25 @@ const Chat = () => {
                   const isUserOnline = onlineUsers.find((ou) => ou.id == user.id)
                   const isUserInactive = isUserOnline ? inactiveUsers.find((iu) => iu.id == user.id) : null          
                   
-                  let className = ''
+                  let className = ``                                                    
 
                   if (isUserOnline) { // changed from ternary, causing problems on firefox.
-                    if (isUserInactive) {
-                      className = 'text-orange-400'
-                    } else {
-                      className = 'text-green-400'
+
+                    if (!isUserInactive) {
+                      className = `text-green-400`
+                    } else {                      
+                      className = `text-orange-400`
                     }
-                  } else {
-                    className = 'text-gray-300'
-                  }                  
+
+                  } else {                    
+                    className = `text-gray-400`
+                  }     
 
                   return <p 
                     title={isUserOnline ? `${user.name} is online.` : `${user.name} is offline.`} 
-                    className={className}                    
-                    key={`roomUser-${id}`}>{cropMessage(`${user.name}`, 8)}
+                    className={`${className}`}                    
+                    key={`roomUser-${id}`}>
+                      {cropMessage(`${user.name}`, 12)}
                   </p>
 
                 }) : 
@@ -940,7 +959,7 @@ const Chat = () => {
 
           <h3 className='bg-transparent justify-start m-2'>
             {
-            // 🔘 🔴 🟠 🟡 🟢 🔵 🟣 ⚫️ ⚪️ 🟤      
+            // 🔘 🔴 🟠 🟡 🟢 🔵 🟣 ⚫️ ⚪️ 🟤
             (auth && currentUser?.name) ? 
               `${userActivity ? `🟢` : `🟠`} Chatting as ${cropMessage(currentUser.name, 8)} ` : 
               isServerOnline ? `🔴 Chatting as Guest` : `🔘 Offline`
@@ -982,22 +1001,29 @@ const Chat = () => {
 
         </div>
 
-        <div className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll`} ref={chatContainerRef}> 
+        <div 
+
+          className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll`}
+          ref={chatContainerRef}>
 
           {messages?.map((message : TChatMessage, id : number) => {
+
+            // 🥗 🌮 🍣 🍙 🍘 🍥 🍨 ☕️ 🎂 🥡 🍵 🍢🍡
 
             const isUserSender = message.isUserSender
             const isMessageSelected = message.id == messageBeingEdited.id
             const isMessageFocused = document.activeElement == messageContainerRef.current
-
-            // 🥗 🌮 🍣 🍙 🍘 🍥 🍨 ☕️ 🎂 🥡 🍵 🍢🍡
+            const userEmoji = currentUser.diff?.nameEmoji ? currentUser.diff?.nameEmoji : `🍣`
+            const userName = currentUser.name ? currentUser.name : `You`
             
             return (
 
               <Fragment key={`message-fragment-${id}`}>
 
                 <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 py-2 justify-end bg-transparent`}>
-                  <h4 className={`bg-transparent font-semibold ${isUserSender ? 'text-yellow-500' : ''}`}>{isUserSender ? `🍣 You` : `🥡 ${message.user}`}</h4>
+                  <h4 className={`bg-transparent font-semibold ${isUserSender ? 'text-yellow-500 cursor-default' : ''}`}>
+                    {isUserSender ? `${userEmoji} ${userName}` : `${message.user}`}
+                  </h4>
                 </span>
                             
                 <span // Editable component with `children` managed by React.
@@ -1055,10 +1081,10 @@ const Chat = () => {
                   </button> : ''}
                   
                   { isMessageFocused ? <button
-                    id={`${editMenuButtonPrefix}-confirm`}                    
-                    className='hover:bg-slate-600 rounded-full' 
-                    data-action={`confirm`} 
-                    title={`Confirm`} 
+                    id={`${editMenuButtonPrefix}-confirm`}
+                    className='hover:bg-slate-600 rounded-full'
+                    data-action={`confirm`}
+                    title={`Confirm`}
                     onClick={(e) => onClickEditModeIcon(e)}>
                       &#10003;
                   </button> : ''}
@@ -1175,10 +1201,12 @@ const Chat = () => {
 
             }  
 
-            <button title={`Copy room name to clipboard`} onClick={() => copyRoomNameToClipboard()}
+            <button 
+              title={`Copy room name to clipboard`} 
+              onClick={() => copyRoomNameToClipboard()}
               disabled={!!reload || firstLoad || !isServerOnline}
-                className={`${copiedToClipboard ? `bg-green-700 hover:bg-green-600` : `bg-[#050D20] hover:bg-black`} rounded-lg disabled:cursor-not-allowed h-full w-[48px]`}
-              >
+              className={`${copiedToClipboard ? `bg-green-700 hover:bg-green-600` : `bg-[#050D20] hover:bg-black`} rounded-lg disabled:cursor-not-allowed h-full w-[48px]`}
+            >
               {copiedToClipboard ? 
                 <FontAwesomeIcon icon={faClipboardCheck}/> : 
                 <FontAwesomeIcon icon={faClipboard}/>

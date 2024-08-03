@@ -59,3 +59,12 @@ export const cropMessage = (msg : string, limit : number = 20) => {
     const croppedMessage = msg.trim().slice(0, limit)
     return msg.length <= limit ? croppedMessage : `${croppedMessage}...`
 }
+
+export const  getItemFromString = (str : string, arr : string[]) => {
+    let hash = 0
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    hash = (hash & 0x7FFFFFFF) % arr.length
+    return arr[hash]
+}
