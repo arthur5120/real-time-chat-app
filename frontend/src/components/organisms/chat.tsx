@@ -31,7 +31,7 @@ const bugsToFix = [
   `Reload not resetting when the data is fetched, locking the user out of the UI.`
 ]
 
-const colors = ['red','green','blue','yellow','orange','purple','pink','cyan','magenta','lime',]  
+const textColors = ['text-red-400','text-blue-400','text-yellow-400','text-purple-400','text-pink-400','text-cyan-400','text-lime-400','text-indigo-400','text-teal-400','text-sky-400','text-violet-400','text-fuchsia-400','text-rose-400',]
 const emojis = [`🥗`, `🌮`, `🍙`, `🍘`, `🍥`, `🍨`, `☕️`, `🎂`, `🥡`, `🍵`, `🍢`, `🍡`]
 
 type TCurrentRoom = {id : string, selectId : number, name : string}
@@ -109,7 +109,7 @@ const Chat = () => {
       const authInfo : TRes = await authStatus({})
       const user = await getUserById(authInfo.id)      
       const emoji = getItemFromString(`${authInfo.id}`, emojis)          
-      const color = getItemFromString(`${authInfo.id}`, colors)
+      const color = getItemFromString(`${authInfo.id}`, textColors)
   
       setCurrentUser({
         id : authInfo.id, // Added later
@@ -231,7 +231,7 @@ const Chat = () => {
         const convertedMessages = filteredMessages.map((m : TMessage) => {
 
           const emoji = getItemFromString(`${m.senderId}`, emojis)
-          const color = getItemFromString(`${m.senderId}`, colors)
+          const color = getItemFromString(`${m.senderId}`, textColors)
 
           if(!uniqueIdList.has(m.senderId)) {
             uniqueIdList.add(m.senderId)            
@@ -908,8 +908,28 @@ const Chat = () => {
           <span className={`bg-transparent m-1 rounded-lg ${roomUsers.length >= 10 ? `overflow-y-scroll` : ``} w-full min-h-[20px] max-h-[312px]`}>
             {isUserInRoom ? <p 
               title={currentUser.name ? `You are online.` : `You are offline.`}
-              className={userActivity ? `text-green-400 font-bold` : `text-orange-400 font-bold`}
-              > {`${currentUser?.name ? currentUser.name : ``}`}
+              className={`flex gap-x-2`}> 
+
+                <span 
+                  className={
+                    `w-2 h-2 self-center bg-white rounded-full ${
+                      userActivity ? `bg-green-400` : `bg-orange-400`
+                    }`
+                  }
+                ></span>
+
+                <span
+                  className={
+                    `${
+                      userActivity ? 
+                      (currentUser?.diff?.nameColor ? currentUser?.diff?.nameColor : `text-green-400`) :
+                      (currentUser?.diff?.nameColor ? currentUser?.diff?.nameColor.replace(`400`, `500`) : `text-orange-400`)
+                    }`
+                  }
+                >
+                  {`${currentUser?.name ? cropMessage(`${currentUser.name}`, 8) : ``}`}                  
+                </span>
+
             </p> : ''}
             {    
               roomUsers.length > 0 ? 
@@ -924,27 +944,37 @@ const Chat = () => {
                   const isUserOnline = onlineUsers.find((ou) => ou.id == user.id)
                   const isUserInactive = isUserOnline ? inactiveUsers.find((iu) => iu.id == user.id) : null          
                   
-                  let className = ``                                                    
+                  let textStyle = ``, backgroundStyle = ``, title = ``                 
+                  const userNameColor = user?.diff?.nameColor ? user?.diff?.nameColor : `text-green-400`
+                  const userNameColorInactive = userNameColor.replace(`400`, `700`)                  
 
                   if (isUserOnline) { // changed from ternary, causing problems on firefox.
 
-                    if (!isUserInactive) {
-                      className = `text-green-400`
-                    } else {                      
-                      className = `text-orange-400`
+                    if (!isUserInactive) { // Active
+                      textStyle = `${userNameColor}`
+                      backgroundStyle = `bg-green-400`
+                      title = `${user.name} is online`
+                    } else { // Inactive
+                      textStyle = `${userNameColorInactive} italic`
+                      backgroundStyle = `bg-orange-400`
+                      title = `${user.name} is inactive`
                     }
 
-                  } else {                    
-                    className = `text-gray-400`
-                  }     
+                  } else { // Offline      
+                    textStyle = `text-gray-400`
+                    backgroundStyle = `bg-gray-400`
+                    title = `${user.name} is offline`
+                  }
 
-                  return <p 
-                    title={isUserOnline ? `${user.name} is online.` : `${user.name} is offline.`} 
-                    className={`${className}`}                    
-                    key={`roomUser-${id}`}>
-                      {cropMessage(`${user.name}`, 12)}
-                  </p>
-
+                  return (
+                    <p title={`${title}`} className={`flex gap-2`} key={`roomUser-${id}`}>
+                      <span className={`w-2 h-2 self-center bg-white rounded-full ${backgroundStyle}`}>                                              
+                      </span>
+                      <span className={`justify-self-center ${textStyle}`}>
+                        {cropMessage(`${user.name}`, 8)}
+                      </span>
+                    </p>
+                  )
                 }) : 
               <p className={`text-gray-400`}>...</p>
             }

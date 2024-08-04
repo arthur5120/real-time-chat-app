@@ -63,12 +63,12 @@
 # Sending inactivity status change erroneously.
 # User going inactive even when clicking. Scheduling is not resetting properly.
 # Maybe change the user diff on the retrieveMessages to a uuid and use it instead of the database id?
+# Update inactive status redundantly when sending message on the other end.
 
 // Done yesterday
 
-Update the chat component and the socket to use objects with both the users ids and names to handle repeated names.
-Add check to retrieveRooms function to prevent it from searching an empty array.
+Implement a method to generate a consistent emoji for each user based on their ID, to distinguish users with the same name. Fix name undefined on room user list during auto-logout.
 
 // Done today
 
-Implement a method to generate a consistent emoji for each user based on their ID, to distinguish users with the same name. Fix name undefined on room user list during auto-logout.
+Make each name on room users list have a different color and a status visual indicator to its side.
