@@ -161,10 +161,13 @@ io.on('connection', (socket) => {
         //io.emit('change', message)
     })
 
-    socket.on('messageChange', (message) => { // content, notification, room (id)
+    socket.on('minorChange', (message, callback = null) => { // content, notification, room (id) (change with no reload)
         console.log(message.notification.trim().replace(/\s+/g, ' '))
-        socket.broadcast.emit(`messageChange`, message)
-        //io.emit('messageChange', message)
+        if (callback != null) {
+            callback(onlineUsers.length)
+        }
+        socket.broadcast.emit(`minorChange`, message)
+        //io.emit('minorChange', message)
     })   
 
     socket.on('auth', (authRequest) => {

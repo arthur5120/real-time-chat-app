@@ -67,7 +67,7 @@ const Chat = () => {
   const [firstLoad, setFirstLoad] = useState(true)
   const [reload, setReload] = useState(1)
   const [hasErrors, setHasErrors] = useState(false)
-  const [isServerOnline, setIsServerOnline] = useState(true)  
+  const [isServerOnline, setIsServerOnline] = useState(true)
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)
@@ -84,10 +84,10 @@ const Chat = () => {
     }
   }
 
-  const addUserToOnlineList = async () => {   
+  const addUserToOnlineList = async () => {
     const authInfo = await authStatus({})
     const isUserOnList = onlineUsers.find((u) => u.id == authInfo.id)
-    if(!isUserOnList) {            
+    if(!isUserOnList) {
       const userInfo = await getUserById(authInfo.id)
       const authRequest : TSocketAuthRequest = {
         user : {id : authInfo.id, name : userInfo.name},
@@ -107,8 +107,8 @@ const Chat = () => {
     try {
 
       const authInfo : TRes = await authStatus({})
-      const user = await getUserById(authInfo.id)      
-      const emoji = getItemFromString(`${authInfo.id}`, emojis)          
+      const user = await getUserById(authInfo.id)
+      const emoji = getItemFromString(`${authInfo.id}`, emojis)
       const color = getItemFromString(`${authInfo.id}`, textColors)
   
       setCurrentUser({
@@ -118,7 +118,7 @@ const Chat = () => {
         email : user.email,
         role : authInfo.role,
         diff : {nameEmoji : emoji, nameColor : color}
-      })              
+      })
 
       if(firstLoad) {
         setInactivityTimer(user.name)
@@ -131,7 +131,7 @@ const Chat = () => {
 
   }
 
-  const createRoomIfNoneAreFound = async () => {      
+  const createRoomIfNoneAreFound = async () => {
     
     console.log(`FUNCTION : Creating room if none are found.`)
 
@@ -156,29 +156,33 @@ const Chat = () => {
 
     console.log(`FUNCTION : Retrieving rooms.`)
 
-    try {            
+    try {
+
       const unsortedLocalRooms = await getChats() as TChatRoom[]
       const sortedLocalRooms = sortByAlphabeticalOrder(unsortedLocalRooms)
-      const hasValidRooms = !!sortedLocalRooms[0]    
-      const authInfo : TRes = await authStatus({})   
+      const hasValidRooms = !!sortedLocalRooms[0]
+      const authInfo : TRes = await authStatus({})
       const chats : {userId : string, chatId : string}[] = await getChatsByUserId(authInfo.id)
 
       if(!hasValidRooms) {
         return
-      }      
+      }
 
       const isRoomIdEmpty = parseInt(currentRoom.id) <= 0
       const isRoomIdValid = !isRoomIdEmpty ? sortedLocalRooms.some((room : TChatRoom) => room.id.trim() == currentRoom.id.trim()) : false
       const isNumberOfRoomsTheSame = unsortedLocalRooms.length == rooms.length
 
       if (isRoomIdEmpty || !isRoomIdValid) {
+
         setCurrentRoom({
           id : sortedLocalRooms[0].id,
           selectId : 0,
           name : sortedLocalRooms[0].name
-        })        
+        })
+
         const foundUserInChat = chats.length > 0 ? chats.find((c) => c.chatId == sortedLocalRooms[0].id) : ''
         setIsUserInroom(!!foundUserInChat)
+
       } else if (!isNumberOfRoomsTheSame!) {        
         const updatedSelectId = sortedLocalRooms.findIndex((room) => room.id.trim() == currentRoom.id.trim())      
         setCurrentRoom({
@@ -266,10 +270,10 @@ const Chat = () => {
 
   }
 
-  const addMessage = async (newMessage : TChatMessage) => { // Removed Async    
+  const addMessage = async (newMessage : TChatMessage) => { // Removed Async
     setMessages((rest) => ([
-      ...rest, 
-      newMessage,       
+      ...rest,
+      newMessage,
     ]))
   }
 
@@ -329,9 +333,13 @@ const Chat = () => {
       const delay = useDelayOnEmit ? 500 : 0 // Prevents the socket from being disconnected too early.       
 
       setTimeout(() => {
-        socket?.emit(`room`, {...savedMessage, isUserSender : false}, (response : boolean) => {
+        socket?.emit(`room`, {...savedMessage, isUserSender : false}, (response : {received : boolean, currentOnlineUsers : number}) => {
           if (response) {
-            console.log(`Message Sent Successfully : ${response}`)
+            console.log(`Message Sent Successfully : ${response.received}`)
+              if(onlineUsers.length != response.currentOnlineUsers) {
+                notifyUser(`The online users list was updated`)
+                setReload(reload  + 1) // Make this update the online user list in a better way later. 
+              }          
           } else {
             setHasErrors(true)
             console.log(`error : failed when sending message to socket.`)
@@ -343,9 +351,9 @@ const Chat = () => {
             room : currentRoom.id,
             notifyRoomOnly : true
           }
-          setRoomUsers([...roomUsers, {id : authInfo.id, name : currentUser.name}])          
+          setRoomUsers([...roomUsers, {id : authInfo.id, name : currentUser.name}])
           setIsUserInroom(true)
-          socket?.emit('messageChange', socketPayload)
+          socket?.emit('minorChange', socketPayload)
         }
       }, delay)
 
@@ -575,9 +583,9 @@ const Chat = () => {
 
     })
       
-    socket?.on('messageChange', (msg : TSocketPayload) => {      
+    socket?.on('minorChange', (msg : TSocketPayload) => {
       const {notification, room, notifyRoomOnly} = msg
-      console.log(`socket on messageChange : ${room}`)
+      console.log(`socket on minorChange : ${room}`)
       if(notification && showNotifications) {
         if(room) {
           if (room == currentRoom.id || !notifyRoomOnly) {
@@ -814,7 +822,7 @@ const Chat = () => {
         const socketPayload : TSocketPayload = {
           notification : `The message "${cropMessage(editedMessage)}" was deleted on ${currentRoom.name}`
         }
-        socket?.emit('messageChange', socketPayload)
+        socket?.emit('minorChange', socketPayload)
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
         setRefreshChat(true)
         break
@@ -832,7 +840,7 @@ const Chat = () => {
           const socketPayload : TSocketPayload = {
             notification : `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`
           }
-          socket?.emit('messageChange', socketPayload)
+          socket?.emit('minorChange', socketPayload)
           setRefreshChat(true)
         }
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
@@ -906,13 +914,13 @@ const Chat = () => {
             Room Users
           </h3>
           <span className={`bg-transparent m-1 rounded-lg ${roomUsers.length >= 10 ? `overflow-y-scroll` : ``} w-full min-h-[20px] max-h-[312px]`}>
-            {isUserInRoom ? <p 
+            {isUserInRoom && auth ? <p 
               title={currentUser.name ? `You are online.` : `You are offline.`}
-              className={`flex gap-x-2`}> 
+              className={`flex gap-x-2`}>
 
                 <span 
                   className={
-                    `w-2 h-2 self-center bg-white rounded-full ${
+                    `w-2 h-2 self-center mt-1 rounded-full ${
                       userActivity ? `bg-green-400` : `bg-orange-400`
                     }`
                   }
@@ -923,7 +931,7 @@ const Chat = () => {
                     `${
                       userActivity ? 
                       (currentUser?.diff?.nameColor ? currentUser?.diff?.nameColor : `text-green-400`) :
-                      (currentUser?.diff?.nameColor ? currentUser?.diff?.nameColor.replace(`400`, `500`) : `text-orange-400`)
+                      (currentUser?.diff?.nameColor ? currentUser?.diff?.nameColor : `text-orange-400`)
                     }`
                   }
                 >
@@ -942,11 +950,11 @@ const Chat = () => {
                   }
 
                   const isUserOnline = onlineUsers.find((ou) => ou.id == user.id)
-                  const isUserInactive = isUserOnline ? inactiveUsers.find((iu) => iu.id == user.id) : null          
+                  const isUserInactive = isUserOnline ? inactiveUsers.find((iu) => iu.id == user.id) : null
                   
-                  let textStyle = ``, backgroundStyle = ``, title = ``                 
+                  let textStyle = ``, backgroundStyle = ``, title = ``
                   const userNameColor = user?.diff?.nameColor ? user?.diff?.nameColor : `text-green-400`
-                  const userNameColorInactive = userNameColor.replace(`400`, `700`)                  
+                  const userNameColorInactive = userNameColor
 
                   if (isUserOnline) { // changed from ternary, causing problems on firefox.
 
@@ -960,7 +968,7 @@ const Chat = () => {
                       title = `${user.name} is inactive`
                     }
 
-                  } else { // Offline      
+                  } else { // Offline
                     textStyle = `text-gray-400`
                     backgroundStyle = `bg-gray-400`
                     title = `${user.name} is offline`
@@ -968,7 +976,7 @@ const Chat = () => {
 
                   return (
                     <p title={`${title}`} className={`flex gap-2`} key={`roomUser-${id}`}>
-                      <span className={`w-2 h-2 self-center bg-white rounded-full ${backgroundStyle}`}>                                              
+                      <span className={`w-2 h-2 mt-1 self-center rounded-full ${backgroundStyle}`}>
                       </span>
                       <span className={`justify-self-center ${textStyle}`}>
                         {cropMessage(`${user.name}`, 8)}
@@ -1232,7 +1240,7 @@ const Chat = () => {
             }  
 
             <button 
-              title={`Copy room name to clipboard`} 
+              title={`Copy room name to clipboard`}
               onClick={() => copyRoomNameToClipboard()}
               disabled={!!reload || firstLoad || !isServerOnline}
               className={`${copiedToClipboard ? `bg-green-700 hover:bg-green-600` : `bg-[#050D20] hover:bg-black`} rounded-lg disabled:cursor-not-allowed h-full w-[48px]`}
@@ -1247,7 +1255,7 @@ const Chat = () => {
 
         </div>
       
-      </section> 
+      </section>
 
       <section className={buttonSectionStyle}>
                 
@@ -1271,7 +1279,7 @@ const Chat = () => {
 
           />
         
-          <CustomButton 
+          <CustomButton
 
             value={
               <span className={`flex flex-col gap-1`}>
@@ -1324,7 +1332,7 @@ const Chat = () => {
       <div className='flex absolute bg-tranparent top-auto bottom-0 m-8 gap-2'>
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
           Render : {renderCounter}
-        </h3>        
+        </h3>
         {/* <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
           {isTyping ? `💬` : `〰️`}
         </h3> */}
