@@ -71,7 +71,7 @@ const Chat = () => {
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)
-  let messageContainerRef =  useRef<HTMLSpanElement>(null)  
+  let messageContainerRef =  useRef<HTMLSpanElement>(null)
   let handleUserActivityRef = useRef<() => void>(() => {})
 
   const socket = useContext(socketContext)
@@ -152,7 +152,7 @@ const Chat = () => {
 
   }
 
-  const retrieveRooms = async () => {
+  const retrieveRooms = async () => {     
 
     console.log(`FUNCTION : Retrieving rooms.`)
 
@@ -183,7 +183,7 @@ const Chat = () => {
         const foundUserInChat = chats.length > 0 ? chats.find((c) => c.chatId == sortedLocalRooms[0].id) : ''
         setIsUserInroom(!!foundUserInChat)
 
-      } else if (!isNumberOfRoomsTheSame!) {        
+      } else if (!isNumberOfRoomsTheSame!) {
         const updatedSelectId = sortedLocalRooms.findIndex((room) => room.id.trim() == currentRoom.id.trim())      
         setCurrentRoom({
           id : sortedLocalRooms[updatedSelectId].id,
@@ -193,6 +193,9 @@ const Chat = () => {
         const foundUserInChat = chats.length > 0 ? chats.find((c) => c.chatId == sortedLocalRooms[updatedSelectId].id) : ''
         setIsUserInroom(!!foundUserInChat)
         setReload(reload + 1)
+      } else {
+        const foundUserInChat = chats.length > 0 ? chats.find((c) => c.chatId == currentRoom.id) : ''
+        setIsUserInroom(!!foundUserInChat)
       }
 
       setRooms(sortedLocalRooms)
@@ -221,7 +224,7 @@ const Chat = () => {
     
       try {
 
-        if(currentRoom.id == '-1') {          
+        if(currentRoom.id == '-1') {
           setReload(reload + 1)
           return
         }
@@ -284,7 +287,7 @@ const Chat = () => {
     }))
   }
 
-  const sendMessage = async (messageContent = '') => { 
+  const sendMessage = async (messageContent = '') => {
     
     const dateTimeNow = Date.now()
     
@@ -338,8 +341,8 @@ const Chat = () => {
             console.log(`Message Sent Successfully : ${response.received}`)
               if(onlineUsers.length != response.currentOnlineUsers) {
                 notifyUser(`The online users list was updated`)
-                setReload(reload  + 1) // Make this update the online user list in a better way later. 
-              }          
+                setReload(reload  + 1) // Make this update the online user list in a better way later.
+              }
           } else {
             setHasErrors(true)
             console.log(`error : failed when sending message to socket.`)
@@ -453,7 +456,7 @@ const Chat = () => {
     const selectId = e.target.selectedIndex
     const roomId = e.target[selectId].id
     const roomName = e.target[selectId].textContent
-    setCurrentRoom({id : roomId, selectId : selectId, name : roomName ? roomName : 'Unknown Room'})
+    setCurrentRoom({id : roomId, selectId : selectId, name : roomName ? roomName : 'Unknown Room'})    
     setReload(reload + 1)
   }
 
@@ -496,8 +499,8 @@ const Chat = () => {
     }
   }
 
-  const initializeAppData = async () => {
-    await retrieveCurrentUser()    
+  const initializeAppData = async () => {    
+    await retrieveCurrentUser()
     await createRoomIfNoneAreFound()
     await retrieveRooms()
     await retrieveMessages()
@@ -1327,24 +1330,26 @@ const Chat = () => {
        </div>
 
 
-      </section>      
+      </section>
              
       <div className='flex absolute bg-tranparent top-auto bottom-0 m-8 gap-2'>
+        {/*
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
           Render : {renderCounter}
         </h3>
-        {/* <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
+        <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
           {isTyping ? `💬` : `〰️`}
-        </h3> */}
+        </h3>
         <h3 className={`flex mb-5 ${socket?.connected ? `bg-green-600` : `bg-red-600` } rounded-lg p-3`}>          
           socket {socket?.connected ? 'on' : 'off'}
-        </h3>        
+        </h3>
         <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
           {roomUsers.length}
         </h3>
         <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
           {`User in Room : ${isUserInRoom}`}
-        </h3>        
+        </h3>
+        */}
       </div>
      
     </section>

@@ -142,7 +142,7 @@ io.on('connection', (socket) => {
         console.log(`${message.user} says "${message.content}".`)
         
         if (callback != null) {
-            callback(true)
+            callback({received : true, currentOnlineUsers : onlineUsers.length})
         }
 
         socket.broadcast.emit('room', message)

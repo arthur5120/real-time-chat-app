@@ -67,10 +67,11 @@
 
 // Done yesterday
 
-Make each name on room users list have a different color and a status visual indicator to its side.
-
-// Done today
-
 Add top margin to the status visual indicator on the room users for alignment.
 Conditionally load the status indicator and user names based on authentication status to prevent visual glitches.
 Implement a check when sending a new message and update the local online users list if the count differs from the socket's.
+
+// Done today
+
+Change the socket room function to handle the local users list update.
+Modify the retrieveRooms function to ensure the isUserInRoom state is updated when switching chat rooms.
