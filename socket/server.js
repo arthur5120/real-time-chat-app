@@ -137,15 +137,21 @@ io.on('connection', (socket) => {
 
     })    
 
-    socket.on('room', (message, callback = null) => { // Listening to Room
+    socket.on('room', (payload, callback = null) => { // Listening to Room        
+
+        const {message} = payload
 
         console.log(`${message.user} says "${message.content}".`)
         
         if (callback != null) {
-            callback({received : true, currentOnlineUsers : onlineUsers.length})
+            callback({
+                received : true, 
+                currentOnlineUsers : onlineUsers.length,
+                currentInactiveUsers : inactiveUsers.length
+            })
         }
 
-        socket.broadcast.emit('room', message)
+        socket.broadcast.emit('room', {...payload, inactiveUsersLength : inactiveUsers.length})
         
         //io.emit(`room`. message)
         //io.to(socket.id).emit('room', messages) // Sends String, Objects etc...

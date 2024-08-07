@@ -20,10 +20,8 @@ const roomsPlaceholder = [{id : '-1', name : ''}]
 const currentRoomPlaceHolder = {id : '-1', selectId : 0, name : ''}
 const editMenuButtonPrefix = `--em-btn--`
 
-const bugsToFix = [
-  `When server is out and comes back, the user can't logout due to the token and gets stuck on the chat screen.`,  
+const bugsToFix = [  
   `Editing the message fails sometimes.`,  
-  `useEffect rarely stops prematurely, locking the user from interacting with the UI.`,
   `A message is being added to the local chat erroneously for a moment before the chat loads the correct messages.`,
   `Edited status not showing on the other chats when freshly editing a message for the first time.`,
   `previous property on the messageBeingEdited state might not be updating correctly.`,
@@ -39,6 +37,7 @@ type TRoom = {id : string, name : string}
 type TRoomUser = {id : string, name : string, diff ? : {nameEmoji ? : string, nameColor ? : string}}
 type TMessageBeingEdited = TChatMessage & {previous ? : string, wasEdited : boolean}
 type TSocketPayload = Partial<{content : string, notification : string, room : string, notifyRoomOnly : boolean}>
+type TRoomLists = Partial<{currentOnlineUsers : number, currentInactiveUsers : number, currentRoomUsers : number}>
 
 const Chat = () => {
 
@@ -47,7 +46,7 @@ const Chat = () => {
   const [isUserInRoom, setIsUserInroom] = useState(false)
   const [currentUser, setCurrentUser] = useState<{id ? : string} & TUser>(userPlaceholder)
   const [roomUsers, setRoomUsers] = useState<TRoomUser[]>([])
-  const [onlineUsers, setOnlineUsers] = useState<TRoomUser[]>([]) // Update to use Unique Names
+  const [onlineUsers, setOnlineUsers] = useState<TRoomUser[]>([])
   const [inactiveUsers, setInactiveUsers] = useState<TRoomUser[]>([])
   const [userActivity, setUserActivity] = useState(true)
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
@@ -152,7 +151,7 @@ const Chat = () => {
 
   }
 
-  const retrieveRooms = async () => {     
+  const retrieveRooms = async () => {
 
     console.log(`FUNCTION : Retrieving rooms.`)
 
@@ -326,7 +325,8 @@ const Chat = () => {
       const savedMessage = {
         id : savedMessageId, 
         ...newMessage, 
-        user : currentUser?.name ? `${currentUser.diff?.nameEmoji} ${currentUser.name}` : ''
+        user : currentUser?.name ? `${currentUser.diff?.nameEmoji} ${currentUser.name}` : '',
+        isUserSender : false
       }      
 
       if(socket?.disconnected) {
@@ -336,12 +336,13 @@ const Chat = () => {
       const delay = useDelayOnEmit ? 500 : 0 // Prevents the socket from being disconnected too early.       
 
       setTimeout(() => {
-        socket?.emit(`room`, {...savedMessage, isUserSender : false}, (response : {received : boolean, currentOnlineUsers : number}) => {
+        socket?.emit(`room`, {message : savedMessage, currentRoomUsers : roomUsers.length}, 
+          (response : {received : boolean} & TRoomLists) => {
           if (response) {
             console.log(`Message Sent Successfully : ${response.received}`)
-              if(onlineUsers.length != response.currentOnlineUsers) {
-                notifyUser(`The online users list was updated`)
-                setReload(reload  + 1) // Make this update the online user list in a better way later.
+              if(onlineUsers.length != response.currentOnlineUsers || inactiveUsers.length != response.currentInactiveUsers) {
+                notifyUser(`The users list was updated`)
+                setReload(reload + 1) // Hard updating lists, find a better way to do this later, get list from socket and update it directly?.
               }
           } else {
             setHasErrors(true)
@@ -567,9 +568,16 @@ const Chat = () => {
     socket?.emit(`authList`)
     socket?.emit(`inactiveList`)
 
-    socket?.on('room', (msg : TChatMessage) => {      
+    socket?.on(`room`, (payload : {message : TChatMessage} & TRoomLists) => {
 
       console.log(`socket on room : ${currentRoom?.id}`)
+      
+      const {
+        message : msg, 
+        currentRoomUsers: usersInRoomNow,
+        currentOnlineUsers: usersOnlineNow,
+        currentInactiveUsers: usersInactiveNow
+      } = payload
 
       const {id, room} = msg
       const firstMessageId = messages?.length > 0 ? messages[0].id : -1
@@ -577,6 +585,12 @@ const Chat = () => {
       if (room == currentRoom.id) {
         if (id != firstMessageId) {
           addMessage(msg)
+          if (usersOnlineNow != onlineUsers.length) { // Updating list if different.
+            setRefreshChat(true)
+          }
+          if (usersInactiveNow != inactiveUsers.length || usersInRoomNow != roomUsers.length) { // Updating list if different.
+            setReload(reload + 1)
+          }      
         }
       } else {
         if(showNotifications) {
@@ -598,13 +612,13 @@ const Chat = () => {
           notifyUser(notification, `info`)
         }
         setRefreshChat(true)
-        //setReload(reload + 1)
       }
     })
 
     socket?.on('change', (msg : string) => {
       console.log(`socket on change : ${currentRoom?.id}`)
       setUseDelayOnEmit(true)
+      //setIsUserInroom(false)
       setReload(reload + 1)
       if (msg != ``) {
         notifyUser(msg, 'info')
@@ -1317,9 +1331,26 @@ const Chat = () => {
             variationName='varthree'
             className={`${spam ? `bg-yellow-500` : `bg-black`} active:bg-gray-900 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad || !isServerOnline}
-            title={`Currently spamming the chat.`}
-            onClick={ async () => {                                                    
-              setSpam((lastSpam) => !lastSpam)
+            //title={`Currently spamming the chat.`}
+            title={`Currently, adding a user to room users and changing the refreshChat state to true in a timer.`}
+            onClick={ async () => {
+              
+              const fakeRoomUser : TRoomUser = ({
+                id : `10`, 
+                name : `John Doe`,
+                diff : {nameColor : textColors[0], nameEmoji : emojis[0]}
+              })
+
+              setInactiveUsers((values) => ([
+                ...values,
+                fakeRoomUser
+              ]))
+              
+              setTimeout(() => {
+                setRefreshChat(true)
+              }, 5000)
+
+              //setSpam((lastSpam) => !lastSpam)
               //setUserActivity ? setUserActivity(!userActivity) : ''
               //setReload(reload + 1)
               //setRefreshChat(true)
@@ -1334,22 +1365,24 @@ const Chat = () => {
              
       <div className='flex absolute bg-tranparent top-auto bottom-0 m-8 gap-2'>
         {/*
+        <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
+        {isTyping ? `💬` : `〰️`}
+        </h3>        
+        */}
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
           Render : {renderCounter}
         </h3>
-        <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
-          {isTyping ? `💬` : `〰️`}
+        <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
+        {`Reload : ${reload}`}
         </h3>
         <h3 className={`flex mb-5 ${socket?.connected ? `bg-green-600` : `bg-red-600` } rounded-lg p-3`}>          
           socket {socket?.connected ? 'on' : 'off'}
         </h3>
         <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
-          {roomUsers.length}
+          (O : {onlineUsers.length})
+          (I : {inactiveUsers.length})
+          (R : {roomUsers.length})
         </h3>
-        <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
-          {`User in Room : ${isUserInRoom}`}
-        </h3>
-        */}
       </div>
      
     </section>

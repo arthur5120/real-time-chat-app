@@ -63,15 +63,19 @@
 # Sending inactivity status change erroneously.
 # User going inactive even when clicking. Scheduling is not resetting properly.
 # Maybe change the user diff on the retrieveMessages to a uuid and use it instead of the database id?
+
+# roomUsers not updating when a new user enters the room sometimes. [DONE]
 # Update inactive status redundantly when sending message on the other end.
+# Update inactivity status on sending a message on the list.
+# When resetting the rooms, the chat gets stuck on infinite reloading.
+# Make user lists update comparing uuid instead of number of users, or maybe dates.
+# User going inactive on logout.
 
 // Done yesterday
 
-Add top margin to the status visual indicator on the room users for alignment.
-Conditionally load the status indicator and user names based on authentication status to prevent visual glitches.
-Implement a check when sending a new message and update the local online users list if the count differs from the socket's.
+Change the socket room function to handle the local users list update.
+Modify the retrieveRooms function to ensure the isUserInRoom state is updated when switching chat rooms.
 
 // Done today
 
-Change the socket room function to handle the local users list update.
-Modify the retrieveRooms function to ensure the isUserInRoom state is updated when switching chat rooms.
+Implement check and update for user lists on sending/receiving new messages.
