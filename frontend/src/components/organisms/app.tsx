@@ -16,7 +16,7 @@ const App = () => {
   
   const [checkAuthStatus, setCheckAuthStatus] = useState(false)
   const [previousAuth, setPreviousAuth] = useState(auth)
-  const [hasSessionExpired, setHasSessionExpired] = useState(false)
+  const [hasSessionExpired, setHasSessionExpired] = useState(false)  
   const location = useLocation()
 
   const handleSocketOnlineList = async () => {        
@@ -126,6 +126,9 @@ const App = () => {
         <header>
           <AuthBanner/>          
           <Navbar />
+          <h3 className={`flex justify-center`}>
+            Auth : {JSON.stringify(auth)}
+          </h3>
         </header>
 
         <main>

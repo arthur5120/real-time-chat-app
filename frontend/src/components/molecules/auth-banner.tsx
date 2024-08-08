@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react"
+import { useContext, useEffect, useRef, useState } from "react"
 import { authContext } from "../../utils/contexts/auth-provider"
 import { useLocation } from "react-router-dom"
 import CustomTitle from "../atoms/title"
@@ -8,25 +8,30 @@ const AuthBanner = () => {
     const { auth, role } = useContext(authContext)
     const [authColor, setAuthColor] = useState('')
     const [authText, setAuthText] = useState('')
+    const authRef = useRef(auth)
     const location = useLocation()
   
     useEffect(() => {
 
-      const intervalId = setTimeout(() => {         
+      console.log(`changing banner to ${authRef.current ? `auth` : `not-auth`}`)
+
+      const timeoutId = setTimeout(() => {
         
-        if (auth) {          
+        if (authRef.current) {
           setAuthText(`Authenticated with ${role == 'Admin' ? 'Administrator' : role} Privileges`)
           setAuthColor('bg-emerald-600')
         } else {
           setAuthText('Not Authenticated')
           setAuthColor('bg-red-600')
         }
+        
+        authRef.current = auth
+
+        return () => {
+          clearTimeout(timeoutId)
+        }
 
       }, 50)
-  
-      return () => {
-        clearTimeout(intervalId)
-      }
 
     }, [auth, role, location])
   

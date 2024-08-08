@@ -65,17 +65,18 @@
 # Maybe change the user diff on the retrieveMessages to a uuid and use it instead of the database id?
 
 # roomUsers not updating when a new user enters the room sometimes. [DONE]
-# Update inactive status redundantly when sending message on the other end.
-# Update inactivity status on sending a message on the list.
+# Update inactive status redundantly when sending message on the other end. [DONE]
+# Update inactivity status when sending a message on the list. [DONE]
 # When resetting the rooms, the chat gets stuck on infinite reloading.
 # Make user lists update comparing uuid instead of number of users, or maybe dates.
 # User going inactive on logout.
+# Banner might be using stale auth states. [DONE]
+# Banner might be breaking due to everlapping state changes.
 
 // Done yesterday
 
-Change the socket room function to handle the local users list update.
-Modify the retrieveRooms function to ensure the isUserInRoom state is updated when switching chat rooms.
+Implement check and update for user lists on sending/receiving new messages.
 
 // Done today
 
-Implement check and update for user lists on sending/receiving new messages.
+Implement a check to prevent changing the inactivity status of offline users in the socket. Modify the auth banner component to use a reference to the auth state, ensuring it does not use a stale version. Update the socket check to prevent adding invalid IDs to the inactivity list.

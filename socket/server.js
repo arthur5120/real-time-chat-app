@@ -16,7 +16,7 @@ const expirationCheck = (expirationTime) => {
 }
 
 setInterval(() => {
-    const hereNow = Date.now()        
+    const hereNow = Date.now()
     if (expirationCheck(nextExpirationCheck) || nextExpirationCheck == -1) {
         console.log(`Running Expiration Check`)
         nextExpirationCheck = hereNow + (60 * 1000 * 5)
@@ -28,7 +28,7 @@ setInterval(() => {
             })
         }
     }
-    console.log(`Online : ${JSON.stringify(onlineUsersNames)}, next check in ${(((nextExpirationCheck - hereNow) / (1000 * 60)) | 0)}m.`)
+    console.log(`Online : ${JSON.stringify(onlineUsersNames)}, inactive : ${JSON.stringify(inactiveUsersNames)} next check in ${(((nextExpirationCheck - hereNow) / (1000 * 60)) | 0)}m.`)
 }, 5000)
 
 const connectUser = (user) => {
@@ -112,8 +112,15 @@ io.on('connection', (socket) => {
 
         console.log(`inactivity status change to ${inactive} for ${name}...`)
 
-        if(!name || name == `` || name == null || !id) {
-            console.log(`invalid name or id`)
+        if(!name || name == `` || name == null || !id || id == `none`) {
+            console.log(`Unable change inactivity : Invalid name or id`)
+            return
+        }
+
+        const onlineUser = onlineUsers.find((u) => u.id == id)
+
+        if(!onlineUser) {
+            console.log(`Unable change inactivity : Status user offline.`)
             return
         }
 

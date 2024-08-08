@@ -1,17 +1,14 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
-import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessageById, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
+import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
-import { convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getItemFromString, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
+import { convertDatetimeToMilliseconds, cropMessage, getItemFromString, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
 import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { 
-  faEye, faEyeSlash, faCircleInfo, faStop, faPause, faPlay, faAngleDoubleDown,
-  faArrowsRotate, faArrowsSpin, faClipboard, faClipboardCheck, faUpDown,
-} from '@fortawesome/free-solid-svg-icons'
+import { faEye, faEyeSlash, faPause, faArrowsRotate, faClipboard, faClipboardCheck,} from '@fortawesome/free-solid-svg-icons'
 
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
@@ -336,8 +333,9 @@ const Chat = () => {
       const delay = useDelayOnEmit ? 500 : 0 // Prevents the socket from being disconnected too early.       
 
       setTimeout(() => {
-        socket?.emit(`room`, {message : savedMessage, currentRoomUsers : roomUsers.length}, 
-          (response : {received : boolean} & TRoomLists) => {
+        socket?.emit(`room`, 
+          {message : savedMessage, currentRoomUsers : roomUsers.length},  // payload
+          (response : {received : boolean} & TRoomLists) => { // callback
           if (response) {
             console.log(`Message Sent Successfully : ${response.received}`)
               if(onlineUsers.length != response.currentOnlineUsers || inactiveUsers.length != response.currentInactiveUsers) {
@@ -523,7 +521,7 @@ const Chat = () => {
     }
   }
 
-  const handleUserActivity = async () => {
+  const handleUserActivity = async () => {    
     if (!userActivity) {
       //notifyUser(`Renewed Activity Status ${userActivity}`)
       setUserActivity(true)
@@ -563,7 +561,7 @@ const Chat = () => {
 
     if(socket?.disconnected) {
       socket?.connect()
-    }    
+    }
     
     socket?.emit(`authList`)
     socket?.emit(`inactiveList`)
@@ -573,7 +571,7 @@ const Chat = () => {
       console.log(`socket on room : ${currentRoom?.id}`)
       
       const {
-        message : msg, 
+        message : msg,
         currentRoomUsers: usersInRoomNow,
         currentOnlineUsers: usersOnlineNow,
         currentInactiveUsers: usersInactiveNow
@@ -590,7 +588,7 @@ const Chat = () => {
           }
           if (usersInactiveNow != inactiveUsers.length || usersInRoomNow != roomUsers.length) { // Updating list if different.
             setReload(reload + 1)
-          }      
+          }
         }
       } else {
         if(showNotifications) {
@@ -617,8 +615,7 @@ const Chat = () => {
 
     socket?.on('change', (msg : string) => {
       console.log(`socket on change : ${currentRoom?.id}`)
-      setUseDelayOnEmit(true)
-      //setIsUserInroom(false)
+      setUseDelayOnEmit(true)      
       setReload(reload + 1)
       if (msg != ``) {
         notifyUser(msg, 'info')
@@ -666,8 +663,7 @@ const Chat = () => {
         setFirstLoad(false)
       }
 
-    }
-  //}, [rooms.length, messages.length, currentRoom.id, reload, auth, showNotifications])
+    }  
   }, [rooms.length, currentRoom.id, reload, auth, showNotifications])
 
   useEffect(() => {
@@ -770,7 +766,7 @@ const Chat = () => {
       return
     }
     setReload(reload + 1)
-  }, [auth])  
+  }, [auth])
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -845,10 +841,7 @@ const Chat = () => {
         break
       }
 
-      case 'confirm' : {       
-        // BUG : Editing a message triggers a re-rendering on the other end, if the user is editing a message
-        // The text will be lost. use getMessageById to retrieve the edited message and update it separately
-        // Instead of triggering a new re-render to retrieve the whole chat.
+      case 'confirm' : {
         if(messageBeingEdited.wasEdited == true) {
           messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
           messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
