@@ -66,12 +66,12 @@ const connectUser = (user) => {
 
 const disconnectUser = (userId) => {
     
-   try { 
+   try {
     
         if(!userId || userId == `` || userId == null || userId == `none`) {
             console.log(`invalid id while disconnecting`)
             return
-        }        
+        }
 
        const onlineUserId = onlineUsers.findIndex((u) => u.id == userId)
        const inactiveUserId = onlineUserId != -1 ?         

@@ -72,15 +72,17 @@
 # User going inactive on logout.
 # Banner might be using stale auth states. [DONE]
 # Banner might be breaking due to everlapping state changes.
-# Inactive status updating unnecessarily.
+# Inactive status updating unnecessarily. [DONE]
 
 // Done yesterday
-
-Implement a check to prevent changing the inactivity status of offline users in the socket. Modify the auth banner component to use a reference to the auth state, ensuring it does not use a stale version. Update the socket check to prevent adding invalid IDs to the inactivity list.
-
-// Done today
 
 Implement an ID check before retrieving chat rooms to prevent 403 (Forbidden) errors due to invalid user IDs.
 Simplify the banner by conditionally loading an element based on the authentication status.
 Count keydown events as user activity by invoking the handleUserActivity function in the textarea event handler.
 Decrease the maximum length for the textarea to prevent messages from being deleted immediately after being sent.
+
+// Done today
+
+Prevent erroneous typing notifications for invalid users.
+Updated the typing indicator to display an icon next to the user name instead of a warning message.
+Reduced the delay on the typing socket emit function.

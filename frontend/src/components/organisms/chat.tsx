@@ -638,9 +638,18 @@ const Chat = () => {
     })
 
     socket?.on(`onTyping`, (payload : TRoomUser & {isTyping : boolean}) => {
-      const {name, isTyping} = payload
-      notifyUser(`${name} has ${isTyping ? `started` : `stopped`} typing.`)      
-      //setTypingUsers() Make add users to the list and prevent initial message.
+      const {id, name, isTyping} = payload      
+      if(isTyping) {
+        setTypingUsers((values) => ([
+          ...values,
+          {id : id, name : name}
+        ]))
+      } else {
+        let newTypingUsers = typingUsers
+        const typingUserID = newTypingUsers.findIndex((u) => u.id == id)
+        newTypingUsers.splice(typingUserID, 1)
+        setTypingUsers(newTypingUsers)
+      }      
     })
 
     if(currentRoom.id != '-1' && currentRoom.id != '0' && reload > 0) {
@@ -777,17 +786,20 @@ const Chat = () => {
     setReload(reload + 1)
   }, [auth])
 
-  useEffect(() => {    
+  useEffect(() => { 
+    if(firstLoad || currentUser.name == '') {
+      return
+    }
     if(updateTypingState) {
       socket?.connect()
       socket?.emit(`onTyping`, {id : currentUser.id, name : currentUser.name, isTyping : isTyping})
       setUpdateTypingState(false)
     }
-    const typeTimeout = setTimeout(() => {      
+    const typeTimeout = setTimeout(() => {
       setUpdateTypingState(true)
-    }, 500)
+    }, 50)
     return () => {
-      clearTimeout(typeTimeout)      
+      clearTimeout(typeTimeout)
     }
   }, [isTyping])
 
@@ -952,9 +964,9 @@ const Chat = () => {
           <span className={`bg-transparent m-1 rounded-lg ${roomUsers.length >= 10 ? `overflow-y-scroll` : ``} w-full min-h-[20px] max-h-[312px]`}>
             {isUserInRoom && auth ? <p 
               title={currentUser.name ? `You are online.` : `You are offline.`}
-              className={`flex gap-x-2`}>
+              className={`flex`}>
 
-                <span 
+                <span
                   className={
                     `w-2 h-2 self-center mt-1 rounded-full ${
                       userActivity ? `bg-green-400` : `bg-orange-400`
@@ -964,14 +976,18 @@ const Chat = () => {
 
                 <span
                   className={
-                    `${
+                    `ml-2 ${
                       userActivity ? 
                       (currentUser?.diff?.nameColor ? currentUser?.diff?.nameColor : `text-green-400`) :
                       (currentUser?.diff?.nameColor ? currentUser?.diff?.nameColor : `text-orange-400`)
                     }`
                   }
                 >
-                  {`${currentUser?.name ? cropMessage(`${currentUser.name}`, 8) : ``}`}                  
+                  {`${currentUser?.name ? cropMessage(`${currentUser.name}`, 5) : ``}`}                  
+                </span>
+
+                <span className={`ml-auto`}>
+                  {isTyping ? `💬` : `〰️`}
                 </span>
 
             </p> : ''}
@@ -979,7 +995,7 @@ const Chat = () => {
               roomUsers.length > 0 ? 
                 roomUsers.map((user : TRoomUser, id : number) => {
 
-                  const isCurrentUser = currentUser.id == user.id
+                  const isCurrentUser = currentUser.id == user.id                  
 
                   if(isCurrentUser) {
                     return
@@ -987,6 +1003,7 @@ const Chat = () => {
 
                   const isUserOnline = onlineUsers.find((ou) => ou.id == user.id)
                   const isUserInactive = isUserOnline ? inactiveUsers.find((iu) => iu.id == user.id) : null
+                  const isUserTyping = typingUsers.find((tu) => tu.id == user.id)
                   
                   let textStyle = ``, backgroundStyle = ``, title = ``
                   const userNameColor = user?.diff?.nameColor ? user?.diff?.nameColor : `text-green-400`
@@ -1011,11 +1028,14 @@ const Chat = () => {
                   }
 
                   return (
-                    <p title={`${title}`} className={`flex gap-2`} key={`roomUser-${id}`}>
+                    <p title={`${title}`} className={`flex`} key={`roomUser-${id}`}>
                       <span className={`w-2 h-2 mt-1 self-center rounded-full ${backgroundStyle}`}>
                       </span>
-                      <span className={`justify-self-center ${textStyle}`}>
-                        {cropMessage(`${user.name}`, 8)}
+                      <span className={` ml-2 ${textStyle}`}>
+                        {cropMessage(`${user.name}`, 5)}
+                      </span>
+                      <span className={`ml-auto`}>
+                        {isUserTyping ? `💬` : `〰️`}
                       </span>
                     </p>
                   )
@@ -1369,15 +1389,15 @@ const Chat = () => {
           (I : {inactiveUsers.length})
           (R : {roomUsers.length})
         </h3>
-        */}
         <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
-        {isTyping ? `💬` : `〰️`}
+          {isTyping ? `💬` : `〰️`}
         </h3>
+        */}        
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
           Render : {renderCounter}
         </h3>
         <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
-        {`Reload : ${reload}`}
+          {`Reload : ${reload}`}
         </h3>
         <h3 className={`flex mb-5 ${socket?.connected ? `bg-green-600` : `bg-red-600` } rounded-lg p-3`}>          
           socket {socket?.connected ? 'on' : 'off'}
