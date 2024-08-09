@@ -31,7 +31,7 @@ const emojis = [`🥗`, `🌮`, `🍙`, `🍘`, `🍥`, `🍨`, `☕️`, `🎂`
 
 type TCurrentRoom = {id : string, selectId : number, name : string}
 type TRoom = {id : string, name : string}
-type TRoomUser = {id : string, name : string, diff ? : {nameEmoji ? : string, nameColor ? : string}}
+type TRoomUser = {id : string, name ? : string, diff ? : {nameEmoji ? : string, nameColor ? : string}}
 type TMessageBeingEdited = TChatMessage & {previous ? : string, wasEdited : boolean}
 type TSocketPayload = Partial<{content : string, notification : string, room : string, notifyRoomOnly : boolean}>
 type TRoomLists = Partial<{currentOnlineUsers : number, currentInactiveUsers : number, currentRoomUsers : number}>
@@ -42,10 +42,12 @@ const Chat = () => {
   const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
   const [isUserInRoom, setIsUserInroom] = useState(false)
   const [currentUser, setCurrentUser] = useState<{id ? : string} & TUser>(userPlaceholder)
-  const [roomUsers, setRoomUsers] = useState<TRoomUser[]>([])
+  const [roomUsers, setRoomUsers] = useState<TRoomUser[]>([]) // Turn all these user lists into one later.
   const [onlineUsers, setOnlineUsers] = useState<TRoomUser[]>([])
   const [inactiveUsers, setInactiveUsers] = useState<TRoomUser[]>([])
-  const [userActivity, setUserActivity] = useState(true)
+  const [typingUsers, setTypingUsers] = useState<TRoomUser[]>([])
+  const [typingDelay, setTypingDelay] = useState<NodeJS.Timeout | null>(null)
+  const [userActivity, setUserActivity] = useState(true)  
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
   const [messages, setMessages] = useState<TChatMessage[]>([])
   const [refreshChat, setRefreshChat] = useState(false)
@@ -55,6 +57,7 @@ const Chat = () => {
   const [verticalView, setVerticalView] = useState(false)
   const [copiedToClipboard, setCopiedToClipboard] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
+  const [updateTypingState, setUpdateTypingState] = useState(true)
   const [inactivityTimerId, setInactivityTimerId] = useState<NodeJS.Timeout | null>(null)
   const [renderCounter, setRenderCounter] = useState(0)
   const [spam, setSpam] = useState(false)
@@ -158,7 +161,7 @@ const Chat = () => {
       const sortedLocalRooms = sortByAlphabeticalOrder(unsortedLocalRooms)
       const hasValidRooms = !!sortedLocalRooms[0]
       const authInfo : TRes = await authStatus({})
-      const chats : {userId : string, chatId : string}[] = await getChatsByUserId(authInfo.id)
+      const chats : {userId : string, chatId : string}[] = authInfo?.id && authInfo.id != `none` ? await getChatsByUserId(authInfo.id) : []
 
       if(!hasValidRooms) {
         return
@@ -176,7 +179,7 @@ const Chat = () => {
           name : sortedLocalRooms[0].name
         })
 
-        const foundUserInChat = chats.length > 0 ? chats.find((c) => c.chatId == sortedLocalRooms[0].id) : ''
+        const foundUserInChat = chats?.length > 0 ? chats.find((c) => c.chatId == sortedLocalRooms[0].id) : ''
         setIsUserInroom(!!foundUserInChat)
 
       } else if (!isNumberOfRoomsTheSame!) {
@@ -186,11 +189,11 @@ const Chat = () => {
           selectId : updatedSelectId, 
           name : sortedLocalRooms[updatedSelectId].name
         })
-        const foundUserInChat = chats.length > 0 ? chats.find((c) => c.chatId == sortedLocalRooms[updatedSelectId].id) : ''
+        const foundUserInChat = chats?.length > 0 ? chats.find((c) => c.chatId == sortedLocalRooms[updatedSelectId].id) : ''
         setIsUserInroom(!!foundUserInChat)
         setReload(reload + 1)
       } else {
-        const foundUserInChat = chats.length > 0 ? chats.find((c) => c.chatId == currentRoom.id) : ''
+        const foundUserInChat = chats?.length > 0 ? chats.find((c) => c.chatId == currentRoom.id) : ''
         setIsUserInroom(!!foundUserInChat)
       }
 
@@ -339,7 +342,7 @@ const Chat = () => {
           if (response) {
             console.log(`Message Sent Successfully : ${response.received}`)
               if(onlineUsers.length != response.currentOnlineUsers || inactiveUsers.length != response.currentInactiveUsers) {
-                notifyUser(`The users list was updated`)
+                notifyUser(`The users list was updated online check : ${onlineUsers.length != response.currentOnlineUsers} inactive check : ${inactiveUsers.length != response.currentInactiveUsers}`)
                 setReload(reload + 1) // Hard updating lists, find a better way to do this later, get list from socket and update it directly?.
               }
           } else {
@@ -521,7 +524,7 @@ const Chat = () => {
     }
   }
 
-  const handleUserActivity = async () => {    
+  const handleUserActivity = async () => {
     if (!userActivity) {
       //notifyUser(`Renewed Activity Status ${userActivity}`)
       setUserActivity(true)
@@ -634,6 +637,12 @@ const Chat = () => {
       setRefreshChat(true)
     })
 
+    socket?.on(`onTyping`, (payload : TRoomUser & {isTyping : boolean}) => {
+      const {name, isTyping} = payload
+      notifyUser(`${name} has ${isTyping ? `started` : `stopped`} typing.`)      
+      //setTypingUsers() Make add users to the list and prevent initial message.
+    })
+
     if(currentRoom.id != '-1' && currentRoom.id != '0' && reload > 0) {
       setReload(0)
     }
@@ -703,7 +712,7 @@ const Chat = () => {
 
   }, [currentUser.name])
 
-  useEffect(() => {  
+  useEffect(() => {  // Inactivity useEffect
     
     if(!isServerOnline) {
       return
@@ -767,6 +776,20 @@ const Chat = () => {
     }
     setReload(reload + 1)
   }, [auth])
+
+  useEffect(() => {    
+    if(updateTypingState) {
+      socket?.connect()
+      socket?.emit(`onTyping`, {id : currentUser.id, name : currentUser.name, isTyping : isTyping})
+      setUpdateTypingState(false)
+    }
+    const typeTimeout = setTimeout(() => {      
+      setUpdateTypingState(true)
+    }, 500)
+    return () => {
+      clearTimeout(typeTimeout)      
+    }
+  }, [isTyping])
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -904,14 +927,17 @@ const Chat = () => {
         handleUserActivity()
         if(!isTyping) {
           setIsTyping(true)
-        }
-      }}
-
-      onKeyUp={() => {
-        if(isTyping) {          
-          setTimeout(() => {
+          typingDelay ? clearTimeout(typingDelay) : ''
+          const localTypingDelay = setTimeout(() => {
             setIsTyping(false)
-          }, 1000)
+          }, 800)
+          setTypingDelay(localTypingDelay)
+        } else {
+          typingDelay ? clearTimeout(typingDelay) : ''
+          const localTypingDelay = setTimeout(() => {
+            setIsTyping(false)
+          }, 800)
+          setTypingDelay(localTypingDelay)
         }
       }}
 
@@ -1179,12 +1205,13 @@ const Chat = () => {
             id=''
             className={`items-start ${secondaryDefault} text-white rounded-lg resize-none p-1 m-1 h-full w-full`}
             cols={41}
-            rows={3}
-            maxLength={255}
-            onChange={(e) => {onTextareaChange(e)}}
+            rows={3}            
+            maxLength={191}            
+            onChange={(e) => {onTextareaChange(e)}}            
             placeholder={`Say something...`}
             value={message.content}
             onKeyDown={(e) => {
+              handleUserActivity()
               if (e.key === "Enter") {
                 if (e.ctrlKey || e.metaKey) {
                   sendMessage()
@@ -1324,30 +1351,9 @@ const Chat = () => {
             variationName='varthree'
             className={`${spam ? `bg-yellow-500` : `bg-black`} active:bg-gray-900 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad || !isServerOnline}
-            //title={`Currently spamming the chat.`}
-            title={`Currently, adding a user to room users and changing the refreshChat state to true in a timer.`}
+            title={`Currently spamming the chat.`}            
             onClick={ async () => {
-              
-              const fakeRoomUser : TRoomUser = ({
-                id : `10`, 
-                name : `John Doe`,
-                diff : {nameColor : textColors[0], nameEmoji : emojis[0]}
-              })
-
-              setInactiveUsers((values) => ([
-                ...values,
-                fakeRoomUser
-              ]))
-              
-              setTimeout(() => {
-                setRefreshChat(true)
-              }, 5000)
-
-              //setSpam((lastSpam) => !lastSpam)
-              //setUserActivity ? setUserActivity(!userActivity) : ''
-              //setReload(reload + 1)
-              //setRefreshChat(true)
-              //setReload(reload + 1)
+              setSpam((lastSpam) => !lastSpam)              
             }}
           />
 
@@ -1358,10 +1364,15 @@ const Chat = () => {
              
       <div className='flex absolute bg-tranparent top-auto bottom-0 m-8 gap-2'>
         {/*
+        <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
+          (O : {onlineUsers.length})
+          (I : {inactiveUsers.length})
+          (R : {roomUsers.length})
+        </h3>
+        */}
         <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
         {isTyping ? `💬` : `〰️`}
-        </h3>        
-        */}
+        </h3>
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
           Render : {renderCounter}
         </h3>
@@ -1370,11 +1381,6 @@ const Chat = () => {
         </h3>
         <h3 className={`flex mb-5 ${socket?.connected ? `bg-green-600` : `bg-red-600` } rounded-lg p-3`}>          
           socket {socket?.connected ? 'on' : 'off'}
-        </h3>
-        <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
-          (O : {onlineUsers.length})
-          (I : {inactiveUsers.length})
-          (R : {roomUsers.length})
         </h3>
       </div>
      

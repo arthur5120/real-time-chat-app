@@ -174,7 +174,7 @@ export const getChatById = async(id : string) => {
 }
 
 export const getChatsByUserId = async (userId : string) => {
-    try {
+    try {        
         const res = await baseURL.get(`users/${userId}/chats`)
         return res.data
     } catch (e) {

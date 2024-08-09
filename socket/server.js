@@ -207,16 +207,22 @@ io.on('connection', (socket) => {
 
     })
 
+    socket.on(`onTyping`, (payload) => { // {id : string, name : string, isTyping : boolean}
+        try {
+            const {name, isTyping} = payload
+            console.log(`${name} has ${isTyping ? `started` : `stopped`} typing.`)
+            socket.broadcast.emit(`onTyping`, payload)            
+        } catch (e) {
+            console.log(`auth error`)
+        }
+    })
+
     socket.on(`authList`, () => {
         io.emit(`auth`, onlineUsersNames)
     })
 
     socket.on(`inactiveList`, () => {
         io.emit('inactive', inactiveUsersNames)
-    })
-    
-    socket.on(``, () => {
-        
     })
 
 })
