@@ -4,10 +4,11 @@ const io = new Server({
     cors : {origin : 'http://localhost:5173'}
 })
 
-let onlineUsers = []
+let onlineUsers = [] // Turn all these into a single list later.
 let onlineUsersNames = []
 let inactiveUsers = []
 let inactiveUsersNames = []
+let typingUsers = new Set()
 let nextExpirationCheck = -1
 
 const expirationCheck = (expirationTime) => {
@@ -209,9 +210,14 @@ io.on('connection', (socket) => {
 
     socket.on(`onTyping`, (payload) => { // {id : string, name : string, isTyping : boolean}
         try {
-            const {name, isTyping} = payload
+            const {id, name, isTyping} = payload
             console.log(`${name} has ${isTyping ? `started` : `stopped`} typing.`)
-            socket.broadcast.emit(`onTyping`, payload)            
+            if(isTyping) {
+                typingUsers.add(id)
+            } else {
+                typingUsers.delete(id)
+            }
+            socket.broadcast.emit(`onTyping`, payload)
         } catch (e) {
             console.log(`auth error`)
         }
@@ -223,6 +229,11 @@ io.on('connection', (socket) => {
 
     socket.on(`inactiveList`, () => {
         io.emit('inactive', inactiveUsersNames)
+    })
+
+    socket.on(`typingList`, () => {
+        const typingListArray = Array.from(typingUsers)
+        io.to(socket.id).emit('onTyping', typingListArray)
     })
 
 })

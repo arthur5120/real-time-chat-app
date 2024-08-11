@@ -319,7 +319,7 @@ const Chat = () => {
         authInfo.id,
         currentRoom.id,
         newMessage.content,
-        newMessage.user,        
+        newMessage.user,
       ) as string
 
       const savedMessage = {
@@ -333,10 +333,12 @@ const Chat = () => {
         socket?.connect()
       }
 
+      socket?.emit(`onTyping`, {id : currentUser.id, name : currentUser.name, isTyping : false})
+
       const delay = useDelayOnEmit ? 500 : 0 // Prevents the socket from being disconnected too early.       
 
       setTimeout(() => {
-        socket?.emit(`room`, 
+        socket?.emit(`room`,
           {message : savedMessage, currentRoomUsers : roomUsers.length},  // payload
           (response : {received : boolean} & TRoomLists) => { // callback
           if (response) {
@@ -568,6 +570,7 @@ const Chat = () => {
     
     socket?.emit(`authList`)
     socket?.emit(`inactiveList`)
+    socket?.emit(`typingList`)
 
     socket?.on(`room`, (payload : {message : TChatMessage} & TRoomLists) => {
 
@@ -597,7 +600,7 @@ const Chat = () => {
         if(showNotifications) {
           notifyUserInRoom(room)
         }
-      }
+      }  
 
     })
       
@@ -763,6 +766,23 @@ const Chat = () => {
 
   }, [spam])
 
+  useEffect(() => { 
+    if(firstLoad || currentUser.name == '') {
+      return
+    }
+    if(updateTypingState) {      
+      socket?.connect()
+      socket?.emit(`onTyping`, {id : currentUser.id, name : currentUser.name, isTyping : isTyping})      
+      setUpdateTypingState(false)
+    }
+    const typeTimeout = setTimeout(() => {
+      setUpdateTypingState(true)
+    }, 50)
+    return () => {
+      clearTimeout(typeTimeout)
+    }
+  }, [isTyping]) 
+
   useEffect(() => {    
     if(!isServerOnline) {
       return
@@ -784,24 +804,7 @@ const Chat = () => {
       return
     }
     setReload(reload + 1)
-  }, [auth])
-
-  useEffect(() => { 
-    if(firstLoad || currentUser.name == '') {
-      return
-    }
-    if(updateTypingState) {
-      socket?.connect()
-      socket?.emit(`onTyping`, {id : currentUser.id, name : currentUser.name, isTyping : isTyping})
-      setUpdateTypingState(false)
-    }
-    const typeTimeout = setTimeout(() => {
-      setUpdateTypingState(true)
-    }, 50)
-    return () => {
-      clearTimeout(typeTimeout)
-    }
-  }, [isTyping])
+  }, [auth])  
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -942,13 +945,13 @@ const Chat = () => {
           typingDelay ? clearTimeout(typingDelay) : ''
           const localTypingDelay = setTimeout(() => {
             setIsTyping(false)
-          }, 800)
+          }, 500)
           setTypingDelay(localTypingDelay)
         } else {
           typingDelay ? clearTimeout(typingDelay) : ''
           const localTypingDelay = setTimeout(() => {
             setIsTyping(false)
-          }, 800)
+          }, 500)
           setTypingDelay(localTypingDelay)
         }
       }}
