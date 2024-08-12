@@ -223,17 +223,38 @@ io.on('connection', (socket) => {
         }
     })
 
-    socket.on(`authList`, () => {
-        io.emit(`auth`, onlineUsersNames)
+    socket.on(`authList`, (payload = null, callback = null) => {
+        try {
+            if(callback && onlineUsers?.length > 0) {
+                callback(onlineUsers)
+            }
+            io.emit(`auth`, onlineUsersNames)   
+        } catch (e) {
+            console.log(`error while updating list`)
+        }
     })
 
-    socket.on(`inactiveList`, () => {
-        io.emit('inactive', inactiveUsersNames)
+    socket.on(`inactiveList`, (payload = null, callback = null) => {
+       try {
+            if(callback && inactiveUsers?.length > 0) {
+                callback(inactiveUsers)
+            }
+            io.emit('inactive', inactiveUsersNames)
+        } catch (e) {
+            console.log(`error while updating list`)
+        }
     })
 
-    socket.on(`typingList`, () => {
-        const typingListArray = Array.from(typingUsers)
-        io.to(socket.id).emit('onTyping', typingListArray)
+    socket.on(`typingList`, (payload = null, callback = null) => {
+        try {
+            const typingListArray = Array.from(typingUsers)
+            if(callback && typingUsers?.length > 0) {
+                callback(typingUsers)
+            }
+            io.to(socket.id).emit('onTyping', typingListArray)
+        } catch (e) {
+            console.log(`error while updating list`)
+        }
     })
 
 })

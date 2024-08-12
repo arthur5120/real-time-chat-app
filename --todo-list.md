@@ -57,11 +57,11 @@
 # Maybe separate the socket operations into their own useEffect and use a useRef hook to not get stale states in a function.
 # Make onlineUsers array a Set instead.
 # Not removing user from socket online list during logout. [DONE]
-# Handle repeated names on the chat/socket room user list. (Maybe use a set with their ids/names)
+# Handle repeated names on the chat/socket room user list. (Maybe use a set with their ids/names) [DONE]
 # Adding null to the socket online list when auto-logout is performed due to duplicated sessions. [DONE]
 # Chat flickering, maybe due to too many messages. (Limit the number of messages rendered, use lazy loading.)
 # Sending inactivity status change erroneously.
-# User going inactive even when clicking. Scheduling is not resetting properly.
+# User going inactive even when clicking. Scheduling is not resetting properly. [DONE]
 # Maybe change the user diff on the retrieveMessages to a uuid and use it instead of the database id?
 
 # roomUsers not updating when a new user enters the room sometimes. [DONE]
@@ -71,17 +71,15 @@
 # Make user lists update comparing uuid instead of number of users, or maybe dates.
 # User going inactive on logout.
 # Banner might be using stale auth states. [DONE]
-# Banner might be breaking due to everlapping state changes.
+# Banner might be breaking due to overlapping state changes.
 # Inactive status updating unnecessarily. [DONE]
 # Typing status not updating when sending the message.
 # Find a way to update all the lists.
 
 // Done yesterday
 
-Prevent erroneous typing notifications for invalid users.
-Updated the typing indicator to display an icon next to the user name instead of a warning message.
-Reduced the delay on the typing socket emit function.
+Update typing status to false after sending a message to prevent it from freezing on the other end due to the socket disconnecting. Reduce typing status update delay to increase responsiveness.
 
 // Done today
 
-Update typing status to false after sending a message to prevent it from freezing on the other end due to the socket disconnecting. Reduce typing status update delay to increase responsiveness.
+Implement user list update on callback function when receiving list events.

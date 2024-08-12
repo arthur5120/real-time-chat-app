@@ -503,7 +503,7 @@ const Chat = () => {
     }
   }
 
-  const initializeAppData = async () => {    
+  const initializeAppData = async () => {
     await retrieveCurrentUser()
     await createRoomIfNoneAreFound()
     await retrieveRooms()
@@ -567,10 +567,14 @@ const Chat = () => {
     if(socket?.disconnected) {
       socket?.connect()
     }
+
+    const test = (arr : any) => {
+      notifyUser(JSON.stringify(arr))
+    }
     
-    socket?.emit(`authList`)
-    socket?.emit(`inactiveList`)
-    socket?.emit(`typingList`)
+    socket?.emit(`authList`, null, setOnlineUsers)
+    socket?.emit(`inactiveList`, null, setInactiveUsers)
+    socket?.emit(`typingList`, null, setTypingUsers)    
 
     socket?.on(`room`, (payload : {message : TChatMessage} & TRoomLists) => {
 
@@ -705,8 +709,8 @@ const Chat = () => {
         addUserToOnlineList()
       }, 200)
          
-      const handleBeforeUnload =  async () => { 
-        const authInfo : TRes = await authStatus({})        
+      const handleBeforeUnload =  async () => {
+        const authInfo : TRes = await authStatus({})
         socket?.connect()
         socket?.emit(`inactive`, {id : authInfo.id, name: currentUser.name, inactive: true})
       }
@@ -804,7 +808,7 @@ const Chat = () => {
       return
     }
     setReload(reload + 1)
-  }, [auth])  
+  }, [auth])
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
