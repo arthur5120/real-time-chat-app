@@ -68,3 +68,55 @@ export const  getItemFromString = (str : string, arr : string[]) => {
     hash = (hash & 0x7FFFFFFF) % arr.length
     return arr[hash]
 }
+
+export const isThingValid = (input : string | number | object | any[] | undefined | null) : boolean => {
+    try {
+         if (input == undefined || input == null) {
+             return false
+         }
+         if (typeof input == `string` && input?.trim() == ``) {
+             return false
+         }
+         if (typeof input == `number` && isNaN(input)) {
+             return false
+         }
+         if (typeof input == `object` && Object.keys(input).length == 0) {
+             return false
+         }
+         return true
+    } catch (e) {
+         return false
+    }   
+ }
+
+export const isThingValidSpecific = (input : any) : boolean => {
+   try {
+        if (input == undefined || input == null) {
+            return false
+        }
+        if (typeof input == `string` && input?.trim() == ``) {
+            return false
+        }
+        if (typeof input == `string` && input?.trim() == `0`) {
+            return false
+        }
+        if (typeof input == `string` && input?.trim() == `-1`) {
+            return false
+        }        
+        if (typeof input == `number` && input <= 0) {
+            return false
+        }
+        if (typeof input == `number` && isNaN(input)) {
+            return false
+        }
+        if (typeof input == `object` && Object.keys(input).length == 0) {
+            return false
+        }
+        if (Array.isArray(input) && input.length == 0) {
+            return false
+        }
+        return true
+   } catch (e) {
+        return false
+   }   
+}

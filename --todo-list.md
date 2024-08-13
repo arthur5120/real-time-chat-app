@@ -75,11 +75,12 @@
 # Inactive status updating unnecessarily. [DONE]
 # Typing status not updating when sending the message.
 # Find a way to update all the lists.
+# Message failing when confirming while editing it.
 
 // Done yesterday
 
-Update typing status to false after sending a message to prevent it from freezing on the other end due to the socket disconnecting. Reduce typing status update delay to increase responsiveness.
+Implement user list update on callback function when receiving list events.
 
 // Done today
 
-Implement user list update on callback function when receiving list events.
+Implement function to check if the user lists are valid when sending and receiving messages, preventing them from updating unnecessarily.

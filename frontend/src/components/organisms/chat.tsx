@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef, useState, Fragment } from 'react'
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
-import { convertDatetimeToMilliseconds, cropMessage, getItemFromString, getTime, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
+import { convertDatetimeToMilliseconds, cropMessage, getItemFromString, getTime, isThingValid, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
@@ -307,7 +307,7 @@ const Chat = () => {
   
       const authInfo = await authStatus({})
 
-      if (!authInfo.authenticated) {              
+      if (!authInfo.authenticated) {
         notifyUser('Not Allowed!', 'error')
         resetMessageContent()
         return
@@ -343,8 +343,8 @@ const Chat = () => {
           (response : {received : boolean} & TRoomLists) => { // callback
           if (response) {
             console.log(`Message Sent Successfully : ${response.received}`)
-              if(onlineUsers.length != response.currentOnlineUsers || inactiveUsers.length != response.currentInactiveUsers) {
-                notifyUser(`The users list was updated online check : ${onlineUsers.length != response.currentOnlineUsers} inactive check : ${inactiveUsers.length != response.currentInactiveUsers}`)
+              if(isThingValid(response.currentOnlineUsers) && onlineUsers.length != response.currentOnlineUsers || isThingValid(response.currentInactiveUsers) && inactiveUsers.length != response.currentInactiveUsers) {                
+                notifyUser(`The users list was updated online ${onlineUsers.length} != ${response.currentOnlineUsers} : ${onlineUsers.length != response.currentOnlineUsers} inactive ${inactiveUsers.length} != ${response.currentInactiveUsers} : ${inactiveUsers.length != response.currentInactiveUsers}`)
                 setReload(reload + 1) // Hard updating lists, find a better way to do this later, get list from socket and update it directly?.
               }
           } else {
@@ -567,10 +567,6 @@ const Chat = () => {
     if(socket?.disconnected) {
       socket?.connect()
     }
-
-    const test = (arr : any) => {
-      notifyUser(JSON.stringify(arr))
-    }
     
     socket?.emit(`authList`, null, setOnlineUsers)
     socket?.emit(`inactiveList`, null, setInactiveUsers)
@@ -582,21 +578,22 @@ const Chat = () => {
       
       const {
         message : msg,
-        currentRoomUsers: usersInRoomNow,
-        currentOnlineUsers: usersOnlineNow,
-        currentInactiveUsers: usersInactiveNow
+        currentRoomUsers,
+        currentOnlineUsers,
+        currentInactiveUsers
       } = payload
 
       const {id, room} = msg
       const firstMessageId = messages?.length > 0 ? messages[0].id : -1
-      
+
       if (room == currentRoom.id) {
         if (id != firstMessageId) {
-          addMessage(msg)
-          if (usersOnlineNow != onlineUsers.length) { // Updating list if different.
+          addMessage(msg)          
+          if (isThingValid(currentOnlineUsers) && currentOnlineUsers != onlineUsers.length) { // Updating list if different.
             setRefreshChat(true)
           }
-          if (usersInactiveNow != inactiveUsers.length || usersInRoomNow != roomUsers.length) { // Updating list if different.
+          if (isThingValid(currentInactiveUsers) && currentInactiveUsers != inactiveUsers.length || isThingValid(currentRoomUsers) && currentRoomUsers != roomUsers.length) { // Updating list if different.
+            notifyUser(`The users list was updated inactive ${currentInactiveUsers} != ${inactiveUsers.length} : ${currentInactiveUsers != inactiveUsers.length}, room ${currentRoomUsers} != ${roomUsers.length} : ${currentRoomUsers != roomUsers.length}`)
             setReload(reload + 1)
           }
         }
@@ -625,7 +622,7 @@ const Chat = () => {
 
     socket?.on('change', (msg : string) => {
       console.log(`socket on change : ${currentRoom?.id}`)
-      setUseDelayOnEmit(true)      
+      setUseDelayOnEmit(true)
       setReload(reload + 1)
       if (msg != ``) {
         notifyUser(msg, 'info')

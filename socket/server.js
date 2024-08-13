@@ -153,13 +153,20 @@ io.on('connection', (socket) => {
         
         if (callback != null) {
             callback({
-                received : true, 
+                received : true,                 
                 currentOnlineUsers : onlineUsers.length,
                 currentInactiveUsers : inactiveUsers.length
             })
         }
 
-        socket.broadcast.emit('room', {...payload, inactiveUsersLength : inactiveUsers.length})
+        const newPayload = {
+            ...payload,
+            currentOnlineUsers: onlineUsers.length,
+            currentInactiveUsers: inactiveUsers.length,
+            // currentRoomUsers : roomUsers.length,
+        }
+
+        socket.broadcast.emit('room', newPayload)
         
         //io.emit(`room`. message)
         //io.to(socket.id).emit('room', messages) // Sends String, Objects etc...
