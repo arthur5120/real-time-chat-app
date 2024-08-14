@@ -232,10 +232,10 @@ io.on('connection', (socket) => {
 
     socket.on(`authList`, (payload = null, callback = null) => {
         try {
-            if(callback && onlineUsers?.length > 0) {
+            if(callback) {
                 callback(onlineUsers)
             }
-            io.emit(`auth`, onlineUsersNames)   
+            io.emit(`auth`, onlineUsersNames)
         } catch (e) {
             console.log(`error while updating list`)
         }
@@ -243,7 +243,7 @@ io.on('connection', (socket) => {
 
     socket.on(`inactiveList`, (payload = null, callback = null) => {
        try {
-            if(callback && inactiveUsers?.length > 0) {
+            if(callback) {
                 callback(inactiveUsers)
             }
             io.emit('inactive', inactiveUsersNames)
@@ -255,7 +255,7 @@ io.on('connection', (socket) => {
     socket.on(`typingList`, (payload = null, callback = null) => {
         try {
             const typingListArray = Array.from(typingUsers)
-            if(callback && typingUsers?.length > 0) {
+            if(callback) {
                 callback(typingUsers)
             }
             io.to(socket.id).emit('onTyping', typingListArray)

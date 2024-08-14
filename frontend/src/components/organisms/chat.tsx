@@ -8,7 +8,7 @@ import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
 import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faEyeSlash, faPause, faArrowsRotate, faClipboard, faClipboardCheck,} from '@fortawesome/free-solid-svg-icons'
+import { faEye, faEyeSlash, faPause, faArrowsRotate, faClipboard, faClipboardCheck, faTriangleExclamation,} from '@fortawesome/free-solid-svg-icons'
 
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
@@ -47,10 +47,11 @@ const Chat = () => {
   const [inactiveUsers, setInactiveUsers] = useState<TRoomUser[]>([])
   const [typingUsers, setTypingUsers] = useState<TRoomUser[]>([])
   const [typingDelay, setTypingDelay] = useState<NodeJS.Timeout | null>(null)
-  const [userActivity, setUserActivity] = useState(true)  
+  const [userActivity, setUserActivity] = useState(true)
   const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
   const [messages, setMessages] = useState<TChatMessage[]>([])
   const [refreshChat, setRefreshChat] = useState(false)
+  const [updateUserLists, setUpdateUserLists] = useState(false)
   const [messageBeingEdited, setMessageBeingEdited] = useState<TMessageBeingEdited>(messagePlaceholder)
   const [showNotifications, setShowNotifications] = useState(true)
   const [autoScroll, setAutoScroll] = useState(true)
@@ -67,6 +68,7 @@ const Chat = () => {
   const [reload, setReload] = useState(1)
   const [hasErrors, setHasErrors] = useState(false)
   const [isServerOnline, setIsServerOnline] = useState(true)
+  const [requireRefresh, setRequireRefresh] = useState(true)
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)
@@ -335,18 +337,23 @@ const Chat = () => {
 
       socket?.emit(`onTyping`, {id : currentUser.id, name : currentUser.name, isTyping : false})
 
-      const delay = useDelayOnEmit ? 500 : 0 // Prevents the socket from being disconnected too early.       
+      const delay = useDelayOnEmit ? 500 : 0 // Prevents the socket from being disconnected too early.
 
       setTimeout(() => {
         socket?.emit(`room`,
           {message : savedMessage, currentRoomUsers : roomUsers.length},  // payload
           (response : {received : boolean} & TRoomLists) => { // callback
           if (response) {
-            console.log(`Message Sent Successfully : ${response.received}`)
-              if(isThingValid(response.currentOnlineUsers) && onlineUsers.length != response.currentOnlineUsers || isThingValid(response.currentInactiveUsers) && inactiveUsers.length != response.currentInactiveUsers) {                
-                notifyUser(`The users list was updated online ${onlineUsers.length} != ${response.currentOnlineUsers} : ${onlineUsers.length != response.currentOnlineUsers} inactive ${inactiveUsers.length} != ${response.currentInactiveUsers} : ${inactiveUsers.length != response.currentInactiveUsers}`)
-                setReload(reload + 1) // Hard updating lists, find a better way to do this later, get list from socket and update it directly?.
+            const {currentOnlineUsers, currentInactiveUsers, received} = response            
+            const areOnlineUsersValid = isThingValid(currentOnlineUsers)
+            const areInactiveUsersValid = isThingValid(currentInactiveUsers)
+            const areOnlineListsDifferent = onlineUsers.length != currentOnlineUsers
+            const areInactiveListsDifferent = inactiveUsers.length != currentInactiveUsers
+              if(areOnlineUsersValid && areOnlineListsDifferent || areInactiveUsersValid && areInactiveListsDifferent) {
+                notifyUser(`The users list was updated online ${onlineUsers.length} != ${currentOnlineUsers} : ${onlineUsers.length != currentOnlineUsers} inactive ${inactiveUsers.length} != ${currentInactiveUsers} : ${inactiveUsers.length != currentInactiveUsers}`)                
+                setUpdateUserLists(true)
               }
+            console.log(`Message Sent Successfully : ${received}`)
           } else {
             setHasErrors(true)
             console.log(`error : failed when sending message to socket.`)
@@ -412,10 +419,10 @@ const Chat = () => {
 
   const notifyUserInRoom = async (id : string, roomMessage : string = ``) => {
     try {
-      const selectedRoom = await getChatById(id)      
+      const selectedRoom = await getChatById(id)
       notifyUser(`${roomMessage != `` ? roomMessage : `New message in `}${selectedRoom.name}`)
     } catch (e) {
-      setHasErrors(true)    
+      setHasErrors(true)
       console.log(`error : when notifying the user in room.`)
     }
   }
@@ -537,6 +544,30 @@ const Chat = () => {
     }
   }
 
+  const retrieveUserLists = async () => {      
+    try {
+      socket?.connect()
+      socket?.emit(`authList`, null, (value : TRoomUser[]) => { // payload, callback
+        if (isThingValid(value)) {
+          setOnlineUsers(value)
+        }         
+      })
+      socket?.emit(`inactiveList`, null, (value : TRoomUser[]) => { // payload, callback
+        if (isThingValid(value)) {
+          setInactiveUsers(value)
+        }
+      })
+      socket?.emit(`typingList`, null, (value : TRoomUser[]) => { // payload, callback
+        if (isThingValid(value)) {
+          setTypingUsers(value)
+        }
+      })
+    } catch (e) {
+      notifyUser(`Something Went Wrong, please try again later`, `warning`)
+      setHasErrors(false)
+    }
+  }
+
   useEffect(() => {
     
     if(!isServerOnline) {
@@ -568,34 +599,36 @@ const Chat = () => {
       socket?.connect()
     }
     
-    socket?.emit(`authList`, null, setOnlineUsers)
-    socket?.emit(`inactiveList`, null, setInactiveUsers)
-    socket?.emit(`typingList`, null, setTypingUsers)    
+    retrieveUserLists()
 
     socket?.on(`room`, (payload : {message : TChatMessage} & TRoomLists) => {
 
       console.log(`socket on room : ${currentRoom?.id}`)
       
-      const {
-        message : msg,
-        currentRoomUsers,
-        currentOnlineUsers,
-        currentInactiveUsers
-      } = payload
-
+      const {message : msg, currentRoomUsers, currentOnlineUsers, currentInactiveUsers} = payload
       const {id, room} = msg
       const firstMessageId = messages?.length > 0 ? messages[0].id : -1
+      //const areOnlineUsersValid = isThingValid(currentOnlineUsers)
+      //const areInactiveUsersValid = isThingValid(currentInactiveUsers)
+      //const areCurrentRoomUsersValid = isThingValid(currentRoomUsers)
+      //const areOnlineUserListsDifferent = currentOnlineUsers != onlineUsers.length
+      //const areInactiveUserListsDifferent = currentInactiveUsers != inactiveUsers.length
+      //const areRoomUserListsDifferent = currentRoomUsers != roomUsers.length
 
       if (room == currentRoom.id) {
         if (id != firstMessageId) {
           addMessage(msg)          
-          if (isThingValid(currentOnlineUsers) && currentOnlineUsers != onlineUsers.length) { // Updating list if different.
-            setRefreshChat(true)
-          }
-          if (isThingValid(currentInactiveUsers) && currentInactiveUsers != inactiveUsers.length || isThingValid(currentRoomUsers) && currentRoomUsers != roomUsers.length) { // Updating list if different.
-            notifyUser(`The users list was updated inactive ${currentInactiveUsers} != ${inactiveUsers.length} : ${currentInactiveUsers != inactiveUsers.length}, room ${currentRoomUsers} != ${roomUsers.length} : ${currentRoomUsers != roomUsers.length}`)
-            setReload(reload + 1)
-          }
+          // if (areOnlineUsersValid && areOnlineUserListsDifferent) { // Updating list if different.
+          //   notifyUser(`Online User List Updated : received ${currentOnlineUsers}, current : ${onlineUsers.length}`)
+          //   setRefreshChat(true)
+          // }
+          // if (areInactiveUsersValid && areInactiveUserListsDifferent) { // Updating list if different.
+          //   notifyUser(`Inactive List Updated : received ${currentInactiveUsers}, current : ${inactiveUsers.length}`)
+          //   setUpdateUserLists(true)
+          // }
+          // if(areCurrentRoomUsersValid && areRoomUserListsDifferent) {
+          //   notifyUser(`Room List Needs Updating : received ${currentRoomUsers}, current : ${roomUsers.length}`, `warning`)
+          // }
         }
       } else {
         if(showNotifications) {
@@ -663,7 +696,7 @@ const Chat = () => {
     return () => {
 
       if(currentRoom.id == '-1' || currentRoom.id == '0') {
-        if(reload < 100) { // Prevents infinite loops.
+        if(reload < 100) {
           setReload(reload + 1)
         } else {
           notifyUser(`Something Went Wrong, please try again later`, `warning`)
@@ -771,9 +804,9 @@ const Chat = () => {
     if(firstLoad || currentUser.name == '') {
       return
     }
-    if(updateTypingState) {      
+    if(updateTypingState) {
       socket?.connect()
-      socket?.emit(`onTyping`, {id : currentUser.id, name : currentUser.name, isTyping : isTyping})      
+      socket?.emit(`onTyping`, {id : currentUser.id, name : currentUser.name, isTyping : isTyping})
       setUpdateTypingState(false)
     }
     const typeTimeout = setTimeout(() => {
@@ -806,6 +839,13 @@ const Chat = () => {
     }
     setReload(reload + 1)
   }, [auth])
+
+  useEffect(() => {
+    if (updateUserLists) {
+      retrieveUserLists()
+      setUpdateUserLists(false)
+    }
+  }, [updateUserLists])
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -1054,14 +1094,13 @@ const Chat = () => {
       <section className={chatSectionStyle}>
 
         <div className={`flex justify-between ${primaryDefault} rounded-lg w-80`}>          
-
-          <h3 className='bg-transparent justify-start m-2'>
+          <h3 className='bg-transparent justify-start m-2'>            
             {
             // 🔘 🔴 🟠 🟡 🟢 🔵 🟣 ⚫️ ⚪️ 🟤
             (auth && currentUser?.name) ? 
               `${userActivity ? `🟢` : `🟠`} Chatting as ${cropMessage(currentUser.name, 8)} ` : 
-              isServerOnline ? `🔴 Chatting as Guest` : `🔘 Offline`
-            }
+              isServerOnline ? `🔴 Chatting as Guest` : `🔘 Offline`               
+            }                      
           </h3>
         
           <span className='flex bg-transparent m-2 cursor-pointer gap-1'>
@@ -1229,9 +1268,9 @@ const Chat = () => {
             id=''
             className={`items-start ${secondaryDefault} text-white rounded-lg resize-none p-1 m-1 h-full w-full`}
             cols={41}
-            rows={3}            
-            maxLength={191}            
-            onChange={(e) => {onTextareaChange(e)}}            
+            rows={3}
+            maxLength={191}
+            onChange={(e) => {onTextareaChange(e)}}
             placeholder={`Say something...`}
             value={message.content}
             onKeyDown={(e) => {
@@ -1388,15 +1427,15 @@ const Chat = () => {
              
       <div className='flex absolute bg-tranparent top-auto bottom-0 m-8 gap-2'>
         {/*
+        <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
+        {isTyping ? `💬` : `〰️`}
+        </h3>
+        */}        
         <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
           (O : {onlineUsers.length})
           (I : {inactiveUsers.length})
           (R : {roomUsers.length})
         </h3>
-        <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
-          {isTyping ? `💬` : `〰️`}
-        </h3>
-        */}        
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
           Render : {renderCounter}
         </h3>

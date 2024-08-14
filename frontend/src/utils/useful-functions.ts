@@ -70,7 +70,7 @@ export const  getItemFromString = (str : string, arr : string[]) => {
 }
 
 export const isThingValid = (input : string | number | object | any[] | undefined | null) : boolean => {
-    try {
+    try { // Accepts empty arrays
          if (input == undefined || input == null) {
              return false
          }

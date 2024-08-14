@@ -76,11 +76,11 @@
 # Typing status not updating when sending the message.
 # Find a way to update all the lists.
 # Message failing when confirming while editing it.
+# Make verification for typing users.
 
 // Done yesterday
 
-Implement user list update on callback function when receiving list events.
+Implement function to check if the user lists are valid when sending and receiving messages, preventing them from updating unnecessarily.
 
 // Done today
-
-Implement function to check if the user lists are valid when sending and receiving messages, preventing them from updating unnecessarily.
+Create useEffect to update user lists. Simplify room socket events on sending and receiving. Remove forced reload for list updates.
