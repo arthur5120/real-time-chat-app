@@ -73,14 +73,17 @@
 # Banner might be using stale auth states. [DONE]
 # Banner might be breaking due to overlapping state changes.
 # Inactive status updating unnecessarily. [DONE]
-# Typing status not updating when sending the message.
+# Typing status not updating when sending the message. [DONE]
 # Find a way to update all the lists.
-# Message failing when confirming while editing it.
-# Make verification for typing users.
+# Message failing when confirming the edit while writing.
+# Make verification for typing users. [DONE]
+# Use state to require a page refresh to the user.
 
 // Done yesterday
 
-Implement function to check if the user lists are valid when sending and receiving messages, preventing them from updating unnecessarily.
+Create useEffect to update user lists. Simplify room socket events on sending and receiving. Remove forced reload for list updates.
 
 // Done today
-Create useEffect to update user lists. Simplify room socket events on sending and receiving. Remove forced reload for list updates.
+
+Fix chat not updating on editing/deleting messages.
+Make verification/update for typing and inactive users upon sending messages.

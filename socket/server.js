@@ -97,7 +97,7 @@ const disconnectUser = (userId) => {
    }
 }
 
-io.on('connection', (socket) => {  
+io.on('connection', (socket) => {
     
     socket?.on(`disconnect`, (reason) => {
         if (reason == `client namespace disconnect`) {
@@ -145,25 +145,40 @@ io.on('connection', (socket) => {
 
     })    
 
-    socket.on('room', (payload, callback = null) => { // Listening to Room        
+    socket.on('room', (payload, callback = null) => { // Listening to Room
 
         const {message} = payload
+        const {userID, ...payloadRest} = payload
+        const typingUsersArray = Array.from(typingUsers) 
+        
+        const inactiveUserId = inactiveUsers.findIndex((iu) => iu.id == userID)
 
-        console.log(`${message.user} says "${message.content}".`)
+        if(inactiveUserId > -1) {
+            console.log(`${message.user} went active.`)
+            inactiveUsers.splice(inactiveUserId, 1)
+            inactiveUsersNames.splice(inactiveUserId, 1)
+            socket.broadcast.emit(`inactive`, inactiveUsersNames)
+        }
+        
+        const updatedUserLists = {
+            currentOnlineUsers : onlineUsers.length,
+            currentInactiveUsers : inactiveUsers.length,               
+            currentTypingUsers : typingUsersArray.length,
+        }
+
+        console.log(`${message.user} says "${message.content}".`)        
         
         if (callback != null) {
             callback({
-                received : true,                 
-                currentOnlineUsers : onlineUsers.length,
-                currentInactiveUsers : inactiveUsers.length
+                received : true,                
+                ...updatedUserLists,
             })
         }
 
         const newPayload = {
-            ...payload,
-            currentOnlineUsers: onlineUsers.length,
-            currentInactiveUsers: inactiveUsers.length,
+            ...payloadRest,
             // currentRoomUsers : roomUsers.length,
+            ...updatedUserLists,
         }
 
         socket.broadcast.emit('room', newPayload)

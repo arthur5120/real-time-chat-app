@@ -34,7 +34,7 @@ type TRoom = {id : string, name : string}
 type TRoomUser = {id : string, name ? : string, diff ? : {nameEmoji ? : string, nameColor ? : string}}
 type TMessageBeingEdited = TChatMessage & {previous ? : string, wasEdited : boolean}
 type TSocketPayload = Partial<{content : string, notification : string, room : string, notifyRoomOnly : boolean}>
-type TRoomLists = Partial<{currentOnlineUsers : number, currentInactiveUsers : number, currentRoomUsers : number}>
+type TRoomLists = Partial<{currentOnlineUsers : number, currentInactiveUsers : number, currentRoomUsers : number, currentTypingUsers : number}>
 
 const Chat = () => {
 
@@ -48,7 +48,7 @@ const Chat = () => {
   const [typingUsers, setTypingUsers] = useState<TRoomUser[]>([])
   const [typingDelay, setTypingDelay] = useState<NodeJS.Timeout | null>(null)
   const [userActivity, setUserActivity] = useState(true)
-  const [message, setMessage] = useState<TChatMessage>(messagePlaceholder)
+  const [message, setMessage] = useState<{senderID ? : string} & TChatMessage>(messagePlaceholder)
   const [messages, setMessages] = useState<TChatMessage[]>([])
   const [refreshChat, setRefreshChat] = useState(false)
   const [updateUserLists, setUpdateUserLists] = useState(false)
@@ -327,6 +327,7 @@ const Chat = () => {
       const savedMessage = {
         id : savedMessageId, 
         ...newMessage, 
+        senderID : currentUser.id,
         user : currentUser?.name ? `${currentUser.diff?.nameEmoji} ${currentUser.name}` : '',
         isUserSender : false
       }      
@@ -344,15 +345,17 @@ const Chat = () => {
           {message : savedMessage, currentRoomUsers : roomUsers.length},  // payload
           (response : {received : boolean} & TRoomLists) => { // callback
           if (response) {
-            const {currentOnlineUsers, currentInactiveUsers, received} = response            
+            const {currentOnlineUsers, currentInactiveUsers, currentTypingUsers, received} = response
             const areOnlineUsersValid = isThingValid(currentOnlineUsers)
             const areInactiveUsersValid = isThingValid(currentInactiveUsers)
+            const areTypingUsersValid = isThingValid(currentTypingUsers)
             const areOnlineListsDifferent = onlineUsers.length != currentOnlineUsers
             const areInactiveListsDifferent = inactiveUsers.length != currentInactiveUsers
-              if(areOnlineUsersValid && areOnlineListsDifferent || areInactiveUsersValid && areInactiveListsDifferent) {
-                notifyUser(`The users list was updated online ${onlineUsers.length} != ${currentOnlineUsers} : ${onlineUsers.length != currentOnlineUsers} inactive ${inactiveUsers.length} != ${currentInactiveUsers} : ${inactiveUsers.length != currentInactiveUsers}`)                
-                setUpdateUserLists(true)
-              }
+            const areTypingUsersDifferent = typingUsers.length != currentTypingUsers
+            if(areOnlineUsersValid && areOnlineListsDifferent || areInactiveUsersValid && areInactiveListsDifferent || areTypingUsersValid && areTypingUsersDifferent) {
+              notifyUser(`The users list was updated online ${onlineUsers.length} != ${currentOnlineUsers} : ${onlineUsers.length != currentOnlineUsers} inactive ${inactiveUsers.length} != ${currentInactiveUsers} : ${inactiveUsers.length != currentInactiveUsers}`)
+              setUpdateUserLists(true)
+            }
             console.log(`Message Sent Successfully : ${received}`)
           } else {
             setHasErrors(true)
@@ -605,30 +608,14 @@ const Chat = () => {
 
       console.log(`socket on room : ${currentRoom?.id}`)
       
-      const {message : msg, currentRoomUsers, currentOnlineUsers, currentInactiveUsers} = payload
+      const {message : msg} = payload // currentRoomUsers, currentOnlineUsers, currentInactiveUsers
       const {id, room} = msg
-      const firstMessageId = messages?.length > 0 ? messages[0].id : -1
-      //const areOnlineUsersValid = isThingValid(currentOnlineUsers)
-      //const areInactiveUsersValid = isThingValid(currentInactiveUsers)
-      //const areCurrentRoomUsersValid = isThingValid(currentRoomUsers)
-      //const areOnlineUserListsDifferent = currentOnlineUsers != onlineUsers.length
-      //const areInactiveUserListsDifferent = currentInactiveUsers != inactiveUsers.length
-      //const areRoomUserListsDifferent = currentRoomUsers != roomUsers.length
+      const firstMessageId = messages?.length > 0 ? messages[0].id : -1      
 
       if (room == currentRoom.id) {
         if (id != firstMessageId) {
-          addMessage(msg)          
-          // if (areOnlineUsersValid && areOnlineUserListsDifferent) { // Updating list if different.
-          //   notifyUser(`Online User List Updated : received ${currentOnlineUsers}, current : ${onlineUsers.length}`)
-          //   setRefreshChat(true)
-          // }
-          // if (areInactiveUsersValid && areInactiveUserListsDifferent) { // Updating list if different.
-          //   notifyUser(`Inactive List Updated : received ${currentInactiveUsers}, current : ${inactiveUsers.length}`)
-          //   setUpdateUserLists(true)
-          // }
-          // if(areCurrentRoomUsersValid && areRoomUserListsDifferent) {
-          //   notifyUser(`Room List Needs Updating : received ${currentRoomUsers}, current : ${roomUsers.length}`, `warning`)
-          // }
+          addMessage(msg)
+          setRefreshChat(true)    
         }
       } else {
         if(showNotifications) {
