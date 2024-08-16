@@ -185,10 +185,10 @@ const Chat = () => {
         setIsUserInroom(!!foundUserInChat)
 
       } else if (!isNumberOfRoomsTheSame!) {
-        const updatedSelectId = sortedLocalRooms.findIndex((room) => room.id.trim() == currentRoom.id.trim())      
+        const updatedSelectId = sortedLocalRooms.findIndex((room) => room.id.trim() == currentRoom.id.trim())
         setCurrentRoom({
           id : sortedLocalRooms[updatedSelectId].id,
-          selectId : updatedSelectId, 
+          selectId : updatedSelectId,
           name : sortedLocalRooms[updatedSelectId].name
         })
         const foundUserInChat = chats?.length > 0 ? chats.find((c) => c.chatId == sortedLocalRooms[updatedSelectId].id) : ''
@@ -353,7 +353,7 @@ const Chat = () => {
             const areInactiveListsDifferent = inactiveUsers.length != currentInactiveUsers
             const areTypingUsersDifferent = typingUsers.length != currentTypingUsers
             if(areOnlineUsersValid && areOnlineListsDifferent || areInactiveUsersValid && areInactiveListsDifferent || areTypingUsersValid && areTypingUsersDifferent) {
-              notifyUser(`The users list was updated online ${onlineUsers.length} != ${currentOnlineUsers} : ${onlineUsers.length != currentOnlineUsers} inactive ${inactiveUsers.length} != ${currentInactiveUsers} : ${inactiveUsers.length != currentInactiveUsers}`)
+              //notifyUser(`The users list was updated online ${onlineUsers.length} != ${currentOnlineUsers} : ${onlineUsers.length != currentOnlineUsers} inactive ${inactiveUsers.length} != ${currentInactiveUsers} : ${inactiveUsers.length != currentInactiveUsers}`)
               setUpdateUserLists(true)
             }
             console.log(`Message Sent Successfully : ${received}`)
@@ -877,14 +877,14 @@ const Chat = () => {
 
   }
 
-  const onClickEditModeIcon = async (e : React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+  const onClickEditModeIcon = async (e : React.MouseEvent<HTMLButtonElement, MouseEvent> | React.KeyboardEvent<HTMLSpanElement>) => {
 
     const element = e.target as HTMLButtonElement
     const action = element.dataset.action
 
-    switch(action) {      
+    switch(action) {
 
-      case 'edit' : {         
+      case 'edit' : {
         const selectedMessage = messageContainerRef.current as HTMLSpanElement
         const selectedMessageId = selectedMessage.dataset.id
         setMessageBeingEdited({
@@ -907,8 +907,8 @@ const Chat = () => {
         break
       }
 
-      case 'confirm' : {
-        if(messageBeingEdited.wasEdited == true) {
+      case 'confirm' : {        
+        if(messageBeingEdited.wasEdited == true) {          
           messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
           messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
           const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
@@ -1086,23 +1086,23 @@ const Chat = () => {
             // 🔘 🔴 🟠 🟡 🟢 🔵 🟣 ⚫️ ⚪️ 🟤
             (auth && currentUser?.name) ? 
               `${userActivity ? `🟢` : `🟠`} Chatting as ${cropMessage(currentUser.name, 8)} ` : 
-              isServerOnline ? `🔴 Chatting as Guest` : `🔘 Offline`               
+              isServerOnline ? `🔴 Chatting as Guest` : `🔘 Offline`
             }                      
           </h3>
         
           <span className='flex bg-transparent m-2 cursor-pointer gap-1'>
 
             <button 
-              title={`Toggle auto-scrolling : ${autoScroll ? `on` : `off`}`} 
+              title={`Toggle auto-scrolling : ${autoScroll ? `on` : `off`}`}
               disabled={!!reload || firstLoad || !isServerOnline}
-              className={ 
+              className={
                 ` ${autoScroll ? `bg-[#050D20] hover:bg-black` : `bg-[#050D20] hover:bg-black`}
                 rounded-lg disabled:cursor-not-allowed`
-              }              
-              onClick={() => {                
+              }
+              onClick={() => {
                 setAutoScroll((prev) => !prev)
               }}
-            >   
+            >
               {autoScroll ?
               <FontAwesomeIcon icon={faArrowsRotate} width={48} height={48}/> :
               <FontAwesomeIcon icon={faPause} width={48} height={48}/>}
@@ -1158,6 +1158,7 @@ const Chat = () => {
                   suppressContentEditableWarning={true}
                   contentEditable={isUserSender && isMessageSelected}
                   title={`Click to edit/delete a message.`}
+                  data-action={`confirm`}
                   onClick={(e) => {
                     if (isUserSender) {
                       if (!messageBeingEdited.content) {
@@ -1178,7 +1179,13 @@ const Chat = () => {
                     onBlurEditableMessage(e)
                   }}
 
-                  onKeyDown={() => {
+                  onKeyDown={(e) => {
+                    // handleUserActivity()
+                    if (e.key === "Enter") {
+                      if (e.ctrlKey || e.metaKey) {
+                        onClickEditModeIcon(e)
+                      }
+                    }
                     if(isMessageSelected && messageBeingEdited.wasEdited == false) {
                       setMessageBeingEdited((values) => ({
                         ...values,
@@ -1204,7 +1211,7 @@ const Chat = () => {
                       &#128393;
                   </button> : ''}
                   
-                  { isMessageFocused ? <button
+                  { isMessageFocused || messageBeingEdited.content ? <button
                     id={`${editMenuButtonPrefix}-confirm`}
                     className='hover:bg-slate-600 rounded-full'
                     data-action={`confirm`}
@@ -1401,7 +1408,7 @@ const Chat = () => {
             variationName='varthree'
             className={`${spam ? `bg-yellow-500` : `bg-black`} active:bg-gray-900 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad || !isServerOnline}
-            title={`Currently spamming the chat.`}            
+            title={`Currently spamming the chat.`}
             onClick={ async () => {
               setSpam((lastSpam) => !lastSpam)              
             }}

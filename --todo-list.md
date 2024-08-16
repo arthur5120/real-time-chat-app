@@ -69,21 +69,25 @@
 # Update inactivity status when sending a message on the list. [DONE]
 # When resetting the rooms, the chat gets stuck on infinite reloading.
 # Make user lists update comparing uuid instead of number of users, or maybe dates.
-# User going inactive on logout.
+# User going inactive on logout. [DONE]
 # Banner might be using stale auth states. [DONE]
 # Banner might be breaking due to overlapping state changes.
 # Inactive status updating unnecessarily. [DONE]
 # Typing status not updating when sending the message. [DONE]
 # Find a way to update all the lists.
-# Message failing when confirming the edit while writing.
+# Message failing when confirming the edit while writing. [DONE]
 # Make verification for typing users. [DONE]
 # Use state to require a page refresh to the user.
+# Create log to show message changing history.
 
 // Done yesterday
 
-Create useEffect to update user lists. Simplify room socket events on sending and receiving. Remove forced reload for list updates.
+Fix chat not updating on editing/deleting messages.
+Make verification/update for typing and inactive users upon sending messages.
 
 // Done today
 
-Fix chat not updating on editing/deleting messages.
-Make verification/update for typing and inactive users upon sending messages.
+Add condition to confirm button (if edited message has content, the button is visible in addition to the isMessageFocused condition, preventing the button from disappearing if the message confirmation fails for any reason.)
+adapt onClickEditModeIcon function to also handle keydown events from a span and a check for a specific key combination for the message span, so it would confirm the changes on a shortcut.
+
+Add condition to display the confirm button based on message content and isMessageFocused state, ensuring the button remains visible even if message confirmation fails. Adapt onClickEditModeIcon function to handle keydown events from a span, including a check for a specific key combination to confirm changes via keyboard shortcut.
