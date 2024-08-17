@@ -233,8 +233,8 @@ const Chat = () => {
         const authInfo = await authStatus({})
         const rawMessages = await getMessages() // Getting all messages to filter them based on room, change this later.
         const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)
-        const uniqueIdList = new Set<string>()                
-        const roomUserList : TRoomUser[] = []           
+        const uniqueIdList = new Set<string>()
+        const roomUserList : TRoomUser[] = []
     
         const convertedMessages = filteredMessages.map((m : TMessage) => {
 
@@ -322,7 +322,7 @@ const Chat = () => {
         currentRoom.id,
         newMessage.content,
         newMessage.user,
-      ) as string
+      ) as string      
 
       const savedMessage = {
         id : savedMessageId, 
@@ -336,7 +336,7 @@ const Chat = () => {
         socket?.connect()
       }
 
-      socket?.emit(`onTyping`, {id : currentUser.id, name : currentUser.name, isTyping : false})
+      socket?.emit(`onTyping`, {id : currentUser.id, name : currentUser.name, isTyping : false})      
 
       const delay = useDelayOnEmit ? 500 : 0 // Prevents the socket from being disconnected too early.
 
@@ -615,7 +615,7 @@ const Chat = () => {
       if (room == currentRoom.id) {
         if (id != firstMessageId) {
           addMessage(msg)
-          setRefreshChat(true)    
+          setRefreshChat(true)
         }
       } else {
         if(showNotifications) {
@@ -825,7 +825,7 @@ const Chat = () => {
       return
     }
     setReload(reload + 1)
-  }, [auth])
+  }, [auth])  
 
   useEffect(() => {
     if (updateUserLists) {
@@ -1409,8 +1409,10 @@ const Chat = () => {
             className={`${spam ? `bg-yellow-500` : `bg-black`} active:bg-gray-900 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad || !isServerOnline}
             title={`Currently spamming the chat.`}
-            onClick={ async () => {
-              setSpam((lastSpam) => !lastSpam)              
+            onClick={ async () => {              
+              //setSpam((lastSpam) => !lastSpam)              
+              socket?.connect()
+              socket?.emit(`inactive`, { id : currentUser.id, name: currentUser.name, inactive: true })
             }}
           />
 

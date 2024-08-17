@@ -79,15 +79,15 @@
 # Make verification for typing users. [DONE]
 # Use state to require a page refresh to the user.
 # Create log to show message changing history.
+# When first starting the server, it takes too long to load the page.
+# User going inactive on auto-logout due login with the same account.
 
 // Done yesterday
 
-Fix chat not updating on editing/deleting messages.
-Make verification/update for typing and inactive users upon sending messages.
+Add condition to display the confirm button based on message content and isMessageFocused state, ensuring the button remains visible even if message confirmation fails. Adapt onClickEditModeIcon function to handle keydown events from a span, including a check for a specific key combination to confirm changes via keyboard shortcut.
 
 // Done today
 
-Add condition to confirm button (if edited message has content, the button is visible in addition to the isMessageFocused condition, preventing the button from disappearing if the message confirmation fails for any reason.)
-adapt onClickEditModeIcon function to also handle keydown events from a span and a check for a specific key combination for the message span, so it would confirm the changes on a shortcut.
+Update sendMessage function and socket events for user inactivity status
 
-Add condition to display the confirm button based on message content and isMessageFocused state, ensuring the button remains visible even if message confirmation fails. Adapt onClickEditModeIcon function to handle keydown events from a span, including a check for a specific key combination to confirm changes via keyboard shortcut.
+Modified socket event handlers and the sendMessage function to trigger an update of the user's inactivity status when a message is sent.

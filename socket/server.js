@@ -52,7 +52,7 @@ const connectUser = (user) => {
                 
         const inactiveUserId = inactiveUsers.findIndex((u) => u.id == user.id)
 
-        if(inactiveUserId > -1) {            
+        if(inactiveUserId > -1) {
             inactiveUsers.splice(inactiveUserId, 1)
             inactiveUsersNames.splice(inactiveUserId, 1)
         }
@@ -147,11 +147,33 @@ io.on('connection', (socket) => {
 
     socket.on('room', (payload, callback = null) => { // Listening to Room
 
-        const {message} = payload
-        const {userID, ...payloadRest} = payload
+        //payloadType = {        
+        //    message : {
+        //        senderID: string | undefined,
+        //        user: string,
+        //        isUserSender: boolean,
+        //        id: string,
+        //        content: string,
+        //        created_at: number,
+        //        updated_at: number,
+        //        room: string,
+        //        isUserSender : string,
+        //    }, 
+        //    currentRoomUsers : number
+        //}
+
+        const {message, currentRoomUsers} = payload
+        const {senderID, ...messageRest} = message
         const typingUsersArray = Array.from(typingUsers) 
         
-        const inactiveUserId = inactiveUsers.findIndex((iu) => iu.id == userID)
+        const payloadRest = {
+            message : messageRest,
+            currentRoomUsers : currentRoomUsers
+        }
+        
+        const inactiveUserId = inactiveUsers.findIndex((u) => u.id == senderID)
+
+        console.log(`Removing inactive from list : ${senderID} found ? ${inactiveUserId > 0 ? `Yes` : `No`}`)        
 
         if(inactiveUserId > -1) {
             console.log(`${message.user} went active.`)
@@ -176,8 +198,7 @@ io.on('connection', (socket) => {
         }
 
         const newPayload = {
-            ...payloadRest,
-            // currentRoomUsers : roomUsers.length,
+            ...payloadRest,            
             ...updatedUserLists,
         }
 
