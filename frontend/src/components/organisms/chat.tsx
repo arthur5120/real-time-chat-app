@@ -32,6 +32,7 @@ const emojis = [`🥗`, `🌮`, `🍙`, `🍘`, `🍥`, `🍨`, `☕️`, `🎂`
 type TCurrentRoom = {id : string, selectId : number, name : string}
 type TRoom = {id : string, name : string}
 type TRoomUser = {id : string, name ? : string, diff ? : {nameEmoji ? : string, nameColor ? : string}}
+type TFullUser = {id ? : string} & TUser & {diff ? : {nameEmoji ? : string, nameColor ? : string}}
 type TMessageBeingEdited = TChatMessage & {previous ? : string, wasEdited : boolean}
 type TSocketPayload = Partial<{content : string, notification : string, room : string, notifyRoomOnly : boolean}>
 type TRoomLists = Partial<{currentOnlineUsers : number, currentInactiveUsers : number, currentRoomUsers : number, currentTypingUsers : number}>
@@ -41,7 +42,7 @@ const Chat = () => {
   const [rooms, setRooms] = useState<TRoom[]>(roomsPlaceholder)
   const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
   const [isUserInRoom, setIsUserInroom] = useState(false)
-  const [currentUser, setCurrentUser] = useState<{id ? : string} & TUser>(userPlaceholder)
+  const [currentUser, setCurrentUser] = useState<TFullUser>(userPlaceholder)
   const [roomUsers, setRoomUsers] = useState<TRoomUser[]>([]) // Turn all these user lists into one later.
   const [onlineUsers, setOnlineUsers] = useState<TRoomUser[]>([])
   const [inactiveUsers, setInactiveUsers] = useState<TRoomUser[]>([])
@@ -724,12 +725,13 @@ const Chat = () => {
 
       const localDelay = setTimeout(() => {
         addUserToOnlineList()
-      }, 200)
+      }, 200)      
          
       const handleBeforeUnload =  async () => {
-        const authInfo : TRes = await authStatus({})
+        //const authInfo : TRes = await authStatus({})        
+        const authInfo = {id : currentUser.id}
         socket?.connect()
-        socket?.emit(`inactive`, {id : authInfo.id, name: currentUser.name, inactive: true})
+        socket?.emit(`inactive`, {id : authInfo.id, name: currentUser.name, inactive: true})        
       }
 
       window.addEventListener('beforeunload', handleBeforeUnload)
@@ -1410,9 +1412,8 @@ const Chat = () => {
             disabled={!!reload || firstLoad || !isServerOnline}
             title={`Currently spamming the chat.`}
             onClick={ async () => {              
-              //setSpam((lastSpam) => !lastSpam)              
-              socket?.connect()
-              socket?.emit(`inactive`, { id : currentUser.id, name: currentUser.name, inactive: true })
+              //setSpam((lastSpam) => !lastSpam)
+              setRefreshChat(true)
             }}
           />
 

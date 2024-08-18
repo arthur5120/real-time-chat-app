@@ -4,8 +4,7 @@ export type TUser = Partial <{
     email : string,
     password : string,
     role : string,
-    created_at : string,  
-    diff : {nameEmoji ? : string, nameColor ? : string}   
+    created_at : string,
 }>
 
 export type TElementProps = Partial<{

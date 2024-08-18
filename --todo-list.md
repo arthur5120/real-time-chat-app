@@ -84,10 +84,9 @@
 
 // Done yesterday
 
-Add condition to display the confirm button based on message content and isMessageFocused state, ensuring the button remains visible even if message confirmation fails. Adapt onClickEditModeIcon function to handle keydown events from a span, including a check for a specific key combination to confirm changes via keyboard shortcut.
+Update sendMessage function and socket events for user inactivity status
+Modified socket event handlers and the sendMessage function to trigger an update of the user's inactivity status when a message is sent.
 
 // Done today
 
-Update sendMessage function and socket events for user inactivity status
-
-Modified socket event handlers and the sendMessage function to trigger an update of the user's inactivity status when a message is sent.
+Create a user type specific to chat to resolve type errors. Update handleBeforeUnload useEffect to utilize local user ID instead of fetching from the server.
