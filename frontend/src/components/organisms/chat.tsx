@@ -731,7 +731,7 @@ const Chat = () => {
         //const authInfo : TRes = await authStatus({})        
         const authInfo = {id : currentUser.id}
         socket?.connect()
-        socket?.emit(`inactive`, {id : authInfo.id, name: currentUser.name, inactive: true})        
+        socket?.emit(`inactive`, {id : authInfo.id, name: currentUser.name, inactive: true, beforeUnloadEvent : true})
       }
 
       window.addEventListener('beforeunload', handleBeforeUnload)

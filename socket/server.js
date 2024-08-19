@@ -10,6 +10,7 @@ let inactiveUsers = []
 let inactiveUsersNames = []
 let typingUsers = new Set()
 let nextExpirationCheck = -1
+let setToLogout = []
 
 const expirationCheck = (expirationTime) => {
     const hereNow = Date.now()
@@ -47,6 +48,7 @@ const connectUser = (user) => {
             onlineUsers.push(user)
             onlineUsersNames.push({id : user.id, name : user.name})
         } else {
+            setToLogout.push(user)
             return
         }
                 
@@ -109,19 +111,25 @@ io.on('connection', (socket) => {
 
     socket.on(`inactive`, (user) => {
                        
-        const {id, name, inactive} = user
+        const {id, name, inactive, handleBeforeUnload} = user
 
-        console.log(`inactivity status change to ${inactive} for ${name}...`)
+        console.log(`inactivity status change to ${inactive} for ${name}...`)        
 
         if(!name || name == `` || name == null || !id || id == `none`) {
-            console.log(`Unable change inactivity : Invalid name or id`)
+            console.log(`Unable to change inactivity : Invalid name or id`)
             return
         }
 
-        const onlineUser = onlineUsers.find((u) => u.id == id)
+        const onlineUser = onlineUsers.find((u) => u.id == id) 
+        const duplicatedUser = setToLogout.find((u) => u.id == id)
 
         if(!onlineUser) {
-            console.log(`Unable change inactivity : Status user offline.`)
+            console.log(`Unable to change inactivity : Status user offline.`)
+            return
+        }
+
+        if(onlineUser && duplicatedUser && handleBeforeUnload) {
+            console.log(`Unable to change inactivity : Auto-logout due to duplicated sessions.`)
             return
         }
 

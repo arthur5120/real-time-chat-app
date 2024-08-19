@@ -80,13 +80,15 @@
 # Use state to require a page refresh to the user.
 # Create log to show message changing history.
 # When first starting the server, it takes too long to load the page.
-# User going inactive on auto-logout due login with the same account.
+# User going inactive on auto-logout due login with the same account.[DONE]
 
 // Done yesterday
 
-Update sendMessage function and socket events for user inactivity status
-Modified socket event handlers and the sendMessage function to trigger an update of the user's inactivity status when a message is sent.
+Create a user type specific to chat to resolve type errors. Update handleBeforeUnload useEffect to utilize local user ID instead of fetching from the server.
 
 // Done today
 
-Create a user type specific to chat to resolve type errors. Update handleBeforeUnload useEffect to utilize local user ID instead of fetching from the server.
+Create socket list of duplicated users set to logout on the socket.
+Update the handleBeforeUnload event to send the logout reason to the socket.
+Modify session handling for inactivity to identify duplicate sessions and prevent status change due to auto-logout
+
