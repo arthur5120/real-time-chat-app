@@ -279,7 +279,7 @@ io.on('connection', (socket) => {
             if(callback) {
                 callback(onlineUsers)
             }
-            io.emit(`auth`, onlineUsersNames)
+            io.to(socket.id).emit('auth', onlineUsersNames)            
         } catch (e) {
             console.log(`error while updating list`)
         }
@@ -290,7 +290,7 @@ io.on('connection', (socket) => {
             if(callback) {
                 callback(inactiveUsers)
             }
-            io.emit('inactive', inactiveUsersNames)
+            io.to(socket.id).emit('inactive', inactiveUsersNames)            
         } catch (e) {
             console.log(`error while updating list`)
         }

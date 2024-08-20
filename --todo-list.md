@@ -77,18 +77,17 @@
 # Find a way to update all the lists.
 # Message failing when confirming the edit while writing. [DONE]
 # Make verification for typing users. [DONE]
+# Changing rooms updates the chat for other users.[DONE]
+# User going inactive on auto-logout due login with the same account.[DONE]
 # Use state to require a page refresh to the user.
 # Create log to show message changing history.
 # When first starting the server, it takes too long to load the page.
-# User going inactive on auto-logout due login with the same account.[DONE]
+# Chat starts flicking when reaching a certain number of messages.
 
 // Done yesterday
 
-Create a user type specific to chat to resolve type errors. Update handleBeforeUnload useEffect to utilize local user ID instead of fetching from the server.
+Create socket list of duplicated users set to logout on the socket. Update the handleBeforeUnload event to send the logout reason to the socket. Modify session handling for inactivity to identify duplicate sessions and prevent status change due to auto-logout.
 
 // Done today
 
-Create socket list of duplicated users set to logout on the socket.
-Update the handleBeforeUnload event to send the logout reason to the socket.
-Modify session handling for inactivity to identify duplicate sessions and prevent status change due to auto-logout
-
+Change user list socket events to only send updates to whoever requests them instead of broadcasting them to every user.

@@ -243,10 +243,10 @@ const Chat = () => {
           const color = getItemFromString(`${m.senderId}`, textColors)
 
           if(!uniqueIdList.has(m.senderId)) {
-            uniqueIdList.add(m.senderId)            
+            uniqueIdList.add(m.senderId)
             roomUserList.push({
-              id : m.senderId, 
-              name : m.senderName, 
+              id : m.senderId,
+              name : m.senderName,
               diff : {nameColor : color, nameEmoji : emoji}
             })
           }
@@ -1207,8 +1207,8 @@ const Chat = () => {
                   { !isMessageFocused && !messageBeingEdited.content ? <button
                     id={`${editMenuButtonPrefix}-edit`}
                     className='hover:bg-slate-600 rounded-full' 
-                    data-action={`edit`} 
-                    title={`Edit`} 
+                    data-action={`edit`}
+                    title={`Edit`}
                     onClick={(e) => onClickEditModeIcon(e)}>
                       &#128393;
                   </button> : ''}
@@ -1449,6 +1449,5 @@ const Chat = () => {
   )
   
 }
-
 
 export default Chat
