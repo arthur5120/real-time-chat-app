@@ -12,6 +12,12 @@ let typingUsers = new Set()
 let nextExpirationCheck = -1
 let setToLogout = []
 
+const getExpirationTime = (minutes = 15) => {
+    const dateNow = Date.now()
+    const expirationTime = dateNow + (1000 * 60 * minutes)
+    return expirationTime
+}
+
 const expirationCheck = (expirationTime) => {
     const hereNow = Date.now()
     return (hereNow - expirationTime) >= 0
@@ -33,7 +39,7 @@ setInterval(() => {
     console.log(`Online : ${JSON.stringify(onlineUsersNames)}, inactive : ${JSON.stringify(inactiveUsersNames)} next check in ${(((nextExpirationCheck - hereNow) / (1000 * 60)) | 0)}m.`)
 }, 5000)
 
-const connectUser = (user) => {
+const connectUser = (user) => { // user :  {id : string, name : string. expirationTime : number}
     
     try {
         
@@ -172,22 +178,28 @@ io.on('connection', (socket) => {
 
         const {message, currentRoomUsers} = payload
         const {senderID, ...messageRest} = message
-        const typingUsersArray = Array.from(typingUsers) 
+        const typingUsersArray = Array.from(typingUsers)
         
         const payloadRest = {
             message : messageRest,
             currentRoomUsers : currentRoomUsers
+        }        
+
+        const onlineUserId = onlineUsers.find((u) => u.id == senderID)
+        
+        if(!onlineUserId) {            
+            const expirationTime = getExpirationTime()
+            const connectingUser = {id : senderID, name : message.user, expirationTime : expirationTime}
+            connectUser(connectingUser)
         }
         
-        const inactiveUserId = inactiveUsers.findIndex((u) => u.id == senderID)
-
-        console.log(`Removing inactive from list : ${senderID} found ? ${inactiveUserId > 0 ? `Yes` : `No`}`)        
+        const inactiveUserId = inactiveUsers.findIndex((u) => u.id == senderID)        
 
         if(inactiveUserId > -1) {
             console.log(`${message.user} went active.`)
             inactiveUsers.splice(inactiveUserId, 1)
             inactiveUsersNames.splice(inactiveUserId, 1)
-            socket.broadcast.emit(`inactive`, inactiveUsersNames)
+            socket.broadcast.emit(`inactive`, inactiveUsersNames)            
         }
         
         const updatedUserLists = {
@@ -233,15 +245,14 @@ io.on('connection', (socket) => {
         }
         socket.broadcast.emit(`minorChange`, message)
         //io.emit('minorChange', message)
-    })   
+    })       
 
     socket.on('auth', (authRequest) => {
 
         try {
 
-            const {user, isConnecting} = authRequest
-            const dateNow = Date.now()
-            const expirationTime = dateNow + (1000 * 60 * 15)
+            const {user, isConnecting} = authRequest            
+            const expirationTime = getExpirationTime()
 
             if (user?.id && isConnecting == true) {
                 connectUser({...user, expirationTime : expirationTime})

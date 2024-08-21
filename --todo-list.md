@@ -89,8 +89,11 @@
 
 // Done yesterday
 
-Change user list socket events to only send updates to whoever requests them instead of broadcasting them to every user.
+Implement feature to log message changes throughout the session. Create component for the history of message changes. Add a toggle button to switch between showing messages or their log
 
 // Done today
 
-Implement feature to log message changes throughout the session. Create component for the history of message changes. Add a toggle button to switch between showing messages or their log
+Enhance socket message handling
+- Add user to onlineUser list if not already present
+- Create component for text placeholders
+- Implement custom placeholder text for elements

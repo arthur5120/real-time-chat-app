@@ -1,4 +1,5 @@
 import { FC } from "react"
+import TextPlaceholder from "../atoms/text-placeholder"
 
 const Log : FC<{values : string[]}> = ({values}) => {
 
@@ -12,7 +13,7 @@ const Log : FC<{values : string[]}> = ({values}) => {
                         {value}
                     </p>
                 )
-            }) : <p className={`text-gray-400`}>...</p>
+            }) : <TextPlaceholder value={`Nothing here...`} />
         }   
    </div>
 

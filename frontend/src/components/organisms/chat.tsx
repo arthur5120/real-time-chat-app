@@ -8,7 +8,8 @@ import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
 import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faEyeSlash, faPause, faArrowsRotate, faClipboard, faClipboardCheck, faTriangleExclamation,} from '@fortawesome/free-solid-svg-icons'
+import { faEye, faEyeSlash, faPause, faArrowsRotate, faClipboard, faClipboardCheck, faTriangleExclamation, faHourglass3,} from '@fortawesome/free-solid-svg-icons'
+import TextPlaceholder from '../atoms/text-placeholder'
 
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
@@ -1037,7 +1038,7 @@ const Chat = () => {
 
             </p> : ''}
             {    
-              roomUsers.length > 0 ? 
+              roomUsers.length <= 0 ? <TextPlaceholder value={`Empty...`} className={`m-0 p-0`}/> :
                 roomUsers.map((user : TRoomUser, id : number) => {
 
                   const isCurrentUser = currentUser.id == user.id                  
@@ -1084,8 +1085,8 @@ const Chat = () => {
                       </span>
                     </p>
                   )
-                }) : 
-              <p className={`text-gray-400`}>...</p>
+                })
+              
             }
           </span>
         </div>
@@ -1144,7 +1145,9 @@ const Chat = () => {
           className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll`}
           ref={chatContainerRef}>
              
-          { showLog ? <Log values={log} /> : messages?.map((message : TChatMessage, id : number) => {
+          { showLog ? <Log values={log} /> : 
+          messages?.length <= 0 ? <TextPlaceholder value={`No messages yet...`}/> : 
+          messages?.map((message : TChatMessage, id : number) => {
 
             // 🥗 🌮 🍣 🍙 🍘 🍥 🍨 ☕️ 🎂 🥡 🍵 🍢🍡
 
