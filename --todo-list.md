@@ -83,11 +83,14 @@
 # Create log to show message changing history.
 # When first starting the server, it takes too long to load the page.
 # Chat starts flicking when reaching a certain number of messages.
+# Maybe make some messages and user names only show if clicking on them.
+# Add a message to the user case there are not messages in the current chat room.
+# Add a context menu to show interactions with a individual given message as well.
 
 // Done yesterday
 
-Create socket list of duplicated users set to logout on the socket. Update the handleBeforeUnload event to send the logout reason to the socket. Modify session handling for inactivity to identify duplicate sessions and prevent status change due to auto-logout.
+Change user list socket events to only send updates to whoever requests them instead of broadcasting them to every user.
 
 // Done today
 
-Change user list socket events to only send updates to whoever requests them instead of broadcasting them to every user.
+Implement feature to log message changes throughout the session. Create component for the history of message changes. Add a toggle button to switch between showing messages or their log

@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef, useState, Fragment } from 'react'
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
-import { convertDatetimeToMilliseconds, cropMessage, getItemFromString, getTime, isThingValid, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
+import { convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getItemFromString, getTime, isThingValid, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
@@ -12,6 +12,7 @@ import { faEye, faEyeSlash, faPause, faArrowsRotate, faClipboard, faClipboardChe
 
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
+import Log from '../molecules/log'
 
 const roomsPlaceholder = [{id : '-1', name : ''}]
 const currentRoomPlaceHolder = {id : '-1', selectId : 0, name : ''}
@@ -70,6 +71,8 @@ const Chat = () => {
   const [hasErrors, setHasErrors] = useState(false)
   const [isServerOnline, setIsServerOnline] = useState(true)
   const [requireRefresh, setRequireRefresh] = useState(true)
+  const [log, setLog] = useState<string[]>([])
+  const [showLog, setShowLog] = useState(false)  
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)
@@ -79,6 +82,13 @@ const Chat = () => {
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
   const {auth, setAuth, role} = useContext(authContext)
+
+  const addToLog =(msg : string) => {    
+    setLog((data) => ([
+      ...data,
+      msg
+    ]))
+  }
 
   const scrollToLatest = () => {
     if (autoScroll && chatContainerRef.current) {
@@ -620,7 +630,7 @@ const Chat = () => {
         }
       } else {
         if(showNotifications) {
-          notifyUserInRoom(room)
+          notifyUserInRoom(room)          
         }
       }  
 
@@ -632,10 +642,11 @@ const Chat = () => {
       if(notification && showNotifications) {
         if(room) {
           if (room == currentRoom.id || !notifyRoomOnly) {
-            notifyUserInRoom(room, notification)
+            notifyUserInRoom(room, notification)            
           }
         } else {
           notifyUser(notification, `info`)
+          addToLog(notification)
         }
         setRefreshChat(true)
       }
@@ -647,6 +658,7 @@ const Chat = () => {
       setReload(reload + 1)
       if (msg != ``) {
         notifyUser(msg, 'info')
+        addToLog(msg)
       }
     })
 
@@ -900,11 +912,11 @@ const Chat = () => {
       case 'delete' : {   
         messageBeingEdited.id ? await deleteMessage(messageBeingEdited.id) : ''
         const editedMessage = messageBeingEdited?.previous ?  messageBeingEdited.previous : ''
-        const socketPayload : TSocketPayload = {
-          notification : `The message "${cropMessage(editedMessage)}" was deleted on ${currentRoom.name}`
-        }
+        const logMessage = `The message "${cropMessage(editedMessage)}" was deleted on ${currentRoom.name}`
+        const socketPayload : TSocketPayload = {notification : logMessage}
         socket?.emit('minorChange', socketPayload)
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
+        addToLog(`You : ${logMessage}`)
         setRefreshChat(true)
         break
       }
@@ -915,10 +927,10 @@ const Chat = () => {
           messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
           const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
           const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
-          const socketPayload : TSocketPayload = {
-            notification : `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`
-          }
+          const logMessage = `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`
+          const socketPayload : TSocketPayload = {notification : logMessage}
           socket?.emit('minorChange', socketPayload)
+          addToLog(`You : ${logMessage}`)
           setRefreshChat(true)
         }
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
@@ -1131,8 +1143,8 @@ const Chat = () => {
 
           className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll`}
           ref={chatContainerRef}>
-
-          {messages?.map((message : TChatMessage, id : number) => {
+             
+          { showLog ? <Log values={log} /> : messages?.map((message : TChatMessage, id : number) => {
 
             // 🥗 🌮 🍣 🍙 🍘 🍥 🍨 ☕️ 🎂 🥡 🍵 🍢🍡
 
@@ -1403,17 +1415,40 @@ const Chat = () => {
               const i = randomNumber * length | 0
               notifyUser(`${bugsToFix[i]}`)
             }}
-          />
+          />          
           
           <CustomButton
             value={`Test 🦾`}
             variationName='varthree'
             className={`${spam ? `bg-yellow-500` : `bg-black`} active:bg-gray-900 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad || !isServerOnline}
-            title={`Currently spamming the chat.`}
+            //title={`Currently spamming the chat.`}
+            title={`Currently testing log.`}
             onClick={ async () => {              
               //setSpam((lastSpam) => !lastSpam)
-              setRefreshChat(true)
+              const randomID = generateUniqueId()
+              setLog((data) => ([
+                ...data,
+                randomID
+              ]))
+              notifyUser(`RandomId added to log. Current number : ${log.length}`)
+            }}
+          />
+
+          <CustomButton
+            value={`Log`}
+            variationName='varthree'
+            className={`bg-orange-900 active:bg-orange-800 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
+            disabled={!!reload || firstLoad || !isServerOnline}
+            title={`Shows either the history of messages or the chat`}
+            onClick={() => {
+              setShowLog(!showLog)
+              const scrollDelay = setTimeout(() => {
+                scrollToLatest()
+              }, 50)
+              return () => {
+                clearTimeout(scrollDelay)
+              }
             }}
           />
 

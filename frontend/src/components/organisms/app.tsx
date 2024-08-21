@@ -125,10 +125,7 @@ const App = () => {
 
         <header>
           <AuthBanner/>          
-          <Navbar />
-          <h3 className={`flex justify-center`}>
-            Auth : {JSON.stringify(auth)}
-          </h3>
+          <Navbar />          
         </header>
 
         <main>
