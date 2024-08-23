@@ -222,7 +222,7 @@ io.on('connection', (socket) => {
             ...updatedUserLists,
         }
 
-        socket.broadcast.emit('room', newPayload)
+        socket.broadcast.emit(`room`, newPayload)
         
         //io.emit(`room`. message)
         //io.to(socket.id).emit('room', messages) // Sends String, Objects etc...
@@ -255,12 +255,14 @@ io.on('connection', (socket) => {
             const expirationTime = getExpirationTime()
 
             if (user?.id && isConnecting == true) {
-                connectUser({...user, expirationTime : expirationTime})
+                connectUser({...user, expirationTime : expirationTime})                
+                socket.broadcast.emit(`auth`, onlineUsersNames)
                 return
             }
             
             if (user?.id && isConnecting == false) {
                 disconnectUser(user.id)
+                socket.broadcast.emit(`auth`, onlineUsersNames)
                 return
             }
 

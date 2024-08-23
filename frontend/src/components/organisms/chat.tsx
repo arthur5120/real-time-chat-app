@@ -1,8 +1,8 @@
-import { useContext, useEffect, useRef, useState, Fragment } from 'react'
+import { useContext, useEffect, useRef, useState, Fragment, Suspense } from 'react'
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
-import { convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getItemFromString, getTime, isThingValid, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
+import { convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getFormattedDate, getItemFromString, getTime, isThingValid, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
@@ -85,9 +85,13 @@ const Chat = () => {
   const {auth, setAuth, role} = useContext(authContext)
 
   const addToLog =(msg : string) => {    
+    //const dateNow = new Date()    
+    //const convertedDateNow = getTime(dateNow)
+    const dateNow = getFormattedDate()        
     setLog((data) => ([
       ...data,
-      msg
+      dateNow,
+      msg,
     ]))
   }
 
@@ -622,7 +626,7 @@ const Chat = () => {
       
       const {message : msg} = payload // currentRoomUsers, currentOnlineUsers, currentInactiveUsers
       const {id, room} = msg
-      const firstMessageId = messages?.length > 0 ? messages[0].id : -1      
+      const firstMessageId = messages?.length > 0 ? messages[0].id : -1
 
       if (room == currentRoom.id) {
         if (id != firstMessageId) {
@@ -643,7 +647,7 @@ const Chat = () => {
       if(notification && showNotifications) {
         if(room) {
           if (room == currentRoom.id || !notifyRoomOnly) {
-            notifyUserInRoom(room, notification)            
+            notifyUserInRoom(room, notification)
           }
         } else {
           notifyUser(notification, `info`)
@@ -817,7 +821,7 @@ const Chat = () => {
     return () => {
       clearTimeout(typeTimeout)
     }
-  }, [isTyping]) 
+  }, [isTyping])   
 
   useEffect(() => {    
     if(!isServerOnline) {
@@ -913,11 +917,11 @@ const Chat = () => {
       case 'delete' : {   
         messageBeingEdited.id ? await deleteMessage(messageBeingEdited.id) : ''
         const editedMessage = messageBeingEdited?.previous ?  messageBeingEdited.previous : ''
-        const logMessage = `The message "${cropMessage(editedMessage)}" was deleted on ${currentRoom.name}`
+        const logMessage = `${currentUser.name} deleted "${cropMessage(editedMessage)}" on ${currentRoom.name}`
         const socketPayload : TSocketPayload = {notification : logMessage}
         socket?.emit('minorChange', socketPayload)
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
-        addToLog(`You : ${logMessage}`)
+        addToLog(`${logMessage}`)
         setRefreshChat(true)
         break
       }
@@ -928,10 +932,10 @@ const Chat = () => {
           messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
           const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
           const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
-          const logMessage = `Message updated from "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`
+          const logMessage = `${currentUser.name} updated "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`
           const socketPayload : TSocketPayload = {notification : logMessage}
           socket?.emit('minorChange', socketPayload)
-          addToLog(`You : ${logMessage}`)
+          addToLog(`${logMessage}`)
           setRefreshChat(true)
         }
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
@@ -1134,17 +1138,16 @@ const Chat = () => {
               {!showNotifications ? 
               <FontAwesomeIcon icon={faEyeSlash} width={48} height={48}/> : 
               <FontAwesomeIcon icon={faEye} width={48} height={48}/>}
-            </button>
+            </button>            
             
           </span>
 
-        </div>
+        </div>        
 
         <div 
-
           className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll`}
           ref={chatContainerRef}>
-             
+
           { showLog ? <Log values={log} /> : 
           messages?.length <= 0 ? <TextPlaceholder value={`No messages yet...`}/> : 
           messages?.map((message : TChatMessage, id : number) => {
@@ -1430,10 +1433,7 @@ const Chat = () => {
             onClick={ async () => {              
               //setSpam((lastSpam) => !lastSpam)
               const randomID = generateUniqueId()
-              setLog((data) => ([
-                ...data,
-                randomID
-              ]))
+              addToLog(randomID)
               notifyUser(`RandomId added to log. Current number : ${log.length}`)
             }}
           />
@@ -1445,10 +1445,10 @@ const Chat = () => {
             disabled={!!reload || firstLoad || !isServerOnline}
             title={`Shows either the history of messages or the chat`}
             onClick={() => {
-              setShowLog(!showLog)
+              setShowLog(!showLog)              
               const scrollDelay = setTimeout(() => {
-                scrollToLatest()
-              }, 50)
+                scrollToLatest()                
+              }, 5)
               return () => {
                 clearTimeout(scrollDelay)
               }

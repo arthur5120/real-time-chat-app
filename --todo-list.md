@@ -80,20 +80,20 @@
 # Changing rooms updates the chat for other users.[DONE]
 # User going inactive on auto-logout due login with the same account.[DONE]
 # Use state to require a page refresh to the user.
-# Create log to show message changing history.
+# Create log to show message changing history. [DONE]
 # When first starting the server, it takes too long to load the page.
 # Chat starts flicking when reaching a certain number of messages.
 # Maybe make some messages and user names only show if clicking on them.
-# Add a message to the user case there are not messages in the current chat room.
+# Add a message to the user case there are not messages in the current chat room. [DONE]
 # Add a context menu to show interactions with a individual given message as well.
+# Change buttons to add a clear log when on the log screen.
+# Make log persistent through sessions using cookies.
+# Maybe modify the log to firstly show a generic message and then a detailed version upon clicking on it.
 
 // Done yesterday
 
-Implement feature to log message changes throughout the session. Create component for the history of message changes. Add a toggle button to switch between showing messages or their log
+Add user to onlineUser list if not already present. Create component for text placeholders. custom placeholder text for elements.
 
 // Done today
 
-Enhance socket message handling
-- Add user to onlineUser list if not already present
-- Create component for text placeholders
-- Implement custom placeholder text for elements
+Fix auth emit event on the socket. Modify the message change notifications to include the name of the user. Reduce delay on loading messages upon switching from the log screen. Modify log to include the date of the messages.

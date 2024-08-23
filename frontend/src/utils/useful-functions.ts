@@ -26,6 +26,12 @@ export const getTime = (value: number) => {
     return timeString.trim()
 }
 
+export const getFormattedDate = () => {
+    const currentDate = new Date()
+    const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}/${(currentDate.getMonth() + 1).toString().padStart(2, '0')}/${currentDate.getFullYear()}`
+    return formattedDate
+}
+
 export const convertDatetimeToMilliseconds = (dateString : string) => { // Datetime To Milliseconds
     const date = new Date(dateString)
     const milliseconds = date.getTime()
