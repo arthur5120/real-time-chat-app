@@ -89,11 +89,12 @@
 # Change buttons to add a clear log when on the log screen.
 # Make log persistent through sessions using cookies.
 # Maybe modify the log to firstly show a generic message and then a detailed version upon clicking on it.
+# Make log specific to the current room.
 
 // Done yesterday
 
-Add user to onlineUser list if not already present. Create component for text placeholders. custom placeholder text for elements.
+Fix auth event emission on the socket. Include user name in message change notifications. Reduce delay when loading messages after switching from the log screen. Add message date to the log.
 
 // Done today
 
-Fix auth emit event on the socket. Modify the message change notifications to include the name of the user. Reduce delay on loading messages upon switching from the log screen. Modify log to include the date of the messages.
+Implement persistent log messages using cookies. Add functionality to set and retrieve log messages from cookies. Modify the main useEffect hook to fetch log messages on component mount. Add a button to clear the log, which is conditionally displayed on the log screen.

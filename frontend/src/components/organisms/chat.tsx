@@ -10,6 +10,7 @@ import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEye, faEyeSlash, faPause, faArrowsRotate, faClipboard, faClipboardCheck, faTriangleExclamation, faHourglass3,} from '@fortawesome/free-solid-svg-icons'
 import TextPlaceholder from '../atoms/text-placeholder'
+import Cookies from 'js-cookie'
 
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
@@ -73,7 +74,7 @@ const Chat = () => {
   const [isServerOnline, setIsServerOnline] = useState(true)
   const [requireRefresh, setRequireRefresh] = useState(true)
   const [log, setLog] = useState<string[]>([])
-  const [showLog, setShowLog] = useState(false)  
+  const [showLog, setShowLog] = useState(false)
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)
@@ -82,23 +83,39 @@ const Chat = () => {
 
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
-  const {auth, setAuth, role} = useContext(authContext)
-
-  const addToLog =(msg : string) => {    
-    //const dateNow = new Date()    
-    //const convertedDateNow = getTime(dateNow)
-    const dateNow = getFormattedDate()        
-    setLog((data) => ([
-      ...data,
-      dateNow,
-      msg,
-    ]))
-  }
+  const {auth, setAuth, role} = useContext(authContext)  
 
   const scrollToLatest = () => {
     if (autoScroll && chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
     }
+  }
+
+  const getCookieLog = () : string[] => {
+    try {
+      const logString = Cookies.get(`log`) as string
+      const logArray = logString ? JSON.parse(logString) : []
+      return logArray
+    } catch (e) {
+      setHasErrors(true)
+      return []
+    }
+  }
+  
+  const setCookieLog = (logArray : string[]) => {
+    const logString = JSON.stringify(logArray)
+    Cookies.set(`log`, logString, {expires : 3, path: '/'})
+  }
+
+  const addToLog =(msg : string) => {    
+    //const dateNow = new Date()
+    //const convertedDateNow = getTime(dateNow)
+    const dateNow = getFormattedDate()    
+    setLog((data) => {      
+      const newLog = [...data, dateNow, msg,]
+      setCookieLog(newLog)
+      return newLog
+    })        
   }
 
   const addUserToOnlineList = async () => {
@@ -171,7 +188,7 @@ const Chat = () => {
 
   const retrieveRooms = async () => {
 
-    console.log(`FUNCTION : Retrieving rooms.`)
+    console.log(`FUNCTION : Retrieving rooms.`)    
 
     try {
 
@@ -239,12 +256,17 @@ const Chat = () => {
     
     console.log(`FUNCTION : Retrieving messages.`)
     
-      try {
+      try {        
+
+        if(firstLoad) {
+          const cookieLog = getCookieLog()
+          setLog(cookieLog)
+        }
 
         if(currentRoom.id == '-1') {
           setReload(reload + 1)
           return
-        }
+        }        
 
         const authInfo = await authStatus({})
         const rawMessages = await getMessages() // Getting all messages to filter them based on room, change this later.
@@ -616,7 +638,7 @@ const Chat = () => {
 
     if(socket?.disconnected) {
       socket?.connect()
-    }
+    }        
     
     retrieveUserLists()
 
@@ -1393,8 +1415,24 @@ const Chat = () => {
 
           />
         
-          <CustomButton
-
+          { showLog ? <CustomButton
+            value={
+              <span className={`flex flex-col gap-1`}>
+                <h3 className='text-slate-100 group-hover:text-white'>
+                  Reset Log
+                </h3>
+              </span>
+            }
+            variationName='vartwo'
+            className={`w-20 h-full max-h-28 m-0 flex items-center justify-center group`}
+            disabled={!!reload || firstLoad || !isServerOnline}
+            title={`Delete All Records`}
+            onClick={() => {
+              setLog([])
+              setCookieLog([])
+            }}
+          />
+          : <CustomButton
             value={
               <span className={`flex flex-col gap-1`}>
                 <h3 className='text-slate-100 group-hover:text-white'>
@@ -1402,13 +1440,12 @@ const Chat = () => {
                 </h3>
               </span>
             }
-
             variationName='vartwo'
             className={`w-20 h-full max-h-28 m-0 flex items-center justify-center group`}
             disabled={!!reload || firstLoad || !isServerOnline}
             title={`Delete all rooms`}
             onClick={() => onResetRoomsClick()}
-          />
+          />}
 
           <CustomButton
             value={`Get 🐜`}
