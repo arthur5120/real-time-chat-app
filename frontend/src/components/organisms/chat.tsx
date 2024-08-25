@@ -117,7 +117,7 @@ const Chat = () => {
       userName : userName,
       date : date ? date : dateNow,
       content : content,
-      roomName : roomName,
+      roomName : roomName ? roomName : `global`,
     }
     setLog((data) => {      
       const newLog = [...data, newLogEntry]
@@ -410,9 +410,10 @@ const Chat = () => {
         })
         if(currentUser?.name && !isUserInRoom) {
           const socketPayload : TSocketPayload = {
-            notification : `${currentUser.name} has entered `,
             roomId : currentRoom.id,
-            notifyRoomOnly : true
+            content : `has entered`,
+            notification : `${currentUser.name} has entered ${currentRoom.name}`,
+            notifyRoomOnly : true,
           }
           setRoomUsers([...roomUsers, {id : authInfo.id, name : currentUser.name}])
           setIsUserInroom(true)
@@ -438,7 +439,8 @@ const Chat = () => {
 
     try {
 
-      const creationMessage = `New Room Created!`
+      const notificationMessage = `New Room Created!`
+      const creationMessage = `created a new room`
       const userInfo = await authStatus({})
 
       if (!userInfo.authenticated) {
@@ -453,8 +455,16 @@ const Chat = () => {
       if(socket?.disconnected) {
 	      socket?.connect()
       }
+
+      const socketPayload : TSocketPayload = {        
+        userName: currentUser.name,
+        content: creationMessage,
+        notification: notificationMessage,
+        //roomName: currentRoom.name, - Global change, needs to notify everyone.
+      }
       
-      socket?.emit(`change`, creationMessage)
+      socket?.emit(`change`, socketPayload)
+      addToLog({userName : currentUser.name, content : creationMessage})
       console.log(`Creating chat, socket connection : ${socket?.connected}`)
 
       setReload(reload + 1)
@@ -484,8 +494,19 @@ const Chat = () => {
         socket?.connect()
       }
 
-      setTimeout(() => {
-        socket?.emit(`change`, `All rooms deleted, a fresh one was created`)
+      const notificationMessage = `All rooms deleted, a fresh one was created`      
+      const logMessage = `deleted all rooms and created a new one`
+      
+      const socketPayload : TSocketPayload = {
+        userName : currentUser.name,
+        content : logMessage,
+        notification : notificationMessage,
+        //roomName : currentRoom.name, - Global change, needs to notify everyone.
+      }
+
+      setTimeout(() => {        
+        socket?.emit(`change`, socketPayload)
+        addToLog({userName : currentUser.name, content : logMessage})
       }, 200)
 
       console.log(`Deleting Rooms, socket connection : ${socket?.connected}`)
@@ -672,7 +693,7 @@ const Chat = () => {
     })
       
     socket?.on('minorChange', (msg : TSocketPayload) => {
-      const {userName, notification, roomId, roomName, notifyRoomOnly} = msg
+      const {userName, notification, roomId, roomName, content, notifyRoomOnly} = msg
       console.log(`socket on minorChange : ${roomId}`)
       if(notification && showNotifications) {
         if(roomId) {
@@ -681,19 +702,20 @@ const Chat = () => {
           }
         } else {
           notifyUser(notification, `info`)
-          addToLog({userName : userName, roomName : roomName, content : notification})
+          addToLog({userName : userName, roomName : roomName, content : content})
         }
         setRefreshChat(true)
       }
     })
 
-    socket?.on(`change`, (msg : string) => {
+    socket?.on(`change`, (payload : TSocketPayload) => {
+      const {userName, roomName, notification, content} = payload
       console.log(`socket on change : ${currentRoom?.id}`)
       setUseDelayOnEmit(true)
       setReload(reload + 1)
-      if (msg != ``) {
-        notifyUser(msg, 'info')
-        //addToLog(msg)
+      if (payload?.notification && notification != ``) {
+        notifyUser(payload, 'info')
+        addToLog({userName : userName, roomName : roomName, content : content})        
       }
     })
 
@@ -949,7 +971,7 @@ const Chat = () => {
         const editedMessage = messageBeingEdited?.previous ?  messageBeingEdited.previous : ''
         const notificationMessage = `${currentUser.name} deleted "${cropMessage(editedMessage)}" on ${currentRoom.name}`
         const logMessage = `deleted "${cropMessage(editedMessage)}"`
-        const socketPayload : TSocketPayload = {userName : currentUser.name, roomName : currentRoom.name, notification : notificationMessage}
+        const socketPayload : TSocketPayload = {userName : currentUser.name, roomName : currentRoom.name, notification : notificationMessage, content : logMessage}
         socket?.emit('minorChange', socketPayload)
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
         addToLog({userName : currentUser.name, roomName : currentRoom.name, content : logMessage})
@@ -965,7 +987,7 @@ const Chat = () => {
           const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
           const notificationMessage = `${currentUser.name} updated "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`
           const logMessage = `updated "${previousMessage}" to "${updatedMessage}"`
-          const socketPayload : TSocketPayload = {userName : currentUser.name, roomName : currentRoom.name, notification : notificationMessage}
+          const socketPayload : TSocketPayload = {userName : currentUser.name, roomName : currentRoom.name, notification : notificationMessage, content : logMessage}
           socket?.emit('minorChange', socketPayload)
           addToLog({userName : currentUser.name, roomName : currentRoom.name, content : logMessage})
           setRefreshChat(true)
@@ -1074,7 +1096,7 @@ const Chat = () => {
 
             </p> : ''}
             {    
-              roomUsers.length <= 0 ? <TextPlaceholder value={`Empty...`} className={`m-0 p-0`}/> :
+              roomUsers.length <= 0 ? <TextPlaceholder value={`No one...`} className={`m-0 p-0`}/> :
                 roomUsers.map((user : TRoomUser, id : number) => {
 
                   const isCurrentUser = currentUser.id == user.id                  

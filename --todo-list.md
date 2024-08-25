@@ -89,16 +89,20 @@
 # Change buttons to add a clear log when on the log screen. [DONE]
 # Make log persistent through sessions using cookies. [DONE]
 # Maybe modify the log to firstly show a generic message and then a detailed version upon clicking on it.
-# Make log into an array of objects instead of an array of strings.
+# Make log into an array of objects instead of an array of strings. [DONE]
 # Make log specific to the current room.
+# Make log specific to user.
 # When server fist starts, changing the messages doesn't update the chat on the other end.
-# Modify the log to accept global changes.
-# Update change socket event to handle the new payload type.
+# Modify the log to accept global changes. [DONE]
+# Update change socket event to handle the new payload type. [DONE]
+# Check minorChange and change socket events for stale states.
+# Make socket events handle stale/undefined payload properties.
+# Change room and minorChange events to have a notification type message and a log one with what has been changed. [DONE]
 
 // Done yesterday
 
-Implement persistent log messages using cookies. Add functionality to set and retrieve log messages from cookies. Modify the main useEffect hook to fetch log messages on component mount. Add a button to clear the log, which is conditionally displayed on the log screen.
+Change log format to an array of objects instead of strings. Adapt log component to display information separately. Change minorChange socket events to handle the new payload type. Add button highlight and title when on log mode.
 
 // Done today
 
-Change log format to an array of objects instead of strings. Adapt log component to display information separately. Change minorChange socket events to handle the new payload type. Add button highlight and title when on log mode.
+Modify room reset and creation functions to log changes. Update change socket events to handle the new payload type. Separate log messages from the notification messages on the socket object. Modify the log component to support global changes.

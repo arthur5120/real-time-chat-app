@@ -229,8 +229,19 @@ io.on('connection', (socket) => {
 
     })
 
-    socket.on('change', (message, callback = null) => {
-        console.log(message)
+    socket.on(`change`, (message, callback = null) => {
+
+        // const socketPayload: Partial<{
+        //     userId: string;
+        //     userName: string;
+        //     content: string;
+        //     notification: string;
+        //     roomName: string;
+        //     roomId: string;
+        //     notifyRoomOnly: boolean;
+        // }>
+
+        console.log(message?.notification ? message.notification : `Change notification : Failed`)
         if (callback != null) {
             callback(true)
         }
