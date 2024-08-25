@@ -59,3 +59,10 @@ export type TSocketAuthRequest = {
     user : {id : string, name ? : string}, 
     isConnecting ? : boolean
 }
+
+export type TLog = Partial<{
+    userName : string, 
+    date : string, 
+    content : string, 
+    roomName : string,
+}>

@@ -69,32 +69,36 @@
 # Update inactivity status when sending a message on the list. [DONE]
 # When resetting the rooms, the chat gets stuck on infinite reloading.
 # Make user lists update comparing uuid instead of number of users, or maybe dates.
+# Banner might be breaking due to overlapping state changes.
+# Find a way to update all the lists.
+# When first starting the server, it takes too long to load the page.
+# Chat starts flicking when reaching a certain number of messages.
+# Maybe make some messages and user names only show if clicking on them.
+# Add a context menu to show interactions with a individual given message as well.
 # User going inactive on logout. [DONE]
 # Banner might be using stale auth states. [DONE]
-# Banner might be breaking due to overlapping state changes.
 # Inactive status updating unnecessarily. [DONE]
 # Typing status not updating when sending the message. [DONE]
-# Find a way to update all the lists.
 # Message failing when confirming the edit while writing. [DONE]
 # Make verification for typing users. [DONE]
 # Changing rooms updates the chat for other users.[DONE]
 # User going inactive on auto-logout due login with the same account.[DONE]
 # Use state to require a page refresh to the user.
 # Create log to show message changing history. [DONE]
-# When first starting the server, it takes too long to load the page.
-# Chat starts flicking when reaching a certain number of messages.
-# Maybe make some messages and user names only show if clicking on them.
 # Add a message to the user case there are not messages in the current chat room. [DONE]
-# Add a context menu to show interactions with a individual given message as well.
-# Change buttons to add a clear log when on the log screen.
-# Make log persistent through sessions using cookies.
+# Change buttons to add a clear log when on the log screen. [DONE]
+# Make log persistent through sessions using cookies. [DONE]
 # Maybe modify the log to firstly show a generic message and then a detailed version upon clicking on it.
+# Make log into an array of objects instead of an array of strings.
 # Make log specific to the current room.
+# When server fist starts, changing the messages doesn't update the chat on the other end.
+# Modify the log to accept global changes.
+# Update change socket event to handle the new payload type.
 
 // Done yesterday
 
-Fix auth event emission on the socket. Include user name in message change notifications. Reduce delay when loading messages after switching from the log screen. Add message date to the log.
+Implement persistent log messages using cookies. Add functionality to set and retrieve log messages from cookies. Modify the main useEffect hook to fetch log messages on component mount. Add a button to clear the log, which is conditionally displayed on the log screen.
 
 // Done today
 
-Implement persistent log messages using cookies. Add functionality to set and retrieve log messages from cookies. Modify the main useEffect hook to fetch log messages on component mount. Add a button to clear the log, which is conditionally displayed on the log screen.
+Change log format to an array of objects instead of strings. Adapt log component to display information separately. Change minorChange socket events to handle the new payload type. Add button highlight and title when on log mode.

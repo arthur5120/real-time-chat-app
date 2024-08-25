@@ -238,7 +238,16 @@ io.on('connection', (socket) => {
         //io.emit('change', message)
     })
 
-    socket.on('minorChange', (message, callback = null) => { // content, notification, room (id) (change with no reload)
+    socket.on('minorChange', (message, callback = null) => {
+        // type TSocketPayload = {
+        //     userId?: string | undefined;
+        //     userName?: string | undefined;
+        //     content?: string | undefined;
+        //     notification?: string | undefined;
+        //     roomName?: string | undefined;
+        //     roomId?: string | undefined;
+        //     notifyRoomOnly?: boolean | undefined;
+        // }
         console.log(message.notification.trim().replace(/\s+/g, ' '))
         if (callback != null) {
             callback(onlineUsers.length)
