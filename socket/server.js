@@ -323,7 +323,7 @@ io.on('connection', (socket) => {
             if(callback) {
                 callback(inactiveUsers)
             }
-            io.to(socket.id).emit('inactive', inactiveUsersNames)            
+            io.to(socket.id).emit('inactive', inactiveUsersNames)
         } catch (e) {
             console.log(`error while updating list`)
         }

@@ -101,8 +101,8 @@
 
 // Done yesterday
 
-Change log format to an array of objects instead of strings. Adapt log component to display information separately. Change minorChange socket events to handle the new payload type. Add button highlight and title when on log mode.
+Modify room reset and creation functions to log changes. Update change socket events to handle the new payload type. Separate log messages from the notification messages on the socket object. Modify the log component to support global changes.
 
 // Done today
 
-Modify room reset and creation functions to log changes. Update change socket events to handle the new payload type. Separate log messages from the notification messages on the socket object. Modify the log component to support global changes.
+Apply function to capitalize notification messages. Fix scroll to latest for the log feed by increasing the delay after changing to the log view. Set placeholders for the log entry object to handle missing values. Modify log function to include the current date and time in log entries.

@@ -7,7 +7,7 @@ export const capitalizeFirst = (string : string) : string => {
     return newString
 }
 
-export const getTime = (value: number) => {
+export const getTimeElapsed = (value: number) => {
 
     const timeNow = Date.now()
     const diff = timeNow - value
@@ -30,6 +30,15 @@ export const getFormattedDate = () => {
     const currentDate = new Date()
     const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}/${(currentDate.getMonth() + 1).toString().padStart(2, '0')}/${currentDate.getFullYear()}`
     return formattedDate
+}
+
+export const getFormattedTime = (): string => {
+    const currentDate = new Date()    
+    const currentHours = currentDate.getHours().toString().padStart(2, '0')
+    const currentMinutes = currentDate.getMinutes().toString().padStart(2, '0')
+    const currentSeconds = currentDate.getSeconds().toString().padStart(2, '0')
+    const formattedTime = `${currentHours}:${currentMinutes}:${currentSeconds}`
+    return formattedTime
 }
 
 export const convertDatetimeToMilliseconds = (dateString : string) => { // Datetime To Milliseconds

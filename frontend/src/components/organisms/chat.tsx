@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef, useState, Fragment, Suspense } from 'rea
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest, TLog } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
-import { convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getFormattedDate, getItemFromString, getTime, isThingValid, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
+import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, isThingValid, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
@@ -78,6 +78,7 @@ const Chat = () => {
   const [showLog, setShowLog] = useState(false)
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
+  let logContainerRef = useRef<HTMLDivElement>(null)
   let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)
   let messageContainerRef =  useRef<HTMLSpanElement>(null)
   let handleUserActivityRef = useRef<() => void>(() => {})
@@ -86,10 +87,10 @@ const Chat = () => {
   const {notifyUser} = useContext(toastContext)
   const {auth, setAuth, role} = useContext(authContext)  
 
-  const scrollToLatest = () => {
-    if (autoScroll && chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
-    }
+  const scrollToLatest = () => {    
+      if (autoScroll && chatContainerRef.current) {
+        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
+      }              
   }
 
   const getCookieLog = () : TLog[] => {
@@ -108,22 +109,21 @@ const Chat = () => {
     Cookies.set(`log`, logString, {expires : 3, path: '/'})
   }
 
-  const addToLog = (data : TLog) => {
-    //const dateNow = new Date()
-    //const convertedDateNow = getTime(dateNow)
+  const addToLog = (data : TLog) => {    
     const dateNow = getFormattedDate()
-    const {userName, date, content, roomName} =  data
+    const timeNow = getFormattedTime()
+    const {userName, time, content, roomName} =  data
     const newLogEntry : TLog = {
-      userName : userName,
-      date : date ? date : dateNow,
-      content : content,
+      userName : userName ? userName : `Unknown`,
+      time : time ? time : `${dateNow} ${timeNow}`,
+      content : content ? content : `No content provided.`,
       roomName : roomName ? roomName : `global`,
     }
-    setLog((data) => {      
+    setLog((data) => {
       const newLog = [...data, newLogEntry]
       setCookieLog(newLog)
       return newLog
-    })        
+    })
   }
 
   const addUserToOnlineList = async () => {
@@ -409,10 +409,11 @@ const Chat = () => {
           }
         })
         if(currentUser?.name && !isUserInRoom) {
+          
           const socketPayload : TSocketPayload = {
             roomId : currentRoom.id,
             content : `has entered`,
-            notification : `${currentUser.name} has entered ${currentRoom.name}`,
+            notification : `${capitalizeFirst(currentUser.name)} has entered ${currentRoom.name}`,
             notifyRoomOnly : true,
           }
           setRoomUsers([...roomUsers, {id : authInfo.id, name : currentUser.name}])
@@ -715,7 +716,7 @@ const Chat = () => {
       setReload(reload + 1)
       if (payload?.notification && notification != ``) {
         notifyUser(payload, 'info')
-        addToLog({userName : userName, roomName : roomName, content : content})        
+        addToLog({userName : userName, roomName : roomName, content : content})
       }
     })
 
@@ -969,7 +970,7 @@ const Chat = () => {
       case 'delete' : {   
         messageBeingEdited.id ? await deleteMessage(messageBeingEdited.id) : ''
         const editedMessage = messageBeingEdited?.previous ?  messageBeingEdited.previous : ''
-        const notificationMessage = `${currentUser.name} deleted "${cropMessage(editedMessage)}" on ${currentRoom.name}`
+        const notificationMessage = `${currentUser.name ? capitalizeFirst(currentUser.name) : ``} deleted "${cropMessage(editedMessage)}" on ${currentRoom.name}`
         const logMessage = `deleted "${cropMessage(editedMessage)}"`
         const socketPayload : TSocketPayload = {userName : currentUser.name, roomName : currentRoom.name, notification : notificationMessage, content : logMessage}
         socket?.emit('minorChange', socketPayload)
@@ -985,7 +986,7 @@ const Chat = () => {
           messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
           const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
           const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
-          const notificationMessage = `${currentUser.name} updated "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`
+          const notificationMessage = `${currentUser?.name ? capitalizeFirst(currentUser.name) : ``} updated "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`
           const logMessage = `updated "${previousMessage}" to "${updatedMessage}"`
           const socketPayload : TSocketPayload = {userName : currentUser.name, roomName : currentRoom.name, notification : notificationMessage, content : logMessage}
           socket?.emit('minorChange', socketPayload)
@@ -1160,7 +1161,7 @@ const Chat = () => {
             (auth && currentUser?.name) ? 
               `${userActivity ? `🟢` : `🟠`} Chatting as ${cropMessage(currentUser.name, 8)} ` : 
               isServerOnline ? `🔴 Chatting as Guest` : `🔘 Offline`
-            }                      
+            }
           </h3>
         
           <span className='flex bg-transparent m-2 cursor-pointer gap-1'>
@@ -1202,7 +1203,7 @@ const Chat = () => {
           className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll`}
           ref={chatContainerRef}>
 
-          { showLog ? <Log values={log} /> : 
+          { showLog ? <Log values={log} ref={logContainerRef}/> : 
           messages?.length <= 0 ? <TextPlaceholder value={`No messages yet...`}/> : 
           messages?.map((message : TChatMessage, id : number) => {
 
@@ -1240,7 +1241,7 @@ const Chat = () => {
                       }
                     } else {
                       notifyUser(
-                        `Message wrote by ${message.user} ${getTime(message.updated_at)} ${message.updated_at == message.created_at ? `` : `and updated at ${getTime(message.updated_at)}`}`
+                        `Message wrote by ${message.user} ${getTimeElapsed(message.updated_at)} ${message.updated_at == message.created_at ? `` : `and updated at ${getTimeElapsed(message.updated_at)}`}`
                       )
                     }
                   }}
@@ -1278,7 +1279,7 @@ const Chat = () => {
                   
                   { !isMessageFocused && !messageBeingEdited.content ? <button
                     id={`${editMenuButtonPrefix}-edit`}
-                    className='hover:bg-slate-600 rounded-full' 
+                    className='hover:bg-slate-600 rounded-full'
                     data-action={`edit`}
                     title={`Edit`}
                     onClick={(e) => onClickEditModeIcon(e)}>
@@ -1316,8 +1317,8 @@ const Chat = () => {
 
                 <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-2 p-1 justify-end bg-transparent`}>
                   <h5 key={`msg-created_at-${id}`}  className='bg-transparent text-sm'>
-                    <time>{`${getTime(message.created_at)}`}</time>
-                    <time className={`text-slate-300 italic`}>{message.created_at != message.updated_at ? ` 📝(${getTime(message.updated_at)})` : ``}</time>
+                    <time>{`${getTimeElapsed(message.created_at)}`}</time>
+                    <time className={`text-slate-300 italic`}>{message.created_at != message.updated_at ? ` 📝(${getTimeElapsed(message.updated_at)})` : ``}</time>
                   </h5>
                 </span>
 
@@ -1486,10 +1487,10 @@ const Chat = () => {
             disabled={!!reload || firstLoad || !isServerOnline}
             title={`Shows either the history of messages or the chat`}
             onClick={() => {
-              setShowLog(!showLog)              
-              const scrollDelay = setTimeout(() => {
-                scrollToLatest()                
-              }, 5)
+              setShowLog(!showLog)
+              const scrollDelay = setTimeout(() => {              
+                scrollToLatest()
+              }, 10)
               return () => {
                 clearTimeout(scrollDelay)
               }
@@ -1514,9 +1515,15 @@ const Chat = () => {
             variationName='varthree'
             className={`${spam ? `bg-yellow-500` : `bg-black`} active:bg-gray-900 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad || !isServerOnline}
-            title={`Currently spamming the chat.`}            
-            onClick={ async () => {              
-              setSpam((lastSpam) => !lastSpam)
+            title={`Currently spamming the chat.`}
+            onClick={ async () => {
+              //setSpam((lastSpam) => !lastSpam)
+              //notifyUser(`${logContainerRef?.current ? logContainerRef?.current.id : `nothing`}`)              
+              const currentDate = new Date()
+              const currentHours = currentDate.getHours()
+              const currentMinutes = currentDate.getMinutes()
+              const currentSeconds = currentDate.getSeconds()
+              notifyUser(`${currentHours} : ${currentMinutes} : ${currentSeconds}`)
             }}
           />          
 
