@@ -90,19 +90,20 @@
 # Make log persistent through sessions using cookies. [DONE]
 # Maybe modify the log to firstly show a generic message and then a detailed version upon clicking on it.
 # Make log into an array of objects instead of an array of strings. [DONE]
+# Modify the log to accept global changes. [DONE]
+# Update change socket event to handle the new payload type. [DONE]
+# Change room and minorChange events to have a notification type message and a log one with what has been changed. [DONE]
+# Check minorChange and change socket events for stale states.[DONE]
+# Make socket events handle stale/undefined payload properties.[DONE]
 # Make log specific to the current room.
 # Make log specific to user.
 # When server fist starts, changing the messages doesn't update the chat on the other end.
-# Modify the log to accept global changes. [DONE]
-# Update change socket event to handle the new payload type. [DONE]
-# Check minorChange and change socket events for stale states.
-# Make socket events handle stale/undefined payload properties.
-# Change room and minorChange events to have a notification type message and a log one with what has been changed. [DONE]
+# On the room reset/creation, if the user continues spamming none of the messages get to the other end.
 
 // Done yesterday
 
-Modify room reset and creation functions to log changes. Update change socket events to handle the new payload type. Separate log messages from the notification messages on the socket object. Modify the log component to support global changes.
+Apply function to capitalize notification messages. Fix scroll to latest for the log feed by increasing the delay after changing to the log view. Set placeholders for the log entry object to handle missing values. Modify log function to include the current date and time in log entries.
 
 // Done today
 
-Apply function to capitalize notification messages. Fix scroll to latest for the log feed by increasing the delay after changing to the log view. Set placeholders for the log entry object to handle missing values. Modify log function to include the current date and time in log entries.
+Use dedicated useEffect and ref for showNotifications state to prevent socket disconnections when it changes and ensure functions using showNotifications always access the latest value. Implement spam detection using a function to check for rapid consecutive messages, prevent them from being sent and notify users with a toast message.

@@ -8,7 +8,7 @@ export const SocketProvider : FC<{children : ReactNode}> = ({children}) => {
   const [socket, setSocket] = useState<Socket | null>(null)
 
   useEffect(() => {
-    setSocket(io('http://localhost:4000'))
+    setSocket(io('http://localhost:4000'))    
   },[])
     
   return (

@@ -75,13 +75,15 @@ const Chat = () => {
   const [isServerOnline, setIsServerOnline] = useState(true)
   const [requireRefresh, setRequireRefresh] = useState(true)
   const [log, setLog] = useState<TLog[]>([])
-  const [showLog, setShowLog] = useState(false)
+  const [showLog, setShowLog] = useState(false)    
+  const [consecutiveMessages, setConsecutiveMessages] = useState<number[]>([])
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let logContainerRef = useRef<HTMLDivElement>(null)
   let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)
   let messageContainerRef =  useRef<HTMLSpanElement>(null)
   let handleUserActivityRef = useRef<() => void>(() => {})
+  let showNotificationsRef = useRef<boolean>(showNotifications)
 
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
@@ -124,6 +126,26 @@ const Chat = () => {
       setCookieLog(newLog)
       return newLog
     })
+  }
+
+  const isSpamming = (hereNow : number) => {
+    const arrayCapacity = 20
+    const messageCount = 5
+    const messageInterval = 10
+    const earliestMessageIndex = consecutiveMessages.length - messageCount
+    const earliestMessage = earliestMessageIndex >= 0 ? consecutiveMessages[earliestMessageIndex] : 0
+    const spamResult = consecutiveMessages.length > messageCount ? ((hereNow - earliestMessage)/1000) <= messageInterval : false
+    if(consecutiveMessages.length >= arrayCapacity) {
+      const first = consecutiveMessages[arrayCapacity - 2]
+      const second = consecutiveMessages[arrayCapacity - 1]
+      setConsecutiveMessages([first, second, hereNow])
+    } else if(!spamResult) {
+      setConsecutiveMessages((current) => ([
+        ...current,
+        hereNow
+      ]))
+    }  
+    return spamResult 
   }
 
   const addUserToOnlineList = async () => {
@@ -320,7 +342,7 @@ const Chat = () => {
 
   }
 
-  const addMessage = async (newMessage : TChatMessage) => { // Removed Async
+  const addMessage = (newMessage : TChatMessage) => { // Removed Async
     setMessages((rest) => ([
       ...rest,
       newMessage,
@@ -334,11 +356,12 @@ const Chat = () => {
     }))
   }
 
-  const sendMessage = async (messageContent = '') => {
+  const sendMessage = async (messageContent = '') => {    
     
-    const dateTimeNow = Date.now()
-    
-    try {      
+    try {     
+      
+      const dateTimeNow = Date.now()
+      const isSpammingResult= isSpamming(dateTimeNow)      
 
       const newMessage : TChatMessage = {
         user : currentUser?.name ? currentUser.name : '',
@@ -347,7 +370,7 @@ const Chat = () => {
         updated_at : dateTimeNow,
         room : currentRoom.id,
       }
-  
+
       if(newMessage.content.trim() == '') { // Validation out of place.
         notifyUser('Write something first!')
         return
@@ -357,6 +380,12 @@ const Chat = () => {
 
       if (!authInfo.authenticated) {
         notifyUser('Not Allowed!', 'error')
+        resetMessageContent()
+        return
+      }
+
+      if(isSpammingResult) {
+        notifyUser(`Slow down! Too many messages!`, `warning`)
         resetMessageContent()
         return
       }
@@ -686,7 +715,7 @@ const Chat = () => {
           setRefreshChat(true)
         }
       } else {
-        if(showNotifications) {
+        if(showNotificationsRef.current) {
           notifyUserInRoom(room)          
         }
       }  
@@ -696,7 +725,7 @@ const Chat = () => {
     socket?.on('minorChange', (msg : TSocketPayload) => {
       const {userName, notification, roomId, roomName, content, notifyRoomOnly} = msg
       console.log(`socket on minorChange : ${roomId}`)
-      if(notification && showNotifications) {
+      if(notification && showNotificationsRef.current) {
         if(roomId) {
           if (roomId == currentRoom.id || !notifyRoomOnly) {
             notifyUserInRoom(roomId, notification)
@@ -745,7 +774,7 @@ const Chat = () => {
         newTypingUsers.splice(typingUserID, 1)
         setTypingUsers(newTypingUsers)
       }      
-    })
+    })    
 
     if(currentRoom.id != '-1' && currentRoom.id != '0' && reload > 0) {
       setReload(0)
@@ -777,7 +806,7 @@ const Chat = () => {
       }
 
     }  
-  }, [rooms.length, currentRoom.id, reload, auth, showNotifications])
+  }, [rooms.length, currentRoom.id, reload, auth])  
 
   useEffect(() => {
 
@@ -904,7 +933,11 @@ const Chat = () => {
       retrieveUserLists()
       setUpdateUserLists(false)
     }
-  }, [updateUserLists])
+  }, [updateUserLists])  
+
+  useEffect(() => {
+    showNotificationsRef.current = showNotifications
+  }, [showNotifications])
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -1517,13 +1550,7 @@ const Chat = () => {
             disabled={!!reload || firstLoad || !isServerOnline}
             title={`Currently spamming the chat.`}
             onClick={ async () => {
-              //setSpam((lastSpam) => !lastSpam)
-              //notifyUser(`${logContainerRef?.current ? logContainerRef?.current.id : `nothing`}`)              
-              const currentDate = new Date()
-              const currentHours = currentDate.getHours()
-              const currentMinutes = currentDate.getMinutes()
-              const currentSeconds = currentDate.getSeconds()
-              notifyUser(`${currentHours} : ${currentMinutes} : ${currentSeconds}`)
+              setSpam((lastSpam) => !lastSpam)
             }}
           />          
 
@@ -1537,11 +1564,14 @@ const Chat = () => {
         <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
         {isTyping ? `💬` : `〰️`}
         </h3>
-        */}        
         <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
           (O : {onlineUsers.length})
           (I : {inactiveUsers.length})
           (R : {roomUsers.length})
+        </h3>
+        */}  
+        <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}> 
+          C. Messages : {consecutiveMessages.length}         
         </h3>
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
           Render : {renderCounter}
