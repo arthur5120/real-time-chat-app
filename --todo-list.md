@@ -99,11 +99,12 @@
 # Make log specific to user.
 # When server fist starts, changing the messages doesn't update the chat on the other end.
 # On the room reset/creation, if the user continues spamming none of the messages get to the other end.
+# Set a visual warning for when the use is locket out of sending messages due to spam.
 
 // Done yesterday
 
-Apply function to capitalize notification messages. Fix scroll to latest for the log feed by increasing the delay after changing to the log view. Set placeholders for the log entry object to handle missing values. Modify log function to include the current date and time in log entries.
+Use dedicated useEffect and ref for showNotifications state to prevent socket disconnections when it changes and ensure functions using showNotifications always access the latest value. Implement spam detection using a function to check for rapid consecutive messages, prevent them from being sent and notify users with a toast message.
 
 // Done today
 
-Use dedicated useEffect and ref for showNotifications state to prevent socket disconnections when it changes and ensure functions using showNotifications always access the latest value. Implement spam detection using a function to check for rapid consecutive messages, prevent them from being sent and notify users with a toast message.
+Add showSpamWarning and spamCountdown states to track spam warning status. Implement useEffect to manage spam warning timeout and state updates. Change chat textarea outline color conditionally based on the showSpamWarning state to provide the user with visual feedback.

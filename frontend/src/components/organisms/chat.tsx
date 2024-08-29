@@ -76,7 +76,9 @@ const Chat = () => {
   const [requireRefresh, setRequireRefresh] = useState(true)
   const [log, setLog] = useState<TLog[]>([])
   const [showLog, setShowLog] = useState(false)    
-  const [consecutiveMessages, setConsecutiveMessages] = useState<number[]>([])
+  const [consecutiveMessages, setConsecutiveMessages] = useState<number[]>([])  
+  const [showSpamWarning, setShowSpamWarning] = useState(false)
+  const [spamCountdown, setSpamCountdown] = useState(0)
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let logContainerRef = useRef<HTMLDivElement>(null)
@@ -87,12 +89,12 @@ const Chat = () => {
 
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
-  const {auth, setAuth, role} = useContext(authContext)  
+  const {auth, setAuth, role} = useContext(authContext)
 
   const scrollToLatest = () => {    
       if (autoScroll && chatContainerRef.current) {
         chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
-      }              
+      }
   }
 
   const getCookieLog = () : TLog[] => {
@@ -134,7 +136,8 @@ const Chat = () => {
     const messageInterval = 10
     const earliestMessageIndex = consecutiveMessages.length - messageCount
     const earliestMessage = earliestMessageIndex >= 0 ? consecutiveMessages[earliestMessageIndex] : 0
-    const spamResult = consecutiveMessages.length > messageCount ? ((hereNow - earliestMessage)/1000) <= messageInterval : false
+    const messageDiff = ((hereNow - earliestMessage)/1000)
+    const spamResult = consecutiveMessages.length >= messageCount ? messageDiff <= messageInterval : false
     if(consecutiveMessages.length >= arrayCapacity) {
       const first = consecutiveMessages[arrayCapacity - 2]
       const second = consecutiveMessages[arrayCapacity - 1]
@@ -144,9 +147,23 @@ const Chat = () => {
         ...current,
         hereNow
       ]))
-    }  
-    return spamResult 
+    }
+    if(spamResult && !showSpamWarning) {
+      setShowSpamWarning(spamResult)
+      setSpamCountdown(messageDiff | 0)
+    }
+    return spamResult
   }
+
+  // const getSpammingResult = () => {    
+  //   const messageCount = 5
+  //   const messageInterval = 10
+  //   const latestMessage = consecutiveMessages[consecutiveMessages.length - 1]
+  //   const earliestMessageIndex = consecutiveMessages.length - messageCount
+  //   const earliestMessage = earliestMessageIndex >= 0 ? consecutiveMessages[earliestMessageIndex] : 0
+  //   const spamResult = consecutiveMessages.length >= messageCount ? ((latestMessage - earliestMessage)/1000) <= messageInterval : false
+  //   return spamResult
+  // }
 
   const addUserToOnlineList = async () => {
     const authInfo = await authStatus({})
@@ -168,7 +185,7 @@ const Chat = () => {
 
     console.log(`FUNCTION : Retrieving current user.`)
 
-    try {
+    try { 
 
       const authInfo : TRes = await authStatus({})
       const user = await getUserById(authInfo.id)
@@ -361,7 +378,7 @@ const Chat = () => {
     try {     
       
       const dateTimeNow = Date.now()
-      const isSpammingResult= isSpamming(dateTimeNow)      
+      const isSpammingResult= isSpamming(dateTimeNow)
 
       const newMessage : TChatMessage = {
         user : currentUser?.name ? currentUser.name : '',
@@ -938,6 +955,20 @@ const Chat = () => {
   useEffect(() => {
     showNotificationsRef.current = showNotifications
   }, [showNotifications])
+  
+  useEffect(() => {
+    if(!showSpamWarning || spamCountdown == 0) {
+      return
+    }
+    const interval = spamCountdown * 1000
+    const warningDelay = setTimeout(() => {
+      setShowSpamWarning(false)      
+      setSpamCountdown(0)
+    }, interval)
+    return () => {
+      clearTimeout(warningDelay)
+    }
+  }, [showSpamWarning, spamCountdown])
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -1368,7 +1399,7 @@ const Chat = () => {
           <textarea
             name=''
             id=''
-            className={`items-start ${secondaryDefault} text-white rounded-lg resize-none p-1 m-1 h-full w-full`}
+            className={`items-start ${secondaryDefault} text-white rounded-lg resize-none p-1 m-1 h-full w-full focus:outline-none focus:ring-2 ${showSpamWarning ? `focus:ring-orange-500` : `focus:ring-blue-500`}`}
             cols={41}
             rows={3}
             maxLength={191}
@@ -1562,16 +1593,16 @@ const Chat = () => {
       <div className='flex absolute bg-tranparent top-auto bottom-0 m-8 gap-2'>
         {/*
         <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
-        {isTyping ? `💬` : `〰️`}
+          {isTyping ? `💬` : `〰️`}
         </h3>
         <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
           (O : {onlineUsers.length})
           (I : {inactiveUsers.length})
           (R : {roomUsers.length})
         </h3>
-        */}  
-        <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}> 
-          C. Messages : {consecutiveMessages.length}         
+        */}
+        <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
+          {spamCountdown}
         </h3>
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
           Render : {renderCounter}
