@@ -52,10 +52,20 @@ export const sortByMilliseconds = (unsorted : TChatMessage[]) => {
     return sorted
 }
 
-export const sortByAlphabeticalOrder = <T extends { name: string }>(unsorted: T[]) => {
+export const sortAlphabeticallyByName = <T extends { name : string }>(unsorted: T[]) => {
     const sorted = unsorted.sort((a, b) => {
         if (a.name < b.name) return -1
         if (a.name > b.name) return 1
+        return 0
+    })
+    return sorted
+}
+
+export const sortAlphabeticallyByAny = <T extends {[index: string]: string}>(unsorted: T[], property : string) => {
+    const sorted = unsorted.sort((a, b) => {
+        if (!a[property] || !b[property]) return 0
+        if (a[property] < b[property]) return -1
+        if (a[property] > b[property]) return 1
         return 0
     })
     return sorted

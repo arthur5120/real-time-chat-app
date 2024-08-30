@@ -2,13 +2,13 @@ import { useContext, useEffect, useRef, useState, Fragment, Suspense } from 'rea
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest, TLog } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
-import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, isThingValid, sortByAlphabeticalOrder, sortByMilliseconds } from '../../utils/useful-functions'
+import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, isThingValid, sortAlphabeticallyByName, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
 import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faEyeSlash, faPause, faArrowsRotate, faClipboard, faClipboardCheck, faTriangleExclamation, faHourglass3,} from '@fortawesome/free-solid-svg-icons'
+import { faEye, faEyeSlash, faPause, faArrowsRotate, faClipboard, faClipboardCheck, faTriangleExclamation, faHourglass3, faMagnifyingGlass, faFilter} from '@fortawesome/free-solid-svg-icons'
 import TextPlaceholder from '../atoms/text-placeholder'
 import Cookies from 'js-cookie'
 
@@ -39,7 +39,6 @@ type TFullUser = {id ? : string} & TUser & {diff ? : {nameEmoji ? : string, name
 type TMessageBeingEdited = TChatMessage & {previous ? : string, wasEdited : boolean}
 type TSocketPayload = Partial<{userId : string, userName : string, content : string, notification : string, roomName : string, roomId : string, notifyRoomOnly : boolean}>
 type TRoomLists = Partial<{currentOnlineUsers : number, currentInactiveUsers : number, currentRoomUsers : number, currentTypingUsers : number}>
-
 
 const Chat = () => {
 
@@ -79,6 +78,7 @@ const Chat = () => {
   const [consecutiveMessages, setConsecutiveMessages] = useState<number[]>([])  
   const [showSpamWarning, setShowSpamWarning] = useState(false)
   const [spamCountdown, setSpamCountdown] = useState(0)
+  const [logFilter, setLogFilter] = useState(0)
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let logContainerRef = useRef<HTMLDivElement>(null)
@@ -240,7 +240,7 @@ const Chat = () => {
     try {
 
       const unsortedLocalRooms = await getChats() as TChatRoom[]
-      const sortedLocalRooms = sortByAlphabeticalOrder(unsortedLocalRooms)
+      const sortedLocalRooms = sortAlphabeticallyByName(unsortedLocalRooms)
       const hasValidRooms = !!sortedLocalRooms[0]
       const authInfo : TRes = await authStatus({})
       const chats : {userId : string, chatId : string}[] = authInfo?.id && authInfo.id != `none` ? await getChatsByUserId(authInfo.id) : []
@@ -926,7 +926,7 @@ const Chat = () => {
     if(!isServerOnline) {
       return
     }
-    if (!messageBeingEdited.id) {
+    if (!messageBeingEdited.id && !showLog) {
       scrollToLatest()
     }        
   }, [messages.length])
@@ -1230,21 +1230,39 @@ const Chat = () => {
         
           <span className='flex bg-transparent m-2 cursor-pointer gap-1'>
 
-            <button 
-              title={`Toggle auto-scrolling : ${autoScroll ? `on` : `off`}`}
-              disabled={!!reload || firstLoad || !isServerOnline}
-              className={
-                ` ${autoScroll ? `bg-[#050D20] hover:bg-black` : `bg-[#050D20] hover:bg-black`}
-                rounded-lg disabled:cursor-not-allowed`
-              }
-              onClick={() => {
-                setAutoScroll((prev) => !prev)
-              }}
-            >
-              {autoScroll ?
-              <FontAwesomeIcon icon={faArrowsRotate} width={48} height={48}/> :
-              <FontAwesomeIcon icon={faPause} width={48} height={48}/>}
-            </button>
+            {
+              !showLog ? <button 
+                title={`Toggle auto-scrolling : ${autoScroll ? `on` : `off`}`}
+                disabled={!!reload || firstLoad || !isServerOnline}
+                className={
+                  ` ${autoScroll ? `bg-[#050D20] hover:bg-black` : `bg-[#050D20] hover:bg-black`}
+                  rounded-lg disabled:cursor-not-allowed`
+                }
+                onClick={() => {
+                  setAutoScroll((prev) => !prev)
+                }}
+              >
+                {autoScroll ?
+                <FontAwesomeIcon icon={faArrowsRotate} width={48} height={48}/> :
+                <FontAwesomeIcon icon={faPause} width={48} height={48}/>}
+              </button> : <button 
+                title={`Filter log entries.`}
+                disabled={!!reload || firstLoad || !isServerOnline}
+                className={
+                  ` ${autoScroll ? `bg-[#050D20] hover:bg-black` : `bg-[#050D20] hover:bg-black`}
+                  rounded-lg disabled:cursor-not-allowed`
+                }
+                onClick={() => {  
+                  if(logFilter > 1) {
+                    setLogFilter(0)
+                  } else {
+                    setLogFilter((prev) => prev + 1)
+                  }                  
+                }}
+              >
+                <FontAwesomeIcon icon={faFilter} width={48} height={48}/>
+              </button>
+            }
             
             <button
               title={`Toggle hide/show message notifications from other chats`}
@@ -1267,7 +1285,7 @@ const Chat = () => {
           className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll`}
           ref={chatContainerRef}>
 
-          { showLog ? <Log values={log} ref={logContainerRef}/> : 
+          { showLog ? <Log values={log} ref={logContainerRef} filter={logFilter}/> : 
           messages?.length <= 0 ? <TextPlaceholder value={`No messages yet...`}/> : 
           messages?.map((message : TChatMessage, id : number) => {
 
@@ -1552,7 +1570,7 @@ const Chat = () => {
             title={`Shows either the history of messages or the chat`}
             onClick={() => {
               setShowLog(!showLog)
-              const scrollDelay = setTimeout(() => {              
+              const scrollDelay = setTimeout(() => {
                 scrollToLatest()
               }, 10)
               return () => {
@@ -1602,7 +1620,7 @@ const Chat = () => {
         </h3>
         */}
         <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
-          {spamCountdown}
+          {logFilter}
         </h3>
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
           Render : {renderCounter}

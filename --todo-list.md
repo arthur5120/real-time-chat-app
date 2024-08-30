@@ -95,16 +95,19 @@
 # Change room and minorChange events to have a notification type message and a log one with what has been changed. [DONE]
 # Check minorChange and change socket events for stale states.[DONE]
 # Make socket events handle stale/undefined payload properties.[DONE]
+# Set a visual warning for when the use is locket out of sending messages due to spam.[DONE]
 # Make log specific to the current room.
 # Make log specific to user.
-# When server fist starts, changing the messages doesn't update the chat on the other end.
+# When server first starts, changing the messages doesn't update the chat on the other end.
 # On the room reset/creation, if the user continues spamming none of the messages get to the other end.
-# Set a visual warning for when the use is locket out of sending messages due to spam.
+# Make filter for the log messages.
+# When a new message is received, if the user is on the log screen, it scrolls down to the bottom anyway. [DONE]
 
 // Done yesterday
 
-Use dedicated useEffect and ref for showNotifications state to prevent socket disconnections when it changes and ensure functions using showNotifications always access the latest value. Implement spam detection using a function to check for rapid consecutive messages, prevent them from being sent and notify users with a toast message.
+Add showSpamWarning and spamCountdown states to track spam warning status. Implement useEffect to manage spam warning timeout and state updates. Change chat textarea outline color conditionally based on the showSpamWarning state to provide the user with visual feedback.
 
 // Done today
 
-Add showSpamWarning and spamCountdown states to track spam warning status. Implement useEffect to manage spam warning timeout and state updates. Change chat textarea outline color conditionally based on the showSpamWarning state to provide the user with visual feedback.
+Prevent scrolling to the bottom when a new message is received while on the log screen. Implement sorting function for arrays of objects by string properties. Update chat and log components to filter log messages chronologically or alphabetically. Add a new button to toggle sorting, with visibility based on the eusr's current screen.
+

@@ -1,17 +1,35 @@
-import { FC, forwardRef} from "react"
+import { forwardRef, useContext, useEffect, useState} from "react"
 import { TLog } from "../../utils/types"
 import { capitalizeFirst } from "../../utils/useful-functions"
+import { sortAlphabeticallyByAny } from "../../utils/useful-functions"
+import { toastContext } from "../../utils/contexts/toast-provider"
 import TextPlaceholder from "../atoms/text-placeholder"
 
-//const Log : FC<{values : TLog[]}> = ({values}) => {
 
-const Log = forwardRef<HTMLDivElement, {values : TLog[]}>(({values}, ref) => {
+const Log = forwardRef<HTMLDivElement, {values : TLog[], filter : number}>(({values, filter}, ref) => {
+    
+        const {notifyUser} = useContext(toastContext)
+        const [logList, setLogList] = useState<TLog[]>(values)
+
+        useEffect(() => {
+            switch (filter) {
+                case 1 : 
+                    setLogList(sortAlphabeticallyByAny(values, `userName`))
+                break
+                case 2 :
+                    setLogList(sortAlphabeticallyByAny(values, `roomName`))
+                break
+                default: // chronologically
+                break
+            }            
+        }, [values, filter])
+
         return (
       
          <div className={`flex flex-col text-center`} ref={ref} id={`logdiv`}>            
               Current Log              
               {            
-                  values && values.length > 0 ? values.map((value) => {
+                  logList && logList.length > 0 ? logList.map((value) => {
                       const {userName, roomName, time, content} = value                
                       return (
                           <span className={`flex flex-col justify-center bg-slate-900 text-white rounded-xl italic m-1 p-1`}>

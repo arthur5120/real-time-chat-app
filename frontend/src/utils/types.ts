@@ -13,7 +13,7 @@ export type TElementProps = Partial<{
 }>
 
 export type TVariations = {
-    [index: string]: string;
+    [index: string]: string
   }
 
 export type TFieldKeys = keyof TUser
