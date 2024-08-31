@@ -1,33 +1,38 @@
-import { forwardRef, useContext, useEffect, useState} from "react"
+import { forwardRef, useEffect, useState} from "react"
 import { TLog } from "../../utils/types"
 import { capitalizeFirst } from "../../utils/useful-functions"
 import { sortAlphabeticallyByAny } from "../../utils/useful-functions"
-import { toastContext } from "../../utils/contexts/toast-provider"
 import TextPlaceholder from "../atoms/text-placeholder"
 
+const filterOrder = [
+    `by date`,
+    `by user name`,
+    `by room name`,
+]
 
 const Log = forwardRef<HTMLDivElement, {values : TLog[], filter : number}>(({values, filter}, ref) => {
-    
-        const {notifyUser} = useContext(toastContext)
+            
         const [logList, setLogList] = useState<TLog[]>(values)
 
-        useEffect(() => {
+        useEffect(() => {            
+            
             switch (filter) {
-                case 1 : 
+                case 1 :
                     setLogList(sortAlphabeticallyByAny(values, `userName`))
                 break
-                case 2 :
+                case 2 :                    
                     setLogList(sortAlphabeticallyByAny(values, `roomName`))
                 break
                 default: // chronologically
                 break
-            }            
-        }, [values, filter])
+            }    
+
+        }, [values, filter])        
 
         return (
       
          <div className={`flex flex-col text-center`} ref={ref} id={`logdiv`}>            
-              Current Log              
+              <h3>Current Log [{filter >= 0 ? filterOrder[filter] : filterOrder[0]}]</h3>
               {            
                   logList && logList.length > 0 ? logList.map((value) => {
                       const {userName, roomName, time, content} = value                

@@ -8,7 +8,11 @@ import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
 import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEye, faEyeSlash, faPause, faArrowsRotate, faClipboard, faClipboardCheck, faTriangleExclamation, faHourglass3, faMagnifyingGlass, faFilter} from '@fortawesome/free-solid-svg-icons'
+import { 
+  faEye, faEyeSlash, faPause, faArrowsRotate, 
+  faClipboard, faClipboardCheck, faTriangleExclamation, 
+  faHourglass3, faMagnifyingGlass, faFilter, faArrowUpAZ, faArrowUpWideShort,
+} from '@fortawesome/free-solid-svg-icons'
 import TextPlaceholder from '../atoms/text-placeholder'
 import Cookies from 'js-cookie'
 
@@ -19,8 +23,9 @@ import Log from '../molecules/log'
 const roomsPlaceholder = [{id : '-1', name : ''}]
 const currentRoomPlaceHolder = {id : '-1', selectId : 0, name : ''}
 const editMenuButtonPrefix = `--em-btn--`
+const filterOrder = [`filtered by date`, `filtered by user name`, `filtered by room name`,]
 
-const bugsToFix = [  
+const bugsToFix = [
   `Editing the message fails sometimes.`,  
   `A message is being added to the local chat erroneously for a moment before the chat loads the correct messages.`,
   `Edited status not showing on the other chats when freshly editing a message for the first time.`,
@@ -685,6 +690,16 @@ const Chat = () => {
     }
   }
 
+  const getFilterIcon = (filterNumber : number) => {    
+    if(filterNumber >= 2) { // room name
+      return <FontAwesomeIcon icon={faArrowUpWideShort} width={48} height={48}/>
+    } else if (filterNumber >= 1) { //  user name
+      return <FontAwesomeIcon icon={faArrowUpAZ} width={48} height={48}/>
+    } else { // chronologically      
+      return <FontAwesomeIcon icon={faFilter} width={48} height={48}/>      
+    }    
+  }
+
   useEffect(() => {
     
     if(!isServerOnline) {
@@ -1246,7 +1261,7 @@ const Chat = () => {
                 <FontAwesomeIcon icon={faArrowsRotate} width={48} height={48}/> :
                 <FontAwesomeIcon icon={faPause} width={48} height={48}/>}
               </button> : <button 
-                title={`Filter log entries.`}
+                title={`${filterOrder[logFilter]}`}
                 disabled={!!reload || firstLoad || !isServerOnline}
                 className={
                   ` ${autoScroll ? `bg-[#050D20] hover:bg-black` : `bg-[#050D20] hover:bg-black`}
@@ -1259,8 +1274,8 @@ const Chat = () => {
                     setLogFilter((prev) => prev + 1)
                   }                  
                 }}
-              >
-                <FontAwesomeIcon icon={faFilter} width={48} height={48}/>
+              >         
+                {getFilterIcon(logFilter)}
               </button>
             }
             

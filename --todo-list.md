@@ -105,9 +105,8 @@
 
 // Done yesterday
 
-Add showSpamWarning and spamCountdown states to track spam warning status. Implement useEffect to manage spam warning timeout and state updates. Change chat textarea outline color conditionally based on the showSpamWarning state to provide the user with visual feedback.
+Prevent scrolling to the bottom when a new message is received while on the log screen. Implement sorting function for arrays of objects by string properties. Update chat and log components to filter log messages chronologically or alphabetically. Add a new button to toggle sorting, with visibility based on the eusr's current screen.
 
 // Done today
 
-Prevent scrolling to the bottom when a new message is received while on the log screen. Implement sorting function for arrays of objects by string properties. Update chat and log components to filter log messages chronologically or alphabetically. Add a new button to toggle sorting, with visibility based on the eusr's current screen.
-
+Updated the log label to reflect the current filter applied to the list. Modified the button icon to change dynamically according to the selected filter for visual feedback.

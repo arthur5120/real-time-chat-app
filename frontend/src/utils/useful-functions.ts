@@ -71,6 +71,24 @@ export const sortAlphabeticallyByAny = <T extends {[index: string]: string}>(uns
     return sorted
 }
 
+export const sortAlphabeticallyByAny2 = <T extends { [index: string]: string }>(
+    unsorted: T[],
+    property: string
+): T[] => {
+    const sorted = [...unsorted].sort((a, b) => {
+        const aValue = a[property];
+        const bValue = b[property];
+
+        // Handle undefined values
+        if (aValue === undefined && bValue === undefined) return 0;
+        if (aValue === undefined) return 1; // Push undefined values to the end
+        if (bValue === undefined) return -1; // Push undefined values to the end
+
+        return aValue.localeCompare(bValue);
+    });
+    return sorted;
+};
+
 export const generateUniqueId = () => {
     const optimisticId = uuidv4()
     return optimisticId
