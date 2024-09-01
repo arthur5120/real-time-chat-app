@@ -96,17 +96,18 @@
 # Check minorChange and change socket events for stale states.[DONE]
 # Make socket events handle stale/undefined payload properties.[DONE]
 # Set a visual warning for when the use is locket out of sending messages due to spam.[DONE]
-# Make log specific to the current room.
-# Make log specific to user.
 # When server first starts, changing the messages doesn't update the chat on the other end.
 # On the room reset/creation, if the user continues spamming none of the messages get to the other end.
-# Make filter for the log messages.
+# Make filter for the log messages. [DONE]
 # When a new message is received, if the user is on the log screen, it scrolls down to the bottom anyway. [DONE]
+# When rooms are cleared or a new one is created there aren't notifications on the other end.
+# On room reset, the room users doesn't update upon the first message on the other end.
+# socket turning off when refreshing the page.
 
 // Done yesterday
 
-Prevent scrolling to the bottom when a new message is received while on the log screen. Implement sorting function for arrays of objects by string properties. Update chat and log components to filter log messages chronologically or alphabetically. Add a new button to toggle sorting, with visibility based on the eusr's current screen.
+Updated the log label to reflect the current filter applied to the list. Modified the button icon to change dynamically according to the selected filter for visual feedback.
 
 // Done today
 
-Updated the log label to reflect the current filter applied to the list. Modified the button icon to change dynamically according to the selected filter for visual feedback.
+Create a new state and useEffect to manage chat room refresh when a new room is created or all rooms are cleared. Refactored data fetching to room related operations to retrieve only necessary data, partially avoiding full reloads. Remove resetMessageContent to ensure the user input is preserved. Change socket events and the main useEffect to support room refresh instead of generic refresh.

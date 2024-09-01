@@ -48,8 +48,9 @@ type TRoomLists = Partial<{currentOnlineUsers : number, currentInactiveUsers : n
 const Chat = () => {
 
   const [rooms, setRooms] = useState<TRoom[]>(roomsPlaceholder)
-  const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
+  const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)  
   const [isUserInRoom, setIsUserInroom] = useState(false)
+  const [refreshRooms, setRefreshRooms] = useState(false)  
   const [currentUser, setCurrentUser] = useState<TFullUser>(userPlaceholder)
   const [roomUsers, setRoomUsers] = useState<TRoomUser[]>([]) // Turn all these user lists into one later.
   const [onlineUsers, setOnlineUsers] = useState<TRoomUser[]>([])
@@ -76,7 +77,7 @@ const Chat = () => {
   const [firstLoad, setFirstLoad] = useState(true)
   const [reload, setReload] = useState(1)
   const [hasErrors, setHasErrors] = useState(false)
-  const [isServerOnline, setIsServerOnline] = useState(true)
+  const [isServerOnline, setIsServerOnline] = useState(true)  
   const [requireRefresh, setRequireRefresh] = useState(true)
   const [log, setLog] = useState<TLog[]>([])
   const [showLog, setShowLog] = useState(false)    
@@ -227,8 +228,8 @@ const Chat = () => {
       const hasValidRooms = !!localRooms[0]
 
       if(!hasValidRooms) {
-        await createChat()
-        setReload(reload + 1)
+        await createChat()        
+        //setReload(reload + 1) // ROOMCHANGE
       }
 
     } catch (e) {
@@ -278,7 +279,8 @@ const Chat = () => {
         })
         const foundUserInChat = chats?.length > 0 ? chats.find((c) => c.chatId == sortedLocalRooms[updatedSelectId].id) : ''
         setIsUserInroom(!!foundUserInChat)
-        setReload(reload + 1)
+        setRefreshChat(true)
+        //setReload(reload + 1) ???? ROOMCHANGE
       } else {
         const foundUserInChat = chats?.length > 0 ? chats.find((c) => c.chatId == currentRoom.id) : ''
         setIsUserInroom(!!foundUserInChat)
@@ -316,7 +318,8 @@ const Chat = () => {
         }
 
         if(currentRoom.id == '-1') {
-          setReload(reload + 1)
+          setRefreshRooms(true)
+          //setReload(reload + 1) ROOMCHANGE
           return
         }        
 
@@ -518,8 +521,8 @@ const Chat = () => {
       socket?.emit(`change`, socketPayload)
       addToLog({userName : currentUser.name, content : creationMessage})
       console.log(`Creating chat, socket connection : ${socket?.connected}`)
-
-      setReload(reload + 1)
+      
+      setRefreshRooms(true)
 
     } catch (e) {
       setHasErrors(true)
@@ -565,8 +568,8 @@ const Chat = () => {
       
       await deleteAllChats()
       await retrieveRooms()
-                  
-      setReload(reload + 1)
+      
+      setRefreshRooms(true) // Redundant
       setUseDelayOnEmit(true)
 
     } catch (e) {
@@ -632,12 +635,18 @@ const Chat = () => {
     }
   }
 
-  const initializeAppData = async () => {
+  const initializeRooms = async () => {
+    await createRoomIfNoneAreFound()
+    await retrieveRooms()
+    await retrieveMessages()
+  }
+
+  const initializeAppData = async () => { // Segment this later.
     await retrieveCurrentUser()
     await createRoomIfNoneAreFound()
     await retrieveRooms()
     await retrieveMessages()
-    resetMessageContent()
+    //resetMessageContent()
   }
 
   const setInactivityTimer =  async (localUserName = null) => {        
@@ -698,7 +707,7 @@ const Chat = () => {
     } else { // chronologically      
       return <FontAwesomeIcon icon={faFilter} width={48} height={48}/>      
     }    
-  }
+  }  
 
   useEffect(() => {
     
@@ -723,7 +732,7 @@ const Chat = () => {
       setHasErrors(false)
     }
 
-    if(reload > 0) {
+    if(reload > 0) {      
       initializeAppData()
     }
 
@@ -748,9 +757,9 @@ const Chat = () => {
         }
       } else {
         if(showNotificationsRef.current) {
-          notifyUserInRoom(room)          
+          notifyUserInRoom(room)
         }
-      }  
+      }
 
     })
       
@@ -771,10 +780,10 @@ const Chat = () => {
     })
 
     socket?.on(`change`, (payload : TSocketPayload) => {
-      const {userName, roomName, notification, content} = payload
+      const {userName, roomName, notification, content} = payload      
       console.log(`socket on change : ${currentRoom?.id}`)
       setUseDelayOnEmit(true)
-      setReload(reload + 1)
+      setRefreshRooms(true)      
       if (payload?.notification && notification != ``) {
         notifyUser(payload, 'info')
         addToLog({userName : userName, roomName : roomName, content : content})
@@ -816,7 +825,8 @@ const Chat = () => {
 
       if(currentRoom.id == '-1' || currentRoom.id == '0') {
         if(reload < 100) {
-          setReload(reload + 1)
+          //setReload(reload + 1) ROOMCHANGE
+          !refreshRooms ? setRefreshRooms(true) : null
         } else {
           notifyUser(`Something Went Wrong, please try again later`, `warning`)
           setIsServerOnline(false)
@@ -970,6 +980,13 @@ const Chat = () => {
   useEffect(() => {
     showNotificationsRef.current = showNotifications
   }, [showNotifications])
+
+  useEffect(() => {
+    if(refreshRooms) {
+      initializeRooms()
+      setRefreshRooms(false)
+    }
+  }, [refreshRooms])
   
   useEffect(() => {
     if(!showSpamWarning || spamCountdown == 0) {
@@ -1020,9 +1037,7 @@ const Chat = () => {
         ...messagePlaceholder,
         previous : '',
         wasEdited : false
-      })
-
-      //setReload(reload + 1)
+      })      
 
     }
 
@@ -1176,7 +1191,7 @@ const Chat = () => {
 
             </p> : ''}
             {    
-              roomUsers.length <= 0 ? <TextPlaceholder value={`No one...`} className={`m-0 p-0`}/> :
+              roomUsers.length <= 0 ? <TextPlaceholder value={`...`} className={`m-0 p-0`}/> :
                 roomUsers.map((user : TRoomUser, id : number) => {
 
                   const isCurrentUser = currentUser.id == user.id                  
