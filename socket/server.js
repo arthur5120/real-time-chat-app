@@ -178,7 +178,7 @@ io.on('connection', (socket) => {
 
         const {message, currentRoomUsers} = payload
         const {senderID, ...messageRest} = message
-        const typingUsersArray = Array.from(typingUsers)
+        const typingUsersArray = Array.from(typingUsers)        
         
         const payloadRest = {
             message : messageRest,
@@ -312,7 +312,7 @@ io.on('connection', (socket) => {
             if(callback) {
                 callback(onlineUsers)
             }
-            io.to(socket.id).emit('auth', onlineUsersNames)            
+            io.to(socket.id).emit('auth', onlineUsersNames)
         } catch (e) {
             console.log(`error while updating list`)
         }

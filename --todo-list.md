@@ -101,13 +101,13 @@
 # Make filter for the log messages. [DONE]
 # When a new message is received, if the user is on the log screen, it scrolls down to the bottom anyway. [DONE]
 # When rooms are cleared or a new one is created there aren't notifications on the other end.
-# On room reset, the room users doesn't update upon the first message on the other end.
+# On room reset, the room users won't update upon the first message on the other end.
 # socket turning off when refreshing the page.
 
 // Done yesterday
 
-Updated the log label to reflect the current filter applied to the list. Modified the button icon to change dynamically according to the selected filter for visual feedback.
+Create a new state and useEffect to manage chat room refresh when a new room is created or all rooms are cleared. Refactored data fetching to room related operations to retrieve only necessary data, partially avoiding full reloads. Remove resetMessageContent to ensure the user input is preserved. Change socket events and the main useEffect to support room refresh instead of generic refresh.
 
 // Done today
 
-Create a new state and useEffect to manage chat room refresh when a new room is created or all rooms are cleared. Refactored data fetching to room related operations to retrieve only necessary data, partially avoiding full reloads. Remove resetMessageContent to ensure the user input is preserved. Change socket events and the main useEffect to support room refresh instead of generic refresh.
+Modify socket event handling to trigger a hard reload on room reset to fix occasional issues with chat not refreshing, remove rooms.length from the main useEffect dependency array to prevent unnecessary hard reloads when creating a new room.
