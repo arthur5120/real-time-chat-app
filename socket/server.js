@@ -73,7 +73,7 @@ const connectUser = (user) => { // user :  {id : string, name : string. expirati
     
 }
 
-const disconnectUser = (userId) => {
+const disconnectUser = (userId) => { // string
     
    try {
     
@@ -115,7 +115,7 @@ io.on('connection', (socket) => {
         }
     })
 
-    socket.on(`inactive`, (user) => {
+    socket.on(`updateInactive`, (user) => {
                        
         const {id, name, inactive, handleBeforeUnload} = user
 
@@ -146,20 +146,20 @@ io.on('connection', (socket) => {
                 console.log(`${name} went inactive.`)
                 inactiveUsers.push({id : id, name : name, inactive : inactive})                
                 inactiveUsersNames.push({id : id, name : name})
-                socket.broadcast.emit(`inactive`, inactiveUsersNames)
+                socket.broadcast.emit(`updateInactive`, inactiveUsersNames)
             }
         } else {
             if(inactiveUserId > -1) {
                 console.log(`${name} went active.`)
                 inactiveUsers.splice(inactiveUserId, 1)
                 inactiveUsersNames.splice(inactiveUserId, 1)
-                socket.broadcast.emit(`inactive`, inactiveUsersNames)
+                socket.broadcast.emit(`updateInactive`, inactiveUsersNames)
             }
         }    
 
     })    
 
-    socket.on('room', (payload, callback = null) => { // Listening to Room
+    socket.on('sendMessage', (payload, callback = null) => { // Listening to Room
 
         //payloadType = {        
         //    message : {
@@ -174,7 +174,7 @@ io.on('connection', (socket) => {
         //        isUserSender : string,
         //    }, 
         //    currentRoomUsers : number
-        //}
+        //}            
 
         const {message, currentRoomUsers} = payload
         const {senderID, ...messageRest} = message
@@ -199,7 +199,7 @@ io.on('connection', (socket) => {
             console.log(`${message.user} went active.`)
             inactiveUsers.splice(inactiveUserId, 1)
             inactiveUsersNames.splice(inactiveUserId, 1)
-            socket.broadcast.emit(`inactive`, inactiveUsersNames)            
+            socket.broadcast.emit(`updateInactive`, inactiveUsersNames)            
         }
         
         const updatedUserLists = {
@@ -222,14 +222,11 @@ io.on('connection', (socket) => {
             ...updatedUserLists,
         }
 
-        socket.broadcast.emit(`room`, newPayload)
-        
-        //io.emit(`room`. message)
-        //io.to(socket.id).emit('room', messages) // Sends String, Objects etc...
+        socket.broadcast.emit(`sendMessage`, newPayload)        
 
     })
 
-    socket.on(`change`, (message, callback = null) => {
+    socket.on(`majorChange`, (message, callback = null) => { // Request reload
 
         // const socketPayload: Partial<{
         //     userId: string;
@@ -245,11 +242,10 @@ io.on('connection', (socket) => {
         if (callback != null) {
             callback(true)
         }
-        socket.broadcast.emit(`change`, message)
-        //io.emit('change', message)
+        socket.broadcast.emit(`majorChange`, message)
     })
 
-    socket.on('minorChange', (message, callback = null) => {
+    socket.on('minorChange', (message, callback = null) => { // No reload required
         // type TSocketPayload = {
         //     userId?: string | undefined;
         //     userName?: string | undefined;
@@ -264,7 +260,6 @@ io.on('connection', (socket) => {
             callback(onlineUsers.length)
         }
         socket.broadcast.emit(`minorChange`, message)
-        //io.emit('minorChange', message)
     })       
 
     socket.on('auth', (authRequest) => {
@@ -292,7 +287,7 @@ io.on('connection', (socket) => {
 
     })
 
-    socket.on(`onTyping`, (payload) => { // {id : string, name : string, isTyping : boolean}
+    socket.on(`updateTyping`, (payload) => { // {id : string, name : string, isTyping : boolean}
         try {
             const {id, name, isTyping} = payload
             console.log(`${name} has ${isTyping ? `started` : `stopped`} typing.`)
@@ -301,7 +296,7 @@ io.on('connection', (socket) => {
             } else {
                 typingUsers.delete(id)
             }
-            socket.broadcast.emit(`onTyping`, payload)
+            socket.broadcast.emit(`updateTyping`, payload)
         } catch (e) {
             console.log(`auth error`)
         }
@@ -323,7 +318,7 @@ io.on('connection', (socket) => {
             if(callback) {
                 callback(inactiveUsers)
             }
-            io.to(socket.id).emit('inactive', inactiveUsersNames)
+            io.to(socket.id).emit(`updateInactive`, inactiveUsersNames)
         } catch (e) {
             console.log(`error while updating list`)
         }
@@ -335,7 +330,7 @@ io.on('connection', (socket) => {
             if(callback) {
                 callback(typingUsers)
             }
-            io.to(socket.id).emit('onTyping', typingListArray)
+            io.to(socket.id).emit(`updateTyping`, typingListArray)
         } catch (e) {
             console.log(`error while updating list`)
         }

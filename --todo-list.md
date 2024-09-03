@@ -100,14 +100,14 @@
 # On the room reset/creation, if the user continues spamming none of the messages get to the other end.
 # Make filter for the log messages. [DONE]
 # When a new message is received, if the user is on the log screen, it scrolls down to the bottom anyway. [DONE]
-# When rooms are cleared or a new one is created there aren't notifications on the other end.
-# On room reset, the room users won't update upon the first message on the other end.
-# socket turning off when refreshing the page.
+# Refreshing prevents the room cooldown.
+# Handle undefined rooms on the socket during room reset.
 
 // Done yesterday
 
-Create a new state and useEffect to manage chat room refresh when a new room is created or all rooms are cleared. Refactored data fetching to room related operations to retrieve only necessary data, partially avoiding full reloads. Remove resetMessageContent to ensure the user input is preserved. Change socket events and the main useEffect to support room refresh instead of generic refresh.
+Modify socket event handling to trigger a hard reload on room reset to fix occasional issues with chat not refreshing, remove rooms.length from the main useEffect dependency array to prevent unnecessary hard reloads when creating a new room.
 
 // Done today
 
-Modify socket event handling to trigger a hard reload on room reset to fix occasional issues with chat not refreshing, remove rooms.length from the main useEffect dependency array to prevent unnecessary hard reloads when creating a new room.
+Update message box placeholder to indicate cooldown status.
+Change socket event names to more specific ones.

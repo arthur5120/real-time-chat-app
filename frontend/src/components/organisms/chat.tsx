@@ -436,12 +436,12 @@ const Chat = () => {
         socket?.connect()
       }
 
-      socket?.emit(`onTyping`, {id : currentUser.id, name : currentUser.name, isTyping : false})      
+      socket?.emit(`updateTyping`, {id : currentUser.id, name : currentUser.name, isTyping : false})      
 
       const delay = useDelayOnEmit ? 500 : 0 // Prevents the socket from being disconnected too early.
 
       setTimeout(() => {
-        socket?.emit(`room`,
+        socket?.emit(`sendMessage`,
           {message : savedMessage, currentRoomUsers : roomUsers.length},  // payload
           (response : {received : boolean} & TRoomLists) => { // callback
           if (response) {
@@ -472,7 +472,7 @@ const Chat = () => {
           }
           setRoomUsers([...roomUsers, {id : authInfo.id, name : currentUser.name}])
           setIsUserInroom(true)
-          socket?.emit('minorChange', socketPayload)
+          socket?.emit(`minorChange`, socketPayload)
         }
       }, delay)
 
@@ -518,7 +518,7 @@ const Chat = () => {
         //roomName: currentRoom.name, - Global change, needs to notify everyone.
       }
       
-      socket?.emit(`change`, socketPayload)
+      socket?.emit(`majorChange`, socketPayload)
       addToLog({userName : currentUser.name, content : creationMessage})
       console.log(`Creating chat, socket connection : ${socket?.connected}`)
       
@@ -560,7 +560,7 @@ const Chat = () => {
       }
 
       setTimeout(() => {        
-        socket?.emit(`change`, socketPayload)
+        socket?.emit(`majorChange`, socketPayload)
         addToLog({userName : currentUser.name, content : logMessage})
       }, 200)
 
@@ -659,7 +659,7 @@ const Chat = () => {
         setUserActivity(false)
         const authInfo : TRes = await authStatus({})
         socket?.connect()
-        socket?.emit(`inactive`, { id : authInfo.id, name: name, inactive: true })
+        socket?.emit(`updateInactive`, { id : authInfo.id, name: name, inactive: true })
       }, 60000) // Time until inactivity
       setInactivityTimerId(timerId)
     }
@@ -671,7 +671,7 @@ const Chat = () => {
       setUserActivity(true)
       const authInfo : TRes = await authStatus({})
       socket?.connect()
-      socket?.emit(`inactive`, { id : authInfo.id, name: currentUser.name, inactive: false })
+      socket?.emit(`updateInactive`, { id : authInfo.id, name: currentUser.name, inactive: false })
       inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
     }
   }
@@ -744,7 +744,7 @@ const Chat = () => {
     retrieveUserLists()
 
     // DEP : currentRoom, messages, refreshChat
-    socket?.on(`room`, (payload : {message : TChatMessage} & TRoomLists) => {
+    socket?.on(`sendMessage`, (payload : {message : TChatMessage} & TRoomLists) => {
 
       console.log(`socket on room : ${currentRoom?.id}`)
       
@@ -764,7 +764,7 @@ const Chat = () => {
     })
     
     // DEP : currentRoom, refreshChat
-    socket?.on('minorChange', (msg : TSocketPayload) => {
+    socket?.on(`minorChange`, (msg : TSocketPayload) => {
       const {userName, notification, roomId, roomName, content, notifyRoomOnly} = msg
       console.log(`socket on minorChange : ${roomId}`)
       if(notification && showNotificationsRef.current) {
@@ -781,7 +781,7 @@ const Chat = () => {
     })
 
     // DEP : currentRoom, useDelayOnEmit, reload
-    socket?.on(`change`, (payload : TSocketPayload) => {
+    socket?.on(`majorChange`, (payload : TSocketPayload) => {
       const {userName, roomName, notification, content} = payload      
       console.log(`socket on change : ${currentRoom?.id}`)
       setUseDelayOnEmit(true)
@@ -801,14 +801,14 @@ const Chat = () => {
     })
 
     // DEP : currentRoom, inactiveUsers, refreshChat
-    socket?.on(`inactive`, (currentInactiveUsers : {id : string, name : string}[]) => {
+    socket?.on(`updateInactive`, (currentInactiveUsers : {id : string, name : string}[]) => {
       console.log(`socket on auth : ${currentRoom?.id}`)
       setInactiveUsers(currentInactiveUsers)
       setRefreshChat(true)
     })
 
     // DEP : typingUsers
-    socket?.on(`onTyping`, (payload : TRoomUser & {isTyping : boolean}) => {
+    socket?.on(`updateTyping`, (payload : TRoomUser & {isTyping : boolean}) => {
       const {id, name, isTyping} = payload
       if(isTyping) {
         setTypingUsers((values) => ([
@@ -879,7 +879,7 @@ const Chat = () => {
         //const authInfo : TRes = await authStatus({})
         const authInfo = {id : currentUser.id}
         socket?.connect()
-        socket?.emit(`inactive`, {id : authInfo.id, name: currentUser.name, inactive: true, beforeUnloadEvent : true})
+        socket?.emit(`updateInactive`, {id : authInfo.id, name: currentUser.name, inactive: true, beforeUnloadEvent : true})
       }
 
       window.addEventListener('beforeunload', handleBeforeUnload)
@@ -921,7 +921,7 @@ const Chat = () => {
     }
     if(updateTypingState) {
       socket?.connect()
-      socket?.emit(`onTyping`, {id : currentUser.id, name : currentUser.name, isTyping : isTyping})
+      socket?.emit(`updateTyping`, {id : currentUser.id, name : currentUser.name, isTyping : isTyping})
       setUpdateTypingState(false)
     }
     const typeTimeout = setTimeout(() => {
@@ -1075,7 +1075,7 @@ const Chat = () => {
         const notificationMessage = `${currentUser.name ? capitalizeFirst(currentUser.name) : ``} deleted "${cropMessage(editedMessage)}" on ${currentRoom.name}`
         const logMessage = `deleted "${cropMessage(editedMessage)}"`
         const socketPayload : TSocketPayload = {userName : currentUser.name, roomName : currentRoom.name, notification : notificationMessage, content : logMessage}
-        socket?.emit('minorChange', socketPayload)
+        socket?.emit(`minorChange`, socketPayload)
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
         addToLog({userName : currentUser.name, roomName : currentRoom.name, content : logMessage})
         setRefreshChat(true)
@@ -1091,7 +1091,7 @@ const Chat = () => {
           const notificationMessage = `${currentUser?.name ? capitalizeFirst(currentUser.name) : ``} updated "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`
           const logMessage = `updated "${previousMessage}" to "${updatedMessage}"`
           const socketPayload : TSocketPayload = {userName : currentUser.name, roomName : currentRoom.name, notification : notificationMessage, content : logMessage}
-          socket?.emit('minorChange', socketPayload)
+          socket?.emit(`minorChange`, socketPayload)
           addToLog({userName : currentUser.name, roomName : currentRoom.name, content : logMessage})
           setRefreshChat(true)
         }
@@ -1324,7 +1324,7 @@ const Chat = () => {
           ref={chatContainerRef}>
 
           { showLog ? <Log values={log} ref={logContainerRef} filter={logFilter}/> : 
-          messages?.length <= 0 ? <TextPlaceholder value={`No messages yet...`}/> : 
+          messages?.length <= 0 ? <TextPlaceholder className={`cursor-default`} value={`No messages yet...`}/> : 
           messages?.map((message : TChatMessage, id : number) => {
 
             // 🥗 🌮 🍣 🍙 🍘 🍥 🍨 ☕️ 🎂 🥡 🍵 🍢🍡
@@ -1460,7 +1460,7 @@ const Chat = () => {
             rows={3}
             maxLength={191}
             onChange={(e) => {onTextareaChange(e)}}
-            placeholder={`Say something...`}
+            placeholder={spamCountdown > 0 ? `Please wait a sec...` : `Say something...`}
             value={message.content}
             onKeyDown={(e) => {
               handleUserActivity()
