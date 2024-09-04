@@ -1,8 +1,8 @@
-import { useContext, useEffect, useRef, useState, Fragment, Suspense } from 'react'
+import { useContext, useEffect, useRef, useState, Fragment, Suspense, useMemo } from 'react'
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest, TLog } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
-import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, isThingValid, sortAlphabeticallyByName, sortByMilliseconds } from '../../utils/useful-functions'
+import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, isThingValid, isThingValidSpecific, sortAlphabeticallyByName, sortByMilliseconds } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
@@ -91,13 +91,13 @@ const Chat = () => {
   let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)
   let messageContainerRef =  useRef<HTMLSpanElement>(null)
   let handleUserActivityRef = useRef<() => void>(() => {})
-  let showNotificationsRef = useRef<boolean>(showNotifications)
+  let showNotificationsRef = useRef<boolean>(showNotifications)   
 
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
   const {auth, setAuth, role} = useContext(authContext)
 
-  const scrollToLatest = () => {    
+  const scrollToLatest = () => {
       if (autoScroll && chatContainerRef.current) {
         chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
       }
@@ -159,17 +159,7 @@ const Chat = () => {
       setSpamCountdown(messageDiff | 0)
     }
     return spamResult
-  }
-
-  // const getSpammingResult = () => {    
-  //   const messageCount = 5
-  //   const messageInterval = 10
-  //   const latestMessage = consecutiveMessages[consecutiveMessages.length - 1]
-  //   const earliestMessageIndex = consecutiveMessages.length - messageCount
-  //   const earliestMessage = earliestMessageIndex >= 0 ? consecutiveMessages[earliestMessageIndex] : 0
-  //   const spamResult = consecutiveMessages.length >= messageCount ? ((latestMessage - earliestMessage)/1000) <= messageInterval : false
-  //   return spamResult
-  // }
+  }  
 
   const addUserToOnlineList = async () => {
     const authInfo = await authStatus({})
@@ -440,11 +430,17 @@ const Chat = () => {
 
       const delay = useDelayOnEmit ? 500 : 0 // Prevents the socket from being disconnected too early.
 
-      setTimeout(() => {
-        socket?.emit(`sendMessage`,
-          {message : savedMessage, currentRoomUsers : roomUsers.length},  // payload
-          (response : {received : boolean} & TRoomLists) => { // callback
+      setTimeout(() => { // setTimeout start
+
+        const socketPayload = {
+          message : savedMessage, 
+          currentRoomUsers : roomUsers.length
+        }
+
+        socket?.emit(`sendMessage`, socketPayload, (response : {received : boolean} & TRoomLists) => { // callback
+
           if (response) {
+
             const {currentOnlineUsers, currentInactiveUsers, currentTypingUsers, received} = response
             const areOnlineUsersValid = isThingValid(currentOnlineUsers)
             const areInactiveUsersValid = isThingValid(currentInactiveUsers)
@@ -452,16 +448,24 @@ const Chat = () => {
             const areOnlineListsDifferent = onlineUsers.length != currentOnlineUsers
             const areInactiveListsDifferent = inactiveUsers.length != currentInactiveUsers
             const areTypingUsersDifferent = typingUsers.length != currentTypingUsers
-            if(areOnlineUsersValid && areOnlineListsDifferent || areInactiveUsersValid && areInactiveListsDifferent || areTypingUsersValid && areTypingUsersDifferent) {
-              //notifyUser(`The users list was updated online ${onlineUsers.length} != ${currentOnlineUsers} : ${onlineUsers.length != currentOnlineUsers} inactive ${inactiveUsers.length} != ${currentInactiveUsers} : ${inactiveUsers.length != currentInactiveUsers}`)
+
+            if(
+                areOnlineUsersValid && areOnlineListsDifferent || 
+                areInactiveUsersValid && areInactiveListsDifferent || 
+                areTypingUsersValid && areTypingUsersDifferent
+            ) {              
               setUpdateUserLists(true)
             }
+
             console.log(`Message Sent Successfully : ${received}`)
+
           } else {
             setHasErrors(true)
             console.log(`error : failed when sending message to socket.`)
           }
+
         })
+
         if(currentUser?.name && !isUserInRoom) {
           
           const socketPayload : TSocketPayload = {
@@ -470,11 +474,14 @@ const Chat = () => {
             notification : `${capitalizeFirst(currentUser.name)} has entered ${currentRoom.name}`,
             notifyRoomOnly : true,
           }
+
           setRoomUsers([...roomUsers, {id : authInfo.id, name : currentUser.name}])
           setIsUserInroom(true)
           socket?.emit(`minorChange`, socketPayload)
+
         }
-      }, delay)
+
+      }, delay) // setTimeout end
 
       console.log(`Sending message : ${JSON.stringify(savedMessage)}, socket connection : ${socket?.connected}`)
 
@@ -708,56 +715,44 @@ const Chat = () => {
     } else { // chronologically      
       return <FontAwesomeIcon icon={faFilter} width={48} height={48}/>      
     }    
-  }  
+  }
 
-  useEffect(() => {
-    
+  useEffect(() => { // Socket  
+
     if(!isServerOnline) {
+      return
+    }    
+
+    if(currentRoom.id == '-1' || currentRoom.id == '0') {
       return
     }
 
-    setRenderCounter(renderCounter + 1)
-    
-    console.log(` - Running useEffect.`)
-    
-    const timer = setTimeout(() => {
-      setCooldown(0)
-    }, cooldown)
+    console.log(`Running Socket useEffect Current Room Id : ${currentRoom?.id}`)
 
-    if(copiedToClipboard) {
-      setCopiedToClipboard(false)
-    }
-
-    if(hasErrors) {
-      notifyUser(`Something Went Wrong, please try again later`, `warning`)
-      setHasErrors(false)
-    }
-
-    if(reload > 0) {      
-      initializeAppData()
-    }
+    // Get DEPs: currentRoom, messages
+    // Set DEPs : refreshChat, useDelayOnEmit, reload, onlineUsers, inactiveUsers, typingUsers
 
     if(socket?.disconnected) {
       socket?.connect()
-    }        
+    }    
     
     retrieveUserLists()
 
     // DEP : currentRoom, messages, refreshChat
     socket?.on(`sendMessage`, (payload : {message : TChatMessage} & TRoomLists) => {
 
-      console.log(`socket on room : ${currentRoom?.id}`)
+      console.log(`socket on sendMessage : ${currentRoom?.id}`)
       
       const {message : msg} = payload // currentRoomUsers, currentOnlineUsers, currentInactiveUsers
       const {id, room} = msg
       const firstMessageId = messages?.length > 0 ? messages[0].id : -1
 
-      if (room == currentRoom.id) {
+      if (room == currentRoom?.id) {
         if (id != firstMessageId) {
           addMessage(msg)
           setRefreshChat(true)
         }
-      } else if(showNotificationsRef.current) {
+      } else if(room != `-1` && room != `0` && showNotificationsRef.current) {
           notifyUserInRoom(room)
       }
 
@@ -769,7 +764,7 @@ const Chat = () => {
       console.log(`socket on minorChange : ${roomId}`)
       if(notification && showNotificationsRef.current) {
         if(roomId) {
-          if (roomId == currentRoom.id || !notifyRoomOnly) {
+          if (roomId == currentRoom?.id || !notifyRoomOnly) {
             notifyUserInRoom(roomId, notification)
           }
         } else {
@@ -783,7 +778,7 @@ const Chat = () => {
     // DEP : currentRoom, useDelayOnEmit, reload
     socket?.on(`majorChange`, (payload : TSocketPayload) => {
       const {userName, roomName, notification, content} = payload      
-      console.log(`socket on change : ${currentRoom?.id}`)
+      console.log(`socket on majorChange : ${currentRoom?.id}`)
       setUseDelayOnEmit(true)
       setReload(reload + 1)
       //setRefreshRooms(true)
@@ -802,13 +797,14 @@ const Chat = () => {
 
     // DEP : currentRoom, inactiveUsers, refreshChat
     socket?.on(`updateInactive`, (currentInactiveUsers : {id : string, name : string}[]) => {
-      console.log(`socket on auth : ${currentRoom?.id}`)
+      console.log(`socket on updateInactive : ${currentRoom?.id}`)
       setInactiveUsers(currentInactiveUsers)
       setRefreshChat(true)
     })
 
     // DEP : typingUsers
     socket?.on(`updateTyping`, (payload : TRoomUser & {isTyping : boolean}) => {
+      console.log(`socket on updateTyping : ${currentRoom?.id}`)
       const {id, name, isTyping} = payload
       if(isTyping) {
         setTypingUsers((values) => ([
@@ -822,6 +818,44 @@ const Chat = () => {
         setTypingUsers(newTypingUsers)
       }      
     })    
+
+    return () => {
+      if(!firstLoad) {
+        socket?.off()
+        socket?.disconnect()
+      }
+    }
+  
+  }, [currentRoom.id]) 
+
+  useEffect(() => { // Main    
+    
+    if(!isServerOnline) {
+      return
+    }
+
+    setRenderCounter(renderCounter + 1)
+    
+    console.log(` - Running Main useEffect.`)
+    
+    const timer = setTimeout(() => {
+      setCooldown(0)
+    }, cooldown)
+
+    if(copiedToClipboard) {
+      setCopiedToClipboard(false)
+    }
+
+    if(hasErrors) {
+      notifyUser(`Something Went Wrong, please try again later`, `warning`)
+      setHasErrors(false)
+    }
+
+    if(reload > 0) {      
+      initializeAppData()
+    }
+
+    // Socket Stuff
 
     if(currentRoom.id != '-1' && currentRoom.id != '0' && reload > 0) {
       setReload(0)
@@ -840,24 +874,20 @@ const Chat = () => {
           setReload(0)
         }
       } else {
+        setFirstLoad(false)
         setReload(0)
       }
 
       setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
       clearTimeout(timer)
       
-      if(!firstLoad) {
-        socket?.off()
-        socket?.disconnect()
-      } else {        
-        setFirstLoad(false)
-      }
+      // Socket Stuff
 
     }  
-  //}, [rooms.length, currentRoom.id, reload, auth])  
-  }, [currentRoom.id, reload, auth])
 
-  useEffect(() => {
+  }, [currentRoom, reload, auth])
+
+  useEffect(() => {    
 
     if(!isServerOnline) {
       return
@@ -895,27 +925,24 @@ const Chat = () => {
 
   }, [currentUser.name])
 
-  useEffect(() => {  // Handles Inactivity
-    
+  useEffect(() => {  // Handles Inactivity    
     if(!isServerOnline) {
       return
-    }
-    
+    }    
     handleUserActivityRef.current = handleUserActivity
-
     if(!firstLoad) { // First load handled by retrieveCurrentUser
       setInactivityTimer()
     }    
-
     window.addEventListener('click', handleUserActivityRef.current)
-
     return () => {
       window.removeEventListener('click', handleUserActivityRef.current)
     }
-
   }, [userActivity])
 
   useEffect(() => { // Typing status
+    if(!isServerOnline) {
+      return
+    }
     if(firstLoad || currentUser.name == '') {
       return
     }
@@ -933,28 +960,26 @@ const Chat = () => {
   }, [isTyping])   
 
   useEffect(() => { // Spam
-
     if(!isServerOnline) {
       return
     }
-
     const spamInterval = setInterval(() => {
       if(spam) {
         sendMessage(`Spamming!`)
       }
     }, 1000)
-
     if(!spam) {
       clearInterval(spamInterval)
     }    
-
     return () => {
       clearInterval(spamInterval)
     }
-
   }, [spam])
 
   useEffect(() => { // Spam count
+    if(!isServerOnline) {
+      return
+    }
     if(!showSpamWarning || spamCountdown == 0) {
       return
     }
@@ -978,6 +1003,9 @@ const Chat = () => {
   }, [messages.length])
 
   useEffect(() => {  // Refresh the chat
+    if(!isServerOnline) {
+      return
+    }
     if (refreshChat) {      
       retrieveMessages()
       setRefreshChat(false)
@@ -992,14 +1020,19 @@ const Chat = () => {
   }, [auth])  
 
   useEffect(() => { // User lists
+    if(!isServerOnline) {
+      return
+    }
     if (updateUserLists) {
       retrieveUserLists()
       setUpdateUserLists(false)
     }
   }, [updateUserLists])  
 
-  
   useEffect(() => { // Refreshes Chat Rooms
+    if(!isServerOnline) {
+      return
+    }
     if(refreshRooms) {
       initializeRooms()
       setRefreshRooms(false)
@@ -1007,6 +1040,9 @@ const Chat = () => {
   }, [refreshRooms])
   
   useEffect(() => { // Notification Status
+    if(!isServerOnline) {
+      return
+    }
     showNotificationsRef.current = showNotifications
   }, [showNotifications])
 
@@ -1472,7 +1508,7 @@ const Chat = () => {
             }}
           />
 
-          <CustomButton        
+          <CustomButton
             value={
               <span className={`flex flex-col gap-1`}>
                 <h3 className='text-slate-100 group-hover:text-white'>
