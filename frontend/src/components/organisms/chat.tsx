@@ -84,7 +84,7 @@ const Chat = () => {
   const [consecutiveMessages, setConsecutiveMessages] = useState<number[]>([])  
   const [showSpamWarning, setShowSpamWarning] = useState(false)
   const [spamCountdown, setSpamCountdown] = useState(0)
-  const [logFilter, setLogFilter] = useState(0)
+  const [logFilter, setLogFilter] = useState(0)  
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let logContainerRef = useRef<HTMLDivElement>(null)
@@ -92,6 +92,7 @@ const Chat = () => {
   let messageContainerRef =  useRef<HTMLSpanElement>(null)
   let handleUserActivityRef = useRef<() => void>(() => {})
   let showNotificationsRef = useRef<boolean>(showNotifications)   
+  let currentRoomIdRef = useRef<string>(currentRoom.id)
 
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
@@ -371,12 +372,12 @@ const Chat = () => {
     }))
   }
 
-  const sendMessage = async (messageContent = '') => {    
+  const sendMessage = async (messageContent = '') => {
     
-    try {     
+    try {
       
       const dateTimeNow = Date.now()
-      const isSpammingResult= isSpamming(dateTimeNow)
+      const isSpammingResult = isSpamming(dateTimeNow)
 
       const newMessage : TChatMessage = {
         user : currentUser?.name ? currentUser.name : '',
@@ -399,7 +400,7 @@ const Chat = () => {
         return
       }
 
-      if(isSpammingResult) {
+      if(isSpammingResult || spamCountdown > 0) {
         notifyUser(`Slow down! Too many messages!`, `warning`)
         resetMessageContent()
         return
@@ -412,7 +413,7 @@ const Chat = () => {
         currentRoom.id,
         newMessage.content,
         newMessage.user,
-      ) as string      
+      ) as string
 
       const savedMessage = {
         id : savedMessageId, 
@@ -467,7 +468,7 @@ const Chat = () => {
         })
 
         if(currentUser?.name && !isUserInRoom) {
-          
+
           const socketPayload : TSocketPayload = {
             roomId : currentRoom.id,
             content : `has entered`,
@@ -518,7 +519,7 @@ const Chat = () => {
 	      socket?.connect()
       }
 
-      const socketPayload : TSocketPayload = {        
+      const socketPayload : TSocketPayload = {
         userName: currentUser.name,
         content: creationMessage,
         notification: notificationMessage,
@@ -528,8 +529,8 @@ const Chat = () => {
       socket?.emit(`majorChange`, socketPayload)
       addToLog({userName : currentUser.name, content : creationMessage})
       console.log(`Creating chat, socket connection : ${socket?.connected}`)
-      
-      setRefreshRooms(true)
+            
+      setReload(reload + 1)
 
     } catch (e) {
       setHasErrors(true)
@@ -539,9 +540,9 @@ const Chat = () => {
   }
 
   const notifyUserInRoom = async (id : string, roomMessage : string = ``) => {
-    try {
+    try {      
       const selectedRoom = await getChatById(id)
-      notifyUser(`${roomMessage != `` ? roomMessage : `New message in `}${selectedRoom.name}`)
+      notifyUser(`${roomMessage != `` ? roomMessage : `New message in `}${selectedRoom.name}`) 
     } catch (e) {
       setHasErrors(true)
       console.log(`error : when notifying the user in room.`)
@@ -707,47 +708,47 @@ const Chat = () => {
     }
   }
 
-  const getFilterIcon = (filterNumber : number) => {    
+  const getFilterIcon = (filterNumber : number) => {
     if(filterNumber >= 2) { // room name
       return <FontAwesomeIcon icon={faArrowUpWideShort} width={48} height={48}/>
     } else if (filterNumber >= 1) { //  user name
       return <FontAwesomeIcon icon={faArrowUpAZ} width={48} height={48}/>
-    } else { // chronologically      
-      return <FontAwesomeIcon icon={faFilter} width={48} height={48}/>      
+    } else { // chronologically
+      return <FontAwesomeIcon icon={faFilter} width={48} height={48}/>
     }    
   }
 
-  useEffect(() => { // Socket  
+  useEffect(() => { // Socket
 
     if(!isServerOnline) {
       return
-    }    
-
-    if(currentRoom.id == '-1' || currentRoom.id == '0') {
-      return
     }
 
-    console.log(`Running Socket useEffect Current Room Id : ${currentRoom?.id}`)
+    //if(currentRoomIdRef.current == '-1' || currentRoomIdRef.current == '0') {
+    //  return
+    //}
+
+    console.log(`Running Socket useEffect Current Room Id : ${currentRoomIdRef.current}`)
 
     // Get DEPs: currentRoom, messages
     // Set DEPs : refreshChat, useDelayOnEmit, reload, onlineUsers, inactiveUsers, typingUsers
 
     if(socket?.disconnected) {
       socket?.connect()
-    }    
+    }
     
     retrieveUserLists()
 
     // DEP : currentRoom, messages, refreshChat
     socket?.on(`sendMessage`, (payload : {message : TChatMessage} & TRoomLists) => {
 
-      console.log(`socket on sendMessage : ${currentRoom?.id}`)
+      console.log(`socket on sendMessage : ${currentRoomIdRef.current}`)
       
       const {message : msg} = payload // currentRoomUsers, currentOnlineUsers, currentInactiveUsers
       const {id, room} = msg
       const firstMessageId = messages?.length > 0 ? messages[0].id : -1
 
-      if (room == currentRoom?.id) {
+      if (room == currentRoomIdRef.current) {
         if (id != firstMessageId) {
           addMessage(msg)
           setRefreshChat(true)
@@ -761,10 +762,11 @@ const Chat = () => {
     // DEP : currentRoom, refreshChat
     socket?.on(`minorChange`, (msg : TSocketPayload) => {
       const {userName, notification, roomId, roomName, content, notifyRoomOnly} = msg
+      const isRoomIdValid = roomId && isThingValidSpecific(roomId) // Redundant check for it to be recognized
       console.log(`socket on minorChange : ${roomId}`)
       if(notification && showNotificationsRef.current) {
-        if(roomId) {
-          if (roomId == currentRoom?.id || !notifyRoomOnly) {
+        if(isRoomIdValid) {
+          if (roomId == currentRoomIdRef.current || !notifyRoomOnly) {
             notifyUserInRoom(roomId, notification)
           }
         } else {
@@ -778,7 +780,7 @@ const Chat = () => {
     // DEP : currentRoom, useDelayOnEmit, reload
     socket?.on(`majorChange`, (payload : TSocketPayload) => {
       const {userName, roomName, notification, content} = payload      
-      console.log(`socket on majorChange : ${currentRoom?.id}`)
+      console.log(`socket on majorChange : ${currentRoomIdRef.current}`)
       setUseDelayOnEmit(true)
       setReload(reload + 1)
       //setRefreshRooms(true)
@@ -790,21 +792,21 @@ const Chat = () => {
 
     // DEP : currentRoom, onlineUsers, refreshChat
     socket?.on(`auth`, (currentOnlineUsers : {id : string, name : string}[]) => {
-      console.log(`socket on auth : ${currentRoom?.id}`)
+      console.log(`socket on auth : ${currentRoomIdRef.current}`)
       setOnlineUsers(currentOnlineUsers)
       setRefreshChat(true)
     })
 
     // DEP : currentRoom, inactiveUsers, refreshChat
     socket?.on(`updateInactive`, (currentInactiveUsers : {id : string, name : string}[]) => {
-      console.log(`socket on updateInactive : ${currentRoom?.id}`)
+      console.log(`socket on updateInactive : ${currentRoomIdRef.current}`)
       setInactiveUsers(currentInactiveUsers)
       setRefreshChat(true)
     })
 
     // DEP : typingUsers
     socket?.on(`updateTyping`, (payload : TRoomUser & {isTyping : boolean}) => {
-      console.log(`socket on updateTyping : ${currentRoom?.id}`)
+      console.log(`socket on updateTyping : ${currentRoomIdRef.current}`)
       const {id, name, isTyping} = payload
       if(isTyping) {
         setTypingUsers((values) => ([
@@ -819,20 +821,20 @@ const Chat = () => {
       }      
     })    
 
-    return () => {
-      if(!firstLoad) {
+    return () => {      
         socket?.off()
-        socket?.disconnect()
-      }
+        socket?.disconnect()      
     }
-  
-  }, [currentRoom.id]) 
 
-  useEffect(() => { // Main    
+  }, [])  
+
+  useEffect(() => { // Main        
     
     if(!isServerOnline) {
       return
     }
+
+    currentRoomIdRef.current = currentRoom.id
 
     setRenderCounter(renderCounter + 1)
     
@@ -1693,8 +1695,11 @@ const Chat = () => {
           (R : {roomUsers.length})
         </h3>
         */}
+        <h3 className={`flex mb-5 bg-pink-600 rounded-lg p-3`}>
+          {currentRoomIdRef.current}
+        </h3>
         <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
-          {logFilter}
+          {spamCountdown}
         </h3>
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
           Render : {renderCounter}

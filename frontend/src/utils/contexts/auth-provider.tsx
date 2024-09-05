@@ -27,12 +27,12 @@ const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
   
   const [auth, setAuth] = useState(false)
   const [role, setRole] = useState('none')
-  const [clickedToLogout, setClickedToLogout] = useState(false)  
+  const [clickedToLogout, setClickedToLogout] = useState(false)
 
   const logout = async () => {
     setClickedToLogout(true)
     setRole ? setRole('none') : ''
-    setAuth ? setAuth(false) : ''    
+    setAuth ? setAuth(false) : ''
   }
 
   const getAuthTokenStatus = async () => {    

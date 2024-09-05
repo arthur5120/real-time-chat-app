@@ -107,11 +107,16 @@
 # Make log changes real time.
 # Make log notes circular.
 # Warn the user about the log being full.
+# Returning to the chat screen when logging out, the notification appears as if in session timeout.
+# Make spam cooldown specific to room and reset along with the rooms.
+# Spam cooldown seems to be cumulative sometimes, check the array to see if it is comparing the correct messages.
+# Clicking to reset room sometimes doesn't update on the other end.
+# When a user removes all their messages from the room, the room user placeholder appears next to their name.
 
 // Done yesterday
 
-Update message box placeholder to indicate cooldown status. Change socket event names to more specific ones.
+Move socket listening events from the main useEffect into its own separate one. Reduce dependencies for the socket useEffect to only the minimum necessary preventing the socket from turning off too often. Add server check for each useEffect. Modify sendMessage socket event to prevent notifications when the room id is invalid.
 
 // Done today
 
-Move socket listening events from the main useEffect into its own separate one. Reduce dependencies for the socket useEffect to only the minimum necessary preventing the socket from turning off too often. Add server check for each useEffect. Modify sendMessage socket event to prevent notifications when the room id is invalid.
+Modify room creation event to trigger a reload, ensuring proper rooms update. Add spamCountdown state check to the sendMessage function to prevent messages from being sent while changing rooms and with the spam cooldown still active. Fix handleSessionExpiration to prevent re-setting auth state to true when clickedToLogout is true, resolving logout issue that returned to the chat screen. Remove firstLoad condition and dependencies from socket useEffect to eliminate duplicate notifications.

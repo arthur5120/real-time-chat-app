@@ -77,7 +77,7 @@ const App = () => {
         notifyUser(`Logged out`)
         setHasSessionExpired(true)
       }      
-    } else if (!auth) {
+    } else if (!auth && !clickedToLogout) {
       setAuth ? setAuth(true) : ''
     }
   }
