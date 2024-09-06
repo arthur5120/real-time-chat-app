@@ -104,6 +104,23 @@ const Chat = () => {
       }
   }
 
+  const getCookieSpam = () : number => {
+    try {
+      const cookieSpam = Cookies.get(`spam`)    
+      const cookieSpamResult = cookieSpam ? parseInt(cookieSpam) : 0
+      return cookieSpamResult
+    } catch (e) {
+      setHasErrors(true)
+      return 0
+    }
+  }
+
+  const setCookieSpam = (lifespanSeconds : number) => {
+    const lifespanDays = lifespanSeconds/(24*60*60)
+    const lifespanSecondsString = JSON.stringify(lifespanSeconds)
+    Cookies.set(`spam`, lifespanSecondsString, { expires: lifespanDays, path: `/` })
+  }
+
   const getCookieLog = () : TLog[] => {
     try {
       const logString = Cookies.get(`log`) as string
@@ -138,13 +155,19 @@ const Chat = () => {
   }
 
   const isSpamming = (hereNow : number) => {
+
+    if (spamCountdown > 0 || showSpamWarning) {      
+      return true
+    }
+
     const arrayCapacity = 20
     const messageCount = 5
     const messageInterval = 10
     const earliestMessageIndex = consecutiveMessages.length - messageCount
-    const earliestMessage = earliestMessageIndex >= 0 ? consecutiveMessages[earliestMessageIndex] : 0
-    const messageDiff = ((hereNow - earliestMessage)/1000)
+    const earliestMessage = earliestMessageIndex >= 0 ? consecutiveMessages[earliestMessageIndex] : 0    
+    const messageDiff = ((hereNow - earliestMessage)/1000)    
     const spamResult = consecutiveMessages.length >= messageCount ? messageDiff <= messageInterval : false
+    
     if(consecutiveMessages.length >= arrayCapacity) {
       const first = consecutiveMessages[arrayCapacity - 2]
       const second = consecutiveMessages[arrayCapacity - 1]
@@ -154,11 +177,15 @@ const Chat = () => {
         ...current,
         hereNow
       ]))
-    }
-    if(spamResult && !showSpamWarning) {
+    }    
+
+    if(spamResult) {
+      const cooldownPeriod = messageDiff | 0
       setShowSpamWarning(spamResult)
-      setSpamCountdown(messageDiff | 0)
+      setSpamCountdown(cooldownPeriod)
+      setCookieSpam(cooldownPeriod)
     }
+
     return spamResult
   }  
 
@@ -304,6 +331,11 @@ const Chat = () => {
       try {        
 
         if(firstLoad) {
+          const cookieSpam = getCookieSpam()
+          if(cookieSpam > 0) {
+            setShowSpamWarning(true)
+            setSpamCountdown(cookieSpam)
+          }
           const cookieLog = getCookieLog()
           setLog(cookieLog)
         }
@@ -375,9 +407,15 @@ const Chat = () => {
   const sendMessage = async (messageContent = '') => {
     
     try {
-      
+
       const dateTimeNow = Date.now()
-      const isSpammingResult = isSpamming(dateTimeNow)
+      const isSpammingResult = isSpamming(dateTimeNow)      
+
+      if(isSpammingResult) {
+        notifyUser(`Slow down! Too many messages!`, `warning`)
+        resetMessageContent()
+        return
+      }
 
       const newMessage : TChatMessage = {
         user : currentUser?.name ? currentUser.name : '',
@@ -396,12 +434,6 @@ const Chat = () => {
 
       if (!authInfo.authenticated) {
         notifyUser('Not Allowed!', 'error')
-        resetMessageContent()
-        return
-      }
-
-      if(isSpammingResult || spamCountdown > 0) {
-        notifyUser(`Slow down! Too many messages!`, `warning`)
         resetMessageContent()
         return
       }
