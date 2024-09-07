@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useState} from "react"
 import { TLog } from "../../utils/types"
-import { capitalizeFirst } from "../../utils/useful-functions"
+import { capitalizeFirst, sortChronogicallyByAny } from "../../utils/useful-functions"
 import { sortAlphabeticallyByAny } from "../../utils/useful-functions"
 import TextPlaceholder from "../atoms/text-placeholder"
 
@@ -24,6 +24,7 @@ const Log = forwardRef<HTMLDivElement, {values : TLog[], filter : number}>(({val
                     setLogList(sortAlphabeticallyByAny(values, `roomName`))
                 break
                 default: // chronologically
+                    setLogList(sortChronogicallyByAny(values, `time`))
                 break
             }    
 

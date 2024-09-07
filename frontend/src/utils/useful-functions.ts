@@ -61,14 +61,31 @@ export const sortAlphabeticallyByName = <T extends { name : string }>(unsorted: 
     return sorted
 }
 
-export const sortAlphabeticallyByAny = <T extends {[index: string]: string}>(unsorted: T[], property : string) => {
+export const sortChronogicallyByAny = <T extends {[index: string]: string}>(unsorted: T[], property : string, reverse ? : boolean) => {    
+    try {
+        const sorted = unsorted.sort((a, b) => {
+            const dateA = a[property] ? new Date(a[property]) : null
+            const dateB = b[property] ? new Date(b[property]) : null
+            if (!dateA || !dateB) return 0
+            if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) return 0
+            if (dateA.getTime() < dateB.getTime()) return -1
+            if (dateA.getTime() > dateB.getTime()) return 1
+            return 0
+        })
+        return reverse ? sorted.reverse() : sorted
+    } catch(e) {
+        return []
+    }
+}
+
+export const sortAlphabeticallyByAny = <T extends {[index: string]: string}>(unsorted: T[], property : string, reverse ? : boolean) => {
     const sorted = unsorted.sort((a, b) => {
         if (!a[property] || !b[property]) return 0
         if (a[property] < b[property]) return -1
         if (a[property] > b[property]) return 1
         return 0
     })
-    return sorted
+    return reverse ? sorted.reverse() : sorted
 }
 
 export const sortAlphabeticallyByAny2 = <T extends { [index: string]: string }>(

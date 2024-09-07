@@ -8,7 +8,8 @@ import {
     modGetChatById,
     modGetChats,
     getChatsByUserId,
-    modDeleteAllChats,    
+    modDeleteAllChats,
+    modGetUsersByChatId,    
 } from "../models/chat-model"
 
  import { midCheckDuplicated } from "../utils/middleware"
@@ -118,6 +119,20 @@ export const conGetChats = async (req : Request, res : Response) => {
 
     } catch (e) {
         return res.status(500).json({message : 'Internal Error'})
+    }
+
+}
+
+export const conGetUsersByChatId = async (req : Request, res : Response) => {
+
+    try {
+        const users = await modGetUsersByChatId(req, res)
+        return res.status(200).send(users)
+    } catch (e) {
+        console.log(e)
+        return res.status(500).json({
+            message : 'Internal Error'            
+        })
     }
 
 }

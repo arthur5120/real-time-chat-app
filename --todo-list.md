@@ -111,12 +111,12 @@
 # Make spam cooldown specific to room and reset along with the rooms.
 # Spam cooldown seems to be cumulative sometimes, check the array to see if it is comparing the correct messages. [DONE]
 # Refreshing prevents the room from staying on cooldown. [DONE]
-# When a user removes all their messages from the room, the room user placeholder appears next to their name.
+# When all users remove all their messages from the room, the room user placeholder appears next to their name. [DONE]
 
 // Done yesterday
 
-Modify room creation event to trigger a reload, ensuring proper rooms update. Add spamCountdown state check to the sendMessage function to prevent messages from being sent while changing rooms and with the spam cooldown still active. Fix handleSessionExpiration to prevent re-setting auth state to true when clickedToLogout is true, resolving logout issue that returned to the chat screen. Remove firstLoad condition and dependencies from socket useEffect to eliminate duplicate notifications.
+Modify isSpamming function for it to check the spamCountdown value and make an early return if necessary, remove that check from sendMessage. Create cookie getter and setter for the spam timer to make it persistent through page refreshes.
 
 // Done today
 
-Modify isSpamming function for it to check the spamCountdown value and make an early return if necessary, remove that check from sendMessage. Create cookie getter and setter for the spam timer to make it persistent through page refreshes.
+Implement api route to get all users present in a chat room. Add isUserInRoom flag to the room users conditional rendering, so the placeholder text won't appear if the current user's in the room. Create a function to sort object arrays chronologically by property

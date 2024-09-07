@@ -1,8 +1,8 @@
 import { useContext, useEffect, useRef, useState, Fragment, Suspense, useMemo } from 'react'
-import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
+import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, getUsersByChatId, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest, TLog } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
-import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, isThingValid, isThingValidSpecific, sortAlphabeticallyByName, sortByMilliseconds } from '../../utils/useful-functions'
+import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, isThingValid, isThingValidSpecific, sortAlphabeticallyByName, sortByMilliseconds, sortChronogicallyByAny } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
@@ -84,7 +84,8 @@ const Chat = () => {
   const [consecutiveMessages, setConsecutiveMessages] = useState<number[]>([])  
   const [showSpamWarning, setShowSpamWarning] = useState(false)
   const [spamCountdown, setSpamCountdown] = useState(0)
-  const [logFilter, setLogFilter] = useState(0)  
+  const [logFilter, setLogFilter] = useState(0)
+  const [test, setTest] = useState<any>(null)
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let logContainerRef = useRef<HTMLDivElement>(null)
@@ -137,9 +138,9 @@ const Chat = () => {
     Cookies.set(`log`, logString, {expires : 3, path: '/'})
   }
 
-  const addToLog = (data : TLog) => {    
+  const addToLog = (data : TLog) => {
     const dateNow = getFormattedDate()
-    const timeNow = getFormattedTime()
+    const timeNow = getFormattedTime()    
     const {userName, time, content, roomName} =  data
     const newLogEntry : TLog = {
       userName : userName ? userName : `Unknown`,
@@ -1269,7 +1270,7 @@ const Chat = () => {
 
             </p> : ''}
             {    
-              roomUsers.length <= 0 ? <TextPlaceholder value={`...`} className={`m-0 p-0`}/> :
+              roomUsers.length <= 0 && !isUserInRoom ? <TextPlaceholder value={`...`} className={`m-0 p-0`}/> :
                 roomUsers.map((user : TRoomUser, id : number) => {
 
                   const isCurrentUser = currentUser.id == user.id                  
@@ -1707,7 +1708,18 @@ const Chat = () => {
             disabled={!!reload || firstLoad || !isServerOnline}
             title={`Currently spamming the chat.`}
             onClick={ async () => {
-              //setSpam((lastSpam) => !lastSpam)              
+              //setSpam((lastSpam) => !lastSpam)
+              const data = [
+                { id: "1", effectiveDate: "2024-09-06T23:34:45.523Z" },
+                { id: "3", effectiveDate: "2022-05-04T09:00:00.000Z" },
+                { id: "2", effectiveDate: "2023-01-21T12:00:00.000Z" },
+                { id: "4", effectiveDate: "2022-05-05T10:00:00.000Z" },
+                { id: "5", effectiveDate: "2021-01-21T08:00:00.000Z" },
+                { id: "6", effectiveDate: "2021-02-22T11:00:00.000Z" },
+                { id: "7", effectiveDate: "invalid date" }
+            ]                        
+              const sorted = sortChronogicallyByAny(data, `id`)
+              setTest(sorted)
             }}
           />          
 
@@ -1727,11 +1739,17 @@ const Chat = () => {
           (R : {roomUsers.length})
         </h3>
         */}
-        <h3 className={`flex mb-5 bg-pink-600 rounded-lg p-3`}>
-          {currentRoomIdRef.current}
+        <h3 className={`flex mb-5 bg-pink-600 rounded-lg p-3`}>          
         </h3>
-        <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
-          {spamCountdown}
+        <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}> 
+          <select name="" id="" className='bg-black text-white rounded p-1 m-1'>
+            {test ? test.map((item : any) => {
+              return (
+                <option>{JSON.stringify(item)}</option>
+              )
+            }) 
+            : ``}
+          </select>
         </h3>
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
           Render : {renderCounter}

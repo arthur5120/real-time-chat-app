@@ -184,6 +184,17 @@ export const getChatsByUserId = async (userId : string) => {
     }
 }
 
+export const getUsersByChatId = async (chatId : string) => {
+    try {        
+        const res = await baseURL.get(`chats/${chatId}/users`)
+        return res.data
+    } catch (e) {
+        if (axios.isAxiosError(e) && e?.response?.status) {
+            return e.response.data
+        }
+    }
+}
+
 export const createMessage = async(senderId : string, chatId : string, content : string, senderName : string = 'Unknown') => { // Idempotency
 
     try {

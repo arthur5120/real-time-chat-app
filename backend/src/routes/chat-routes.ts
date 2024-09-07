@@ -7,6 +7,7 @@ import {
     conGetChats,
     conGetChatsByUserId,
     conDeleteAllChats,
+    conGetUsersByChatId,
 } from "../controllers/chat-controllers"
 
 import { 
@@ -26,6 +27,7 @@ chatRouter.delete('/delete-chat/:id', midBodyParsers, midCheckAuth, midCheckAllo
 chatRouter.delete('/delete-all-chats/', midBodyParsers, midCheckAuth, midCheckAllowed, conDeleteAllChats)
 chatRouter.get('/chats', conGetChats)
 chatRouter.get('/chats/:id', conGetChatById)
+chatRouter.get('/chats/:id/users', midBodyParsers, midCheckAuth, midCheckAllowed, conGetUsersByChatId)
 chatRouter.get('/users/:id/chats', midBodyParsers, midCheckAuth, conGetChatsByUserId)
 
 export default chatRouter
