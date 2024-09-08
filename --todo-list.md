@@ -99,24 +99,26 @@
 # Make user lists update comparing uuid instead of number of users, or maybe dates.
 # Find a way to update all the lists.
 # When first starting the server, it takes too long to load the page.
-# Chat starts flicking when reaching a certain number of messages.
+# Chat starts flicking w\hen reaching a certain number of messages.
 # Maybe make some messages and user names only show if clicking on them.
 # Add a context menu to show interactions with a individual given message as well.
 # When server first starts, changing the messages doesn't update the chat on the other end.
 # On the room reset/creation, if the user continues spamming none of the messages get to the other end.
 # useEffect Bug : Auth running on useEffect after sending message. Functions emitting to auth : "addUserToOnlineList, retrieveUserLists".
-# Make log changes in real time.
-# Make log notes circular.
+# Make log changes in real time. [DONE]
+# Make log notes circular. [DONE]
 # Warn the user about the log being full.
 # Make spam cooldown specific to room and reset along with the rooms.
 # Spam cooldown seems to be cumulative sometimes, check the array to see if it is comparing the correct messages. [DONE]
 # Refreshing prevents the room from staying on cooldown. [DONE]
 # When all users remove all their messages from the room, the room user placeholder appears next to their name. [DONE]
+# When log messages updates, it might not consider the filter mode, setting them always chronologically.
 
 // Done yesterday
 
-Modify isSpamming function for it to check the spamCountdown value and make an early return if necessary, remove that check from sendMessage. Create cookie getter and setter for the spam timer to make it persistent through page refreshes.
+Implement api route to get all users present in a chat room. Add isUserInRoom flag to the room users conditional rendering, so the placeholder text won't appear if the current user's in the room. Create a function to sort object arrays chronologically by property
 
 // Done today
 
-Implement api route to get all users present in a chat room. Add isUserInRoom flag to the room users conditional rendering, so the placeholder text won't appear if the current user's in the room. Create a function to sort object arrays chronologically by property
+Update the addToLog function to maintain circular log messages with the limit of 10 messages. Ensure the log feed updates in real-time. Add keys to the dynamically generated elements on the log component.
+

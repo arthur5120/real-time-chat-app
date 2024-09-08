@@ -139,6 +139,7 @@ const Chat = () => {
   }
 
   const addToLog = (data : TLog) => {
+    
     const dateNow = getFormattedDate()
     const timeNow = getFormattedTime()    
     const {userName, time, content, roomName} =  data
@@ -149,10 +150,15 @@ const Chat = () => {
       roomName : roomName ? roomName : `global`,
     }
     setLog((data) => {
-      const newLog = [...data, newLogEntry]
+      let newLog = data
+      if (newLog.length >= 10) {
+        newLog.splice(0,1)
+        newLog = sortChronogicallyByAny(newLog, `time`)        
+      }
+        newLog = [...newLog, newLogEntry]
       setCookieLog(newLog)
       return newLog
-    })
+    })   
   }
 
   const isSpamming = (hereNow : number) => {
@@ -1708,18 +1714,7 @@ const Chat = () => {
             disabled={!!reload || firstLoad || !isServerOnline}
             title={`Currently spamming the chat.`}
             onClick={ async () => {
-              //setSpam((lastSpam) => !lastSpam)
-              const data = [
-                { id: "1", effectiveDate: "2024-09-06T23:34:45.523Z" },
-                { id: "3", effectiveDate: "2022-05-04T09:00:00.000Z" },
-                { id: "2", effectiveDate: "2023-01-21T12:00:00.000Z" },
-                { id: "4", effectiveDate: "2022-05-05T10:00:00.000Z" },
-                { id: "5", effectiveDate: "2021-01-21T08:00:00.000Z" },
-                { id: "6", effectiveDate: "2021-02-22T11:00:00.000Z" },
-                { id: "7", effectiveDate: "invalid date" }
-            ]                        
-              const sorted = sortChronogicallyByAny(data, `id`)
-              setTest(sorted)
+              setSpam((lastSpam) => !lastSpam)   
             }}
           />          
 
@@ -1740,16 +1735,9 @@ const Chat = () => {
         </h3>
         */}
         <h3 className={`flex mb-5 bg-pink-600 rounded-lg p-3`}>          
+          filter : {logFilter}
         </h3>
-        <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}> 
-          <select name="" id="" className='bg-black text-white rounded p-1 m-1'>
-            {test ? test.map((item : any) => {
-              return (
-                <option>{JSON.stringify(item)}</option>
-              )
-            }) 
-            : ``}
-          </select>
+        <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>     
         </h3>
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
           Render : {renderCounter}

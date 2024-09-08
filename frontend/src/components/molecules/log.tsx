@@ -18,12 +18,15 @@ const Log = forwardRef<HTMLDivElement, {values : TLog[], filter : number}>(({val
             
             switch (filter) {
                 case 1 :
-                    setLogList(sortAlphabeticallyByAny(values, `userName`))
+                    console.log(`Log Component Message : Setting Log List to 1.`)
+                    setLogList(sortAlphabeticallyByAny(values, `userName`, true))
                 break
-                case 2 :                    
-                    setLogList(sortAlphabeticallyByAny(values, `roomName`))
+                case 2 :    
+                    console.log(`Log Component Message : Setting Log List to 2.`)                
+                    setLogList(sortAlphabeticallyByAny(values, `roomName`, true))
                 break
                 default: // chronologically
+                    console.log(`Log Component Message : Setting Log List to 0.`)                
                     setLogList(sortChronogicallyByAny(values, `time`))
                 break
             }    
@@ -35,18 +38,18 @@ const Log = forwardRef<HTMLDivElement, {values : TLog[], filter : number}>(({val
          <div className={`flex flex-col text-center`} ref={ref} id={`logdiv`}>            
               <h3>Current Log [{filter >= 0 ? filterOrder[filter] : filterOrder[0]}]</h3>
               {            
-                  logList && logList.length > 0 ? logList.map((value) => {
+                  logList && logList.length > 0 ? logList.map((value, index) => {
                       const {userName, roomName, time, content} = value                
                       return (
-                          <span className={`flex flex-col justify-center bg-slate-900 text-white rounded-xl italic m-1 p-1`}>
-                              <p className={`flextext-center justify-center`}>
-                                  <span className={`text-red-600`}>{`${capitalizeFirst(`${userName}`)}`}</span>
-                                  <span> - </span>
-                                  <span className={`text-orange-600`}>{time}</span>                                                        
+                          <span className={`flex flex-col justify-center bg-slate-900 text-white rounded-xl italic m-1 p-1`} key={`log-entry-main-span-${index}`}>
+                              <p className={`flextext-center justify-center`} key={`log-entry-p1-${index}`}>
+                                  <span className={`text-red-600`} key={`log-entry-main-span-child1-${index}`} >{`${capitalizeFirst(`${userName}`)}`}</span>
+                                  <span key={`log-entry-main-span-child2-${index}`} > - </span>
+                                  <span className={`text-orange-600`} key={`log-entry-main-span-child3-${index}`} >{time}</span>                                                        
                               </p>                        
-                              <p className={`flextext-center justify-center`}>
-                                  <span className={`text-white`}>{`${capitalizeFirst(`${content}`)} on `}</span>
-                                  <span className={`text-yellow-600`}>{roomName}</span>
+                              <p className={`flextext-center justify-center`} key={`log-entry-p2-${index}`}>
+                                  <span className={`text-white`} key={`log-entry-main-span-child4-${index}`}>{`${capitalizeFirst(`${content}`)} on `}</span>
+                                  <span className={`text-yellow-600`} key={`log-entry-main-span-child5-${index}`}>{roomName}</span>
                               </p>
                           </span>
                       )
