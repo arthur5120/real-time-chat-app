@@ -11,32 +11,40 @@ const filterOrder = [
 ]
 
 const Log = forwardRef<HTMLDivElement, {values : TLog[], filter : number}>(({values, filter}, ref) => {
-            
-        const [logList, setLogList] = useState<TLog[]>(values)
+        
+        const [logList, setLogList] = useState<TLog[]>(values)        
 
-        useEffect(() => {            
+        useEffect(() => {   
+            
+            let sortedLogList
             
             switch (filter) {
                 case 1 :
-                    console.log(`Log Component Message : Setting Log List to 1.`)
-                    setLogList(sortAlphabeticallyByAny(values, `userName`, true))
+                    console.log(`Log Component Message : Setting Log List to ${filter}. By User Name`)                    
+                    sortedLogList = sortAlphabeticallyByAny(values, `userName`)
+                    console.log(sortedLogList)
+                    setLogList(sortedLogList)                    
                 break
                 case 2 :    
-                    console.log(`Log Component Message : Setting Log List to 2.`)                
-                    setLogList(sortAlphabeticallyByAny(values, `roomName`, true))
+                    console.log(`Log Component Message : Setting Log List to ${filter}. By Room Name`)                                    
+                    sortedLogList = sortAlphabeticallyByAny(values, `roomName`)
+                    console.log(sortedLogList)
+                    setLogList(sortedLogList)
                 break
-                default: // chronologically
-                    console.log(`Log Component Message : Setting Log List to 0.`)                
-                    setLogList(sortChronogicallyByAny(values, `time`))
+                default:
+                    console.log(`Log Component Message : Setting Log List to ${filter}. By Time and Date`)                    
+                    sortedLogList = sortAlphabeticallyByAny(values, `time`)
+                    console.log(sortedLogList)
+                    setLogList(sortedLogList)    
                 break
             }    
 
-        }, [values, filter])        
+        }, [values, filter])
 
         return (
       
          <div className={`flex flex-col text-center`} ref={ref} id={`logdiv`}>            
-              <h3>Current Log [{filter >= 0 ? filterOrder[filter] : filterOrder[0]}]</h3>
+              <h3>[ordered { filter >= 0 ? filterOrder[filter] : filterOrder[0]}]</h3>
               {            
                   logList && logList.length > 0 ? logList.map((value, index) => {
                       const {userName, roomName, time, content} = value                

@@ -792,7 +792,7 @@ const Chat = () => {
           addMessage(msg)
           setRefreshChat(true)
         }
-      } else if(room != `-1` && room != `0` && showNotificationsRef.current) {
+      } else if(room != `-1` && room != `0` && showNotificationsRef.current) {        
           notifyUserInRoom(room)
       }
 
@@ -865,7 +865,7 @@ const Chat = () => {
         socket?.disconnect()      
     }
 
-  }, [])  
+  }, [socket])
 
   useEffect(() => { // Main        
     

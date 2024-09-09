@@ -1,6 +1,6 @@
 import Navbar from "../molecules/navbar"
 import AuthBanner from "../molecules/auth-banner"
-import { Outlet, useLocation } from "react-router-dom"
+import { Outlet, useLocation, useNavigate } from "react-router-dom"
 import { useContext, useEffect, useState } from "react"
 import { authContext } from "../../utils/contexts/auth-provider"
 import { toastContext } from "../../utils/contexts/toast-provider"
@@ -18,6 +18,7 @@ const App = () => {
   const [previousAuth, setPreviousAuth] = useState(auth)
   const [hasSessionExpired, setHasSessionExpired] = useState(false)  
   const location = useLocation()
+  const navigate = useNavigate()
 
   const handleSocketOnlineList = async () => {        
 
@@ -34,7 +35,7 @@ const App = () => {
           const authRequest : TSocketAuthRequest = {user : {id : ``}, isConnecting : false}
           socket?.emit(`auth`, authRequest)
           socket?.emit(`authList`)
-          socket?.emit(`inactiveList`)
+          socket?.emit(`inactiveList`)          
           setHasSessionExpired(false)
         }
   
@@ -76,6 +77,7 @@ const App = () => {
       if (auth) {
         notifyUser(`Logged out`)
         setHasSessionExpired(true)
+        navigate('/login')
       }      
     } else if (!auth && !clickedToLogout) {
       setAuth ? setAuth(true) : ''

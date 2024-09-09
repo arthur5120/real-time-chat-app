@@ -35,7 +35,7 @@ export const conAuth = async (req : Request, res : Response) => {
         const user = await modGetUserByEmail(req, res) as {id : string}
         const guid = generateUniqueId()
         const payload = {...user, guid : guid}
-        const token = midGenerateToken(payload) 
+        const token = midGenerateToken(payload)
         const expirationTime = Date.now() + 1000 * 60 * 15
 
         const onlineUserId = onlineUsers.findIndex((u) => u.userId == user?.id)

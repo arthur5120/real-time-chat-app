@@ -113,12 +113,12 @@
 # Refreshing prevents the room from staying on cooldown. [DONE]
 # When all users remove all their messages from the room, the room user placeholder appears next to their name. [DONE]
 # When log messages updates, it might not consider the filter mode, setting them always chronologically.
+# On auto-logout due to duplicated sessions, the socket stops listening to events. [DONE?]
 
 // Done yesterday
 
-Implement api route to get all users present in a chat room. Add isUserInRoom flag to the room users conditional rendering, so the placeholder text won't appear if the current user's in the room. Create a function to sort object arrays chronologically by property
+Update the addToLog function to maintain circular log messages with the limit of 10 messages. Ensure the log feed updates in real-time. Add keys to the dynamically generated elements on the log component.
 
 // Done today
 
-Update the addToLog function to maintain circular log messages with the limit of 10 messages. Ensure the log feed updates in real-time. Add keys to the dynamically generated elements on the log component.
-
+Modify handleSessionExpiration function to redirect the user to the login page when performing an auto-logout due to duplicated login sessions. Add socket as a dependency in the socket useEffect to ensure it listens correctly after page refresh. Change functions that sort arrays of objects alphabetically to normalize strings before comparing them.
