@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useState} from "react"
+import { forwardRef} from "react"
 import { TLog } from "../../utils/types"
 import { capitalizeFirst, sortChronogicallyByAny } from "../../utils/useful-functions"
 import { sortAlphabeticallyByAny } from "../../utils/useful-functions"
@@ -12,41 +12,36 @@ const filterOrder = [
 
 const Log = forwardRef<HTMLDivElement, {values : TLog[], filter : number}>(({values, filter}, ref) => {
         
-        const [logList, setLogList] = useState<TLog[]>(values)        
+        const getSortedValues = () => {
 
-        useEffect(() => {   
-            
-            let sortedLogList
+            let sortedLogList = values || []
             
             switch (filter) {
                 case 1 :
                     console.log(`Log Component Message : Setting Log List to ${filter}. By User Name`)                    
                     sortedLogList = sortAlphabeticallyByAny(values, `userName`)
                     console.log(sortedLogList)
-                    setLogList(sortedLogList)                    
-                break
+                return sortedLogList                
                 case 2 :    
                     console.log(`Log Component Message : Setting Log List to ${filter}. By Room Name`)                                    
                     sortedLogList = sortAlphabeticallyByAny(values, `roomName`)
-                    console.log(sortedLogList)
-                    setLogList(sortedLogList)
-                break
+                    console.log(sortedLogList)  
+                return sortedLogList
                 default:
                     console.log(`Log Component Message : Setting Log List to ${filter}. By Time and Date`)                    
-                    sortedLogList = sortAlphabeticallyByAny(values, `time`)
-                    console.log(sortedLogList)
-                    setLogList(sortedLogList)    
-                break
-            }    
+                    sortedLogList = sortChronogicallyByAny(values, `time`)
+                    console.log(sortedLogList)                    
+                return sortedLogList
+            }
 
-        }, [values, filter])
+        }
 
         return (
       
          <div className={`flex flex-col text-center`} ref={ref} id={`logdiv`}>            
               <h3>[ordered { filter >= 0 ? filterOrder[filter] : filterOrder[0]}]</h3>
               {            
-                  logList && logList.length > 0 ? logList.map((value, index) => {
+                values && values.length > 1 ? getSortedValues().map((value, index) => {
                       const {userName, roomName, time, content} = value                
                       return (
                           <span className={`flex flex-col justify-center bg-slate-900 text-white rounded-xl italic m-1 p-1`} key={`log-entry-main-span-${index}`}>

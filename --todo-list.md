@@ -112,13 +112,13 @@
 # Spam cooldown seems to be cumulative sometimes, check the array to see if it is comparing the correct messages. [DONE]
 # Refreshing prevents the room from staying on cooldown. [DONE]
 # When all users remove all their messages from the room, the room user placeholder appears next to their name. [DONE]
-# When log messages updates, it might not consider the filter mode, setting them always chronologically.
+# When log messages updates, it might not consider the filter mode, setting them always chronologically. [DONE]
 # On auto-logout due to duplicated sessions, the socket stops listening to events. [DONE?]
 
 // Done yesterday
 
-Update the addToLog function to maintain circular log messages with the limit of 10 messages. Ensure the log feed updates in real-time. Add keys to the dynamically generated elements on the log component.
+Modify handleSessionExpiration function to redirect the user to the login page when performing an auto-logout due to duplicated login sessions. Add socket as a dependency in the socket useEffect to ensure it listens correctly after page refresh. Change functions that sort arrays of objects alphabetically to normalize strings before comparing them.
 
 // Done today
 
-Modify handleSessionExpiration function to redirect the user to the login page when performing an auto-logout due to duplicated login sessions. Add socket as a dependency in the socket useEffect to ensure it listens correctly after page refresh. Change functions that sort arrays of objects alphabetically to normalize strings before comparing them.
+Fix delay when showing the sorted values on the log component by removing the useEffect and state and directly mapping the sorted values in the component's render method.
