@@ -39,7 +39,7 @@ const Log = forwardRef<HTMLDivElement, {values : TLog[], filter : number}>(({val
         return (
       
          <div className={`flex flex-col text-center`} ref={ref} id={`logdiv`}>            
-              <h3>[ordered { filter >= 0 ? filterOrder[filter] : filterOrder[0]}]</h3>
+              <h3>[sorted { filter >= 0 ? filterOrder[filter] : filterOrder[0]}]</h3>
               {            
                 values && values.length > 1 ? getSortedValues().map((value, index) => {
                       const {userName, roomName, time, content} = value                

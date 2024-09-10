@@ -52,8 +52,7 @@ const App = () => {
           return
         }
     
-        if (!auth && authInfo.id != `none`) { // Logout   
-          //notifyUser(`Logout.`)
+        if (!auth && authInfo.id != `none`) { // Logout             
           setRole ? setRole('none') : ''
           const authRequest : TSocketAuthRequest = {user: {id : authInfo.id}, isConnecting : false}
           socket?.emit(`auth`, authRequest)

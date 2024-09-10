@@ -1733,7 +1733,6 @@ const Chat = () => {
           (I : {inactiveUsers.length})
           (R : {roomUsers.length})
         </h3>
-        */}
         <h3 className={`flex mb-5 bg-pink-600 rounded-lg p-3`}>          
           filter : {logFilter}
         </h3>
@@ -1748,6 +1747,7 @@ const Chat = () => {
         <h3 className={`flex mb-5 ${socket?.connected ? `bg-green-600` : `bg-red-600` } rounded-lg p-3`}>
           socket {socket?.connected ? 'on' : 'off'}
         </h3>
+        */}
       </div>
      
     </section>

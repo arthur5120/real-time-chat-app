@@ -98,9 +98,9 @@ export const conLogout = async (req : Request, res : Response) => {
         const {auth} = req.cookies
         const verifiedUser = jwt.verify(auth, secretKey) as {id : string, role : string, guid : string} | null
         const onlineUserId = onlineUsers.findIndex((u) => u.userId == verifiedUser?.id)
-
-        if (onlineUserId != -1) {
-            onlineUsers.splice(onlineUserId, 1)
+        
+        if (verifiedUser?.id) {
+            onlineUserId != -1 ? onlineUsers.splice(onlineUserId, 1) : ''
             return await res.clearCookie('auth').json({'message':'logged off'})
         } else {
             return await res.json({'message' : 'Something went wrong'})    

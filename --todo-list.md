@@ -117,8 +117,8 @@
 
 // Done yesterday
 
-Modify handleSessionExpiration function to redirect the user to the login page when performing an auto-logout due to duplicated login sessions. Add socket as a dependency in the socket useEffect to ensure it listens correctly after page refresh. Change functions that sort arrays of objects alphabetically to normalize strings before comparing them.
+Fix delay when showing the sorted values on the log component by removing the useEffect and state and directly mapping the sorted values in the component's render method.
 
 // Done today
 
-Fix delay when showing the sorted values on the log component by removing the useEffect and state and directly mapping the sorted values in the component's render method.
+Modify server's logout function to remove its dependency on the online users list, preventing logout issues when the server is down.
