@@ -11,7 +11,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { 
   faEye, faEyeSlash, faPause, faArrowsRotate, 
   faClipboard, faClipboardCheck, faTriangleExclamation, 
-  faHourglass3, faMagnifyingGlass, faFilter, faArrowUpAZ, faArrowUpWideShort,
+  faHourglass3, faMagnifyingGlass, faFilter, 
+  faArrowUpAZ, faArrowDownAZ, faArrowUp19,
+  faArrowUpShortWide, faArrowDownShortWide, faArrowDown19,
+  faList, faListNumeric, faListSquares, faListAlt,
+  faRotate, faFilterCircleXmark,
+  faRodSnake,
+  faRandom,
 } from '@fortawesome/free-solid-svg-icons'
 import TextPlaceholder from '../atoms/text-placeholder'
 import Cookies from 'js-cookie'
@@ -23,16 +29,7 @@ import Log from '../molecules/log'
 const roomsPlaceholder = [{id : '-1', name : ''}]
 const currentRoomPlaceHolder = {id : '-1', selectId : 0, name : ''}
 const editMenuButtonPrefix = `--em-btn--`
-const filterOrder = [`filtered by date`, `filtered by user name`, `filtered by room name`,]
-
-const bugsToFix = [
-  `Editing the message fails sometimes.`,  
-  `A message is being added to the local chat erroneously for a moment before the chat loads the correct messages.`,
-  `Edited status not showing on the other chats when freshly editing a message for the first time.`,
-  `previous property on the messageBeingEdited state might not be updating correctly.`,
-  `Inactivity status not loading sometimes when refreshing the page.`,
-  `Reload not resetting when the data is fetched, locking the user out of the UI.`
-]
+const orderText = [`sorted by date`, `sorted by user name`, `sorted by room name`,]
 
 const textColors = ['text-red-400','text-blue-400','text-yellow-400','text-purple-400','text-pink-400','text-cyan-400','text-lime-400','text-indigo-400','text-teal-400','text-sky-400','text-violet-400','text-fuchsia-400','text-rose-400',]
 const emojis = [`🥗`, `🌮`, `🍙`, `🍘`, `🍥`, `🍨`, `☕️`, `🎂`, `🥡`, `🍵`, `🍢`, `🍡`]
@@ -48,9 +45,9 @@ type TRoomLists = Partial<{currentOnlineUsers : number, currentInactiveUsers : n
 const Chat = () => {
 
   const [rooms, setRooms] = useState<TRoom[]>(roomsPlaceholder)
-  const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)  
+  const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
   const [isUserInRoom, setIsUserInroom] = useState(false)
-  const [refreshRooms, setRefreshRooms] = useState(false)  
+  const [refreshRooms, setRefreshRooms] = useState(false)
   const [currentUser, setCurrentUser] = useState<TFullUser>(userPlaceholder)
   const [roomUsers, setRoomUsers] = useState<TRoomUser[]>([]) // Turn all these user lists into one later.
   const [onlineUsers, setOnlineUsers] = useState<TRoomUser[]>([])
@@ -77,15 +74,15 @@ const Chat = () => {
   const [firstLoad, setFirstLoad] = useState(true)
   const [reload, setReload] = useState(1)
   const [hasErrors, setHasErrors] = useState(false)
-  const [isServerOnline, setIsServerOnline] = useState(true)  
+  const [isServerOnline, setIsServerOnline] = useState(true)
   const [requireRefresh, setRequireRefresh] = useState(true)
   const [log, setLog] = useState<TLog[]>([])
-  const [showLog, setShowLog] = useState(false)    
-  const [consecutiveMessages, setConsecutiveMessages] = useState<number[]>([])  
+  const [showLog, setShowLog] = useState(false)
+  const [consecutiveMessages, setConsecutiveMessages] = useState<number[]>([])
   const [showSpamWarning, setShowSpamWarning] = useState(false)
   const [spamCountdown, setSpamCountdown] = useState(0)
-  const [logFilter, setLogFilter] = useState(0)
-  const [test, setTest] = useState<any>(null)
+  const [logOrder, setLogOrder] = useState(0)  
+  const [reverseLogOrder, setReverseLogOrder] = useState(false)
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let logContainerRef = useRef<HTMLDivElement>(null)
@@ -97,7 +94,7 @@ const Chat = () => {
 
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
-  const {auth, setAuth, role} = useContext(authContext)
+  const {auth} = useContext(authContext)
 
   const scrollToLatest = () => {
       if (autoScroll && chatContainerRef.current) {
@@ -158,7 +155,7 @@ const Chat = () => {
         newLog = [...newLog, newLogEntry]
       setCookieLog(newLog)
       return newLog
-    })   
+    })
   }
 
   const isSpamming = (hereNow : number) => {
@@ -171,8 +168,8 @@ const Chat = () => {
     const messageCount = 5
     const messageInterval = 10
     const earliestMessageIndex = consecutiveMessages.length - messageCount
-    const earliestMessage = earliestMessageIndex >= 0 ? consecutiveMessages[earliestMessageIndex] : 0    
-    const messageDiff = ((hereNow - earliestMessage)/1000)    
+    const earliestMessage = earliestMessageIndex >= 0 ? consecutiveMessages[earliestMessageIndex] : 0
+    const messageDiff = ((hereNow - earliestMessage)/1000)
     const spamResult = consecutiveMessages.length >= messageCount ? messageDiff <= messageInterval : false
     
     if(consecutiveMessages.length >= arrayCapacity) {
@@ -184,7 +181,7 @@ const Chat = () => {
         ...current,
         hereNow
       ]))
-    }    
+    }
 
     if(spamResult) {
       const cooldownPeriod = messageDiff | 0
@@ -253,7 +250,7 @@ const Chat = () => {
       const hasValidRooms = !!localRooms[0]
 
       if(!hasValidRooms) {
-        await createChat()        
+        await createChat()
         //setReload(reload + 1) // ROOMCHANGE
       }
 
@@ -318,24 +315,13 @@ const Chat = () => {
       console.log(`error : retrieving rooms.`)
     }
     
-  }  
-
-  const convertRawMessage = (m: TMessage, userName : string = ``): TChatMessage => {
-    return {
-        id: m.id,
-        user: userName != `` ? userName : m.senderName,
-        content: m.content,
-        created_at: convertDatetimeToMilliseconds(m.created_at),
-        updated_at: convertDatetimeToMilliseconds(m.updated_at),
-        room: m.chatId
-    }
   }
 
   const retrieveMessages = async () => {
     
     console.log(`FUNCTION : Retrieving messages.`)
     
-      try {        
+      try {
 
         if(firstLoad) {
           const cookieSpam = getCookieSpam()
@@ -351,7 +337,7 @@ const Chat = () => {
           setRefreshRooms(true)
           //setReload(reload + 1) ROOMCHANGE
           return
-        }        
+        }
 
         const authInfo = await authStatus({})
         const rawMessages = await getMessages() // Getting all messages to filter them based on room, change this later.
@@ -432,7 +418,7 @@ const Chat = () => {
         room : currentRoom.id,
       }
 
-      if(newMessage.content.trim() == '') { // Validation out of place.
+      if(newMessage.content.trim() == '') {
         notifyUser('Write something first!')
         return
       }
@@ -445,7 +431,7 @@ const Chat = () => {
         return
       }
 
-      await addUserToChat(authInfo.id, currentRoom.id) // Adding user to chat without checking.
+      await addUserToChat(authInfo.id, currentRoom.id) // Adding user to chat without checking if it exists.
   
       const savedMessageId = await createMessage(
         authInfo.id,
@@ -455,25 +441,25 @@ const Chat = () => {
       ) as string
 
       const savedMessage = {
-        id : savedMessageId, 
-        ...newMessage, 
+        id : savedMessageId,
+        ...newMessage,
         senderID : currentUser.id,
         user : currentUser?.name ? `${currentUser.diff?.nameEmoji} ${currentUser.name}` : '',
         isUserSender : false
-      }      
+      }
 
       if(socket?.disconnected) {
         socket?.connect()
       }
 
-      socket?.emit(`updateTyping`, {id : currentUser.id, name : currentUser.name, isTyping : false})      
+      socket?.emit(`updateTyping`, {id : currentUser.id, name : currentUser.name, isTyping : false})
 
       const delay = useDelayOnEmit ? 500 : 0 // Prevents the socket from being disconnected too early.
 
       setTimeout(() => { // setTimeout start
 
         const socketPayload = {
-          message : savedMessage, 
+          message : savedMessage,
           currentRoomUsers : roomUsers.length
         }
 
@@ -493,7 +479,7 @@ const Chat = () => {
                 areOnlineUsersValid && areOnlineListsDifferent || 
                 areInactiveUsersValid && areInactiveListsDifferent || 
                 areTypingUsersValid && areTypingUsersDifferent
-            ) {              
+            ) {
               setUpdateUserLists(true)
             }
 
@@ -562,7 +548,7 @@ const Chat = () => {
         userName: currentUser.name,
         content: creationMessage,
         notification: notificationMessage,
-        //roomName: currentRoom.name, - Global change, needs to notify everyone.
+        //roomName: currentRoom.name, - No room name means global change, needs to notify everyone.
       }
       
       socket?.emit(`majorChange`, socketPayload)
@@ -693,8 +679,7 @@ const Chat = () => {
     await retrieveCurrentUser()
     await createRoomIfNoneAreFound()
     await retrieveRooms()
-    await retrieveMessages()
-    //resetMessageContent()
+    await retrieveMessages()    
   }
 
   const setInactivityTimer =  async (localUserName = null) => {        
@@ -747,13 +732,24 @@ const Chat = () => {
     }
   }
 
-  const getFilterIcon = (filterNumber : number) => {
-    if(filterNumber >= 2) { // room name
-      return <FontAwesomeIcon icon={faArrowUpWideShort} width={48} height={48}/>
-    } else if (filterNumber >= 1) { //  user name
-      return <FontAwesomeIcon icon={faArrowUpAZ} width={48} height={48}/>
+  const getOrderIcon = (orderNumber : number) => {
+    if(orderNumber >= 2) { // room name            
+      return (
+        !reverseLogOrder ? 
+        <FontAwesomeIcon icon={faArrowUpShortWide} width={48} height={48}/> : 
+        <FontAwesomeIcon icon={faArrowDownShortWide} width={48} height={48}/>
+      )
+    } else if (orderNumber >= 1) { // user name
+      return (
+        !reverseLogOrder ? 
+        <FontAwesomeIcon icon={faArrowUpAZ} width={48} height={48}/> : 
+        <FontAwesomeIcon icon={faArrowDownAZ} width={48} height={48}/>)
     } else { // chronologically
-      return <FontAwesomeIcon icon={faFilter} width={48} height={48}/>
+      return (
+        !reverseLogOrder ? 
+        <FontAwesomeIcon icon={faArrowUp19} width={48} height={48}/> : 
+        <FontAwesomeIcon icon={faArrowDown19} width={48} height={48}/>
+      )
     }    
   }
 
@@ -762,10 +758,6 @@ const Chat = () => {
     if(!isServerOnline) {
       return
     }
-
-    //if(currentRoomIdRef.current == '-1' || currentRoomIdRef.current == '0') {
-    //  return
-    //}
 
     console.log(`Running Socket useEffect Current Room Id : ${currentRoomIdRef.current}`)
 
@@ -778,7 +770,7 @@ const Chat = () => {
     
     retrieveUserLists()
 
-    // DEP : currentRoom, messages, refreshChat
+    // DEP : currentRoom, messages, refreshChat    
     socket?.on(`sendMessage`, (payload : {message : TChatMessage} & TRoomLists) => {
 
       console.log(`socket on sendMessage : ${currentRoomIdRef.current}`)
@@ -821,8 +813,7 @@ const Chat = () => {
       const {userName, roomName, notification, content} = payload      
       console.log(`socket on majorChange : ${currentRoomIdRef.current}`)
       setUseDelayOnEmit(true)
-      setReload(reload + 1)
-      //setRefreshRooms(true)
+      setReload(reload + 1)      
       if (payload?.notification && notification != ``) {
         notifyUser(notification, 'info')
         addToLog({userName : userName, roomName : roomName, content : content})
@@ -1085,7 +1076,7 @@ const Chat = () => {
       return
     }
     showNotificationsRef.current = showNotifications
-  }, [showNotifications])
+  }, [showNotifications])  
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -1361,36 +1352,49 @@ const Chat = () => {
                 <FontAwesomeIcon icon={faArrowsRotate} width={48} height={48}/> :
                 <FontAwesomeIcon icon={faPause} width={48} height={48}/>}
               </button> : <button 
-                title={`${filterOrder[logFilter]}`}
+                title={`${orderText[logOrder]}`}
                 disabled={!!reload || firstLoad || !isServerOnline}
                 className={
                   ` ${autoScroll ? `bg-[#050D20] hover:bg-black` : `bg-[#050D20] hover:bg-black`}
                   rounded-lg disabled:cursor-not-allowed`
                 }
                 onClick={() => {  
-                  if(logFilter > 1) {
-                    setLogFilter(0)
+                  if(logOrder > 1) {
+                    setLogOrder(0)
                   } else {
-                    setLogFilter((prev) => prev + 1)
+                    setLogOrder((prev) => prev + 1)
                   }                  
                 }}
               >         
-                {getFilterIcon(logFilter)}
+                {getOrderIcon(logOrder)}
               </button>
             }
             
-            <button
-              title={`Toggle hide/show message notifications from other chats`}
-              disabled={!!reload || firstLoad || !isServerOnline}
-              className={`bg-[#050D20] hover:bg-black rounded-lg disabled:cursor-not-allowed`}
-              onClick={() => {
-                setShowNotifications((prev) => !prev)
-              }}
-            >
-              {!showNotifications ? 
-              <FontAwesomeIcon icon={faEyeSlash} width={48} height={48}/> : 
-              <FontAwesomeIcon icon={faEye} width={48} height={48}/>}
-            </button>            
+            {            
+              !showLog ? <button
+                title={`Toggle hide/show message notifications from other chats`}
+                disabled={!!reload || firstLoad || !isServerOnline}
+                className={`bg-[#050D20] hover:bg-black rounded-lg disabled:cursor-not-allowed`}
+                onClick={() => {
+                  setShowNotifications((prev) => !prev)
+                }}
+              >
+                {!showNotifications ? 
+                <FontAwesomeIcon icon={faEyeSlash} width={48} height={48}/> : 
+                <FontAwesomeIcon icon={faEye} width={48} height={48}/>}
+              </button> : <button
+                title={`Invert sort order`}
+                disabled={!!reload || firstLoad || !isServerOnline}
+                className={`bg-[#050D20] hover:bg-black rounded-lg disabled:cursor-not-allowed`}
+                onClick={() => {
+                  setReverseLogOrder((prev) => !prev)
+                }}
+              >
+                {reverseLogOrder ? 
+                <FontAwesomeIcon icon={faList} width={48} height={48}/> : 
+                <FontAwesomeIcon icon={faRandom} width={48} height={48}/>}
+              </button>           
+            }           
             
           </span>
 
@@ -1400,7 +1404,7 @@ const Chat = () => {
           className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll`}
           ref={chatContainerRef}>
 
-          { showLog ? <Log values={log} ref={logContainerRef} filter={logFilter}/> : 
+          { showLog ? <Log values={log} ref={logContainerRef} order={logOrder} reverseOrder={reverseLogOrder}/> : 
           messages?.length <= 0 ? <TextPlaceholder className={`cursor-default`} value={`No messages yet...`}/> : 
           messages?.map((message : TChatMessage, id : number) => {
 
@@ -1680,7 +1684,7 @@ const Chat = () => {
           <CustomButton
             value={`Log`}
             variationName='varthree'
-            className={`${showLog ? `bg-yellow-600 active:bg-yellow-700` : `bg-orange-900 active:bg-orange-800`} w-20 h-full max-h-28 m-0 flex items-center justify-center`}
+            className={`${showLog ? `bg-yellow-600 active:bg-yellow-600` : `bg-orange-900 active:bg-orange-900`} w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad || !isServerOnline}
             title={`Shows either the history of messages or the chat`}
             onClick={() => {
@@ -1694,6 +1698,8 @@ const Chat = () => {
             }}
           />
 
+          {/* 
+          
           <CustomButton
             value={`Get 🐜`}
             variationName='varthree'
@@ -1714,9 +1720,11 @@ const Chat = () => {
             disabled={!!reload || firstLoad || !isServerOnline}
             title={`Currently spamming the chat.`}
             onClick={ async () => {
-              setSpam((lastSpam) => !lastSpam)   
+              setSpam((lastSpam) => !lastSpam)
             }}
-          />          
+          /> 
+          
+          */}
 
        </div>
 
@@ -1736,16 +1744,16 @@ const Chat = () => {
         <h3 className={`flex mb-5 bg-pink-600 rounded-lg p-3`}>          
           filter : {logFilter}
         </h3>
-        <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>     
-        </h3>
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
-          Render : {renderCounter}
+        Render : {renderCounter}
         </h3>
         <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
-          {`Reload : ${reload}`}
+        {`Reload : ${reload}`}
         </h3>
         <h3 className={`flex mb-5 ${socket?.connected ? `bg-green-600` : `bg-red-600` } rounded-lg p-3`}>
-          socket {socket?.connected ? 'on' : 'off'}
+        socket {socket?.connected ? 'on' : 'off'}
+        </h3>
+        <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
         </h3>
         */}
       </div>

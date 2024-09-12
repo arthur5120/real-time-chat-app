@@ -1,4 +1,4 @@
-import { forwardRef} from "react"
+import { forwardRef, useEffect} from "react"
 import { TLog } from "../../utils/types"
 import { capitalizeFirst, sortChronogicallyByAny } from "../../utils/useful-functions"
 import { sortAlphabeticallyByAny } from "../../utils/useful-functions"
@@ -10,38 +10,40 @@ const filterOrder = [
     `by room name`,
 ]
 
-const Log = forwardRef<HTMLDivElement, {values : TLog[], filter : number}>(({values, filter}, ref) => {
+const Log = forwardRef<HTMLDivElement, {values : TLog[], order : number, reverseOrder ? : boolean}>(({values, order, reverseOrder}, ref) => {    
         
         const getSortedValues = () => {
 
             let sortedLogList = values || []
             
-            switch (filter) {
+            switch (order) {
                 case 1 :
-                    console.log(`Log Component Message : Setting Log List to ${filter}. By User Name`)                    
-                    sortedLogList = sortAlphabeticallyByAny(values, `userName`)
+                    console.log(`Log Component Message : Setting Log List to ${order}. By User Name`)                    
+                    sortedLogList = sortAlphabeticallyByAny(values, `userName`, reverseOrder)
                     console.log(sortedLogList)
                 return sortedLogList                
                 case 2 :    
-                    console.log(`Log Component Message : Setting Log List to ${filter}. By Room Name`)                                    
-                    sortedLogList = sortAlphabeticallyByAny(values, `roomName`)
+                    console.log(`Log Component Message : Setting Log List to ${order}. By Room Name`)                                    
+                    sortedLogList = sortAlphabeticallyByAny(values, `roomName`, reverseOrder)
                     console.log(sortedLogList)  
                 return sortedLogList
                 default:
-                    console.log(`Log Component Message : Setting Log List to ${filter}. By Time and Date`)                    
-                    sortedLogList = sortChronogicallyByAny(values, `time`)
+                    console.log(`Log Component Message : Setting Log List to ${order}. By Time and Date`)                    
+                    sortedLogList = sortChronogicallyByAny(values, `time`, reverseOrder)
                     console.log(sortedLogList)                    
                 return sortedLogList
             }
 
         }
 
+        const logListTitle = `[sorted by ${order >= 0 ? filterOrder[order] : filterOrder[0]} - ${reverseOrder ? `inverted` : `normal`}]`
+
         return (
       
          <div className={`flex flex-col text-center`} ref={ref} id={`logdiv`}>            
-              <h3>[sorted { filter >= 0 ? filterOrder[filter] : filterOrder[0]}]</h3>
+              <h3>{logListTitle}</h3>
               {            
-                values && values.length > 1 ? getSortedValues().map((value, index) => {
+                values && values.length > 0 ? getSortedValues().map((value, index) => {
                       const {userName, roomName, time, content} = value                
                       return (
                           <span className={`flex flex-col justify-center bg-slate-900 text-white rounded-xl italic m-1 p-1`} key={`log-entry-main-span-${index}`}>

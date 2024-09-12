@@ -117,8 +117,12 @@
 
 // Done yesterday
 
-Fix delay when showing the sorted values on the log component by removing the useEffect and state and directly mapping the sorted values in the component's render method.
+Modify server's logout function to remove its dependency on the online users list, preventing logout issues when the server is down.
 
 // Done today
 
-Modify server's logout function to remove its dependency on the online users list, preventing logout issues when the server is down.
+Change the conditional rendering on the log component to support single records.
+Create a boolean state to control when to display the log list in reverse order.
+Modify the button for hiding/showing notifications to instead display a button for reversing the log order when on the log screen.
+Update button icons to reflect the current log order and different sorting criteria.
+Adapt the log component to support inverting the order based on a boolean prop.
