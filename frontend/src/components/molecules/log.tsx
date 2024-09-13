@@ -5,9 +5,9 @@ import { sortAlphabeticallyByAny } from "../../utils/useful-functions"
 import TextPlaceholder from "../atoms/text-placeholder"
 
 const filterOrder = [
-    `by date`,
-    `by user name`,
-    `by room name`,
+    `date`,
+    `user name`,
+    `room name`,
 ]
 
 const Log = forwardRef<HTMLDivElement, {values : TLog[], order : number, reverseOrder ? : boolean}>(({values, order, reverseOrder}, ref) => {    

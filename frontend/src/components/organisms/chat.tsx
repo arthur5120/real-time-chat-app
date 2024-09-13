@@ -1391,8 +1391,8 @@ const Chat = () => {
                 }}
               >
                 {reverseLogOrder ? 
-                <FontAwesomeIcon icon={faList} width={48} height={48}/> : 
-                <FontAwesomeIcon icon={faRandom} width={48} height={48}/>}
+                <FontAwesomeIcon icon={faRandom} width={48} height={48}/> :
+                <FontAwesomeIcon icon={faList} width={48} height={48}/>}
               </button>           
             }           
             
