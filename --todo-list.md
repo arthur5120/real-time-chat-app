@@ -114,15 +114,18 @@
 # When all users remove all their messages from the room, the room user placeholder appears next to their name. [DONE]
 # When log messages updates, it might not consider the filter mode, setting them always chronologically. [DONE]
 # On auto-logout due to duplicated sessions, the socket stops listening to events. [DONE?]
+# Make notifications specific to rooms the user's currently in. [DONE]
+# Modify sendMessage socket event on the socket useEffect to check if the room id is valid with the appropriate method.
+# Modify notifyUserInRoom function to use the appropriate method for checking the room id.
+# Make notifyUserInRoom use the room id ref instead of the state?
+# When deleting all messages, the user no longer appears on the room user list. Is that a problem though?
 
 // Done yesterday
 
-Change the conditional rendering on the log component to support single records.
-Create a boolean state to control when to display the log list in reverse order.
-Modify the button for hiding/showing notifications to instead display a button for reversing the log order when on the log screen.
-Update button icons to reflect the current log order and different sorting criteria.
-Adapt the log component to support inverting the order based on a boolean prop.
+Fix button to revert sort order showing the wrong icon.
 
 // Done today
 
-Fix button to revert sort order showing the wrong icon.
+Create ref for current user id and update the main useEffect to set it correctly.
+Set confirm and delete message events to notify only the room they're emitted from.
+Modify notifyUserInRoom function to check for valid room IDs and only notify the rooms where the user is currently present.

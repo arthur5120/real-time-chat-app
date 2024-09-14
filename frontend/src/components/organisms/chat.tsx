@@ -91,6 +91,7 @@ const Chat = () => {
   let handleUserActivityRef = useRef<() => void>(() => {})
   let showNotificationsRef = useRef<boolean>(showNotifications)   
   let currentRoomIdRef = useRef<string>(currentRoom.id)
+  let currentUserIdRef = useRef<string | undefined>(currentUser.id)
 
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
@@ -340,7 +341,7 @@ const Chat = () => {
         }
 
         const authInfo = await authStatus({})
-        const rawMessages = await getMessages() // Getting all messages to filter them based on room, change this later.
+        const rawMessages = await getMessages() // Getting all messages to filter them based on room, change this later.              
         const filteredMessages = rawMessages.filter((m : TMessage) => m.chatId == currentRoom.id)
         const uniqueIdList = new Set<string>()
         const roomUserList : TRoomUser[] = []
@@ -548,7 +549,7 @@ const Chat = () => {
         userName: currentUser.name,
         content: creationMessage,
         notification: notificationMessage,
-        //roomName: currentRoom.name, - No room name means global change, needs to notify everyone.
+        //roomName: currentRoom.name, - No room name means global change, needs to notify everyone.        
       }
       
       socket?.emit(`majorChange`, socketPayload)
@@ -564,14 +565,27 @@ const Chat = () => {
 
   }
 
-  const notifyUserInRoom = async (id : string, roomMessage : string = ``) => {
-    try {      
-      const selectedRoom = await getChatById(id)
-      notifyUser(`${roomMessage != `` ? roomMessage : `New message in `}${selectedRoom.name}`) 
+  const notifyUserInRoom = async (selectedRoomId : string, roomMessage : string = ``) => {
+
+    try {   
+      
+      if(!isThingValidSpecific(selectedRoomId)) {
+        return
+      }
+
+      const selectedRoom = await getChatById(selectedRoomId)
+      const userChats = currentUserIdRef.current ? await getChatsByUserId(currentUserIdRef.current) : false
+      const userPresentInRoom = userChats?.length > 0 ? userChats.find((r : {chatId : string}) => r.chatId == selectedRoomId) : false      
+
+      if(!!userPresentInRoom && !!selectedRoom) {
+        notifyUser(`${roomMessage != `` ? roomMessage : `New message in `}${selectedRoom.name}`)
+      }
+
     } catch (e) {
       setHasErrors(true)
-      console.log(`error : when notifying the user in room.`)
+      console.log(`error : when notifying the user in room. ${e}`)
     }
+
   }
 
   const deleteAllRooms = async () => {
@@ -777,14 +791,14 @@ const Chat = () => {
       
       const {message : msg} = payload // currentRoomUsers, currentOnlineUsers, currentInactiveUsers
       const {id, room} = msg
-      const firstMessageId = messages?.length > 0 ? messages[0].id : -1
+      const firstMessageId = messages?.length > 0 ? messages[0].id : -1      
 
       if (room == currentRoomIdRef.current) {
         if (id != firstMessageId) {
           addMessage(msg)
           setRefreshChat(true)
         }
-      } else if(room != `-1` && room != `0` && showNotificationsRef.current) {        
+      } else if(room != `-1` && room != `0` && showNotificationsRef.current) {      
           notifyUserInRoom(room)
       }
 
@@ -800,7 +814,7 @@ const Chat = () => {
           if (roomId == currentRoomIdRef.current || !notifyRoomOnly) {
             notifyUserInRoom(roomId, notification)
           }
-        } else {
+        } else { // Send it to everyone if room is undefined.
           notifyUser(notification, `info`)
           addToLog({userName : userName, roomName : roomName, content : content})
         }
@@ -865,6 +879,7 @@ const Chat = () => {
     }
 
     currentRoomIdRef.current = currentRoom.id
+    currentUserIdRef.current = currentUser.id
 
     setRenderCounter(renderCounter + 1)
     
@@ -1142,7 +1157,14 @@ const Chat = () => {
         const editedMessage = messageBeingEdited?.previous ?  messageBeingEdited.previous : ''
         const notificationMessage = `${currentUser.name ? capitalizeFirst(currentUser.name) : ``} deleted "${cropMessage(editedMessage)}" on ${currentRoom.name}`
         const logMessage = `deleted "${cropMessage(editedMessage)}"`
-        const socketPayload : TSocketPayload = {userName : currentUser.name, roomName : currentRoom.name, notification : notificationMessage, content : logMessage}
+        const socketPayload : TSocketPayload = {
+          userName : currentUser.name, 
+          roomName : currentRoom.name, 
+          roomId : currentRoom.id,
+          notification : notificationMessage, 
+          content : logMessage,
+          notifyRoomOnly : true,
+        }
         socket?.emit(`minorChange`, socketPayload)
         setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
         addToLog({userName : currentUser.name, roomName : currentRoom.name, content : logMessage})
@@ -1158,7 +1180,14 @@ const Chat = () => {
           const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
           const notificationMessage = `${currentUser?.name ? capitalizeFirst(currentUser.name) : ``} updated "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`
           const logMessage = `updated "${previousMessage}" to "${updatedMessage}"`
-          const socketPayload : TSocketPayload = {userName : currentUser.name, roomName : currentRoom.name, notification : notificationMessage, content : logMessage}
+          const socketPayload : TSocketPayload = {
+            userName : currentUser.name, 
+            roomName : currentRoom.name,
+            roomId : currentRoom.id,
+            notification : notificationMessage, 
+            content : logMessage,
+            notifyRoomOnly : true,
+          }
           socket?.emit(`minorChange`, socketPayload)
           addToLog({userName : currentUser.name, roomName : currentRoom.name, content : logMessage})
           setRefreshChat(true)
