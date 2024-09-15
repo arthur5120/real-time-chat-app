@@ -1,23 +1,16 @@
-import { useContext, useEffect, useRef, useState, Fragment, Suspense, useMemo } from 'react'
-import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, getUsersByChatId, updateMessage, } from '../../hooks/useAxios'
+import { useContext, useEffect, useRef, useState, Fragment } from 'react'
+import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest, TLog } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
-import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, generateUniqueId, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, isThingValid, isThingValidSpecific, sortAlphabeticallyByName, sortByMilliseconds, sortChronogicallyByAny } from '../../utils/useful-functions'
+import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, isThingValid, isThingValidSpecific, sortAlphabeticallyByName, sortByMilliseconds, sortChronogicallyByAny } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
 import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { 
-  faEye, faEyeSlash, faPause, faArrowsRotate, 
-  faClipboard, faClipboardCheck, faTriangleExclamation, 
-  faHourglass3, faMagnifyingGlass, faFilter, 
-  faArrowUpAZ, faArrowDownAZ, faArrowUp19,
-  faArrowUpShortWide, faArrowDownShortWide, faArrowDown19,
-  faList, faListNumeric, faListSquares, faListAlt,
-  faRotate, faFilterCircleXmark,
-  faRodSnake,
-  faRandom,
+  faEye, faEyeSlash, faPause, faArrowsRotate, faClipboard, faClipboardCheck, faArrowUpAZ, 
+  faArrowDownAZ, faArrowUp19, faArrowUpShortWide, faArrowDownShortWide, faArrowDown19, faList, faRandom,
 } from '@fortawesome/free-solid-svg-icons'
 import TextPlaceholder from '../atoms/text-placeholder'
 import Cookies from 'js-cookie'
@@ -567,7 +560,7 @@ const Chat = () => {
 
   const notifyUserInRoom = async (selectedRoomId : string, roomMessage : string = ``) => {
 
-    try {   
+    try {
       
       if(!isThingValidSpecific(selectedRoomId)) {
         return
@@ -791,14 +784,15 @@ const Chat = () => {
       
       const {message : msg} = payload // currentRoomUsers, currentOnlineUsers, currentInactiveUsers
       const {id, room} = msg
-      const firstMessageId = messages?.length > 0 ? messages[0].id : -1      
+      const firstMessageId = messages?.length > 0 ? messages[0].id : -1     
+      const isRoomIdValid = room && isThingValidSpecific(room) // Redundant check for it to be recognized
 
       if (room == currentRoomIdRef.current) {
         if (id != firstMessageId) {
           addMessage(msg)
           setRefreshChat(true)
         }
-      } else if(room != `-1` && room != `0` && showNotificationsRef.current) {      
+      } else if(isRoomIdValid && showNotificationsRef.current) {      
           notifyUserInRoom(room)
       }
 

@@ -1,13 +1,13 @@
-# Give custom elements a prefix ("UI")
-# Break down larger components into smaller ones
-# Implement Idempotency, with a uuid key for each request, an expiration time for it
 # Move try-catch blocks from the actual page to the axios hook to prevent repetition. () [DONE]
 # New messages not getting edited right away, refreshing necessary. [DONE]
 # Show List of Users and number of messages within a chat room. [DONE]
-# Show unread messages
 # Upon creating a new room, the current room is not updated, showing the messages from the previous room. [DONE]
-# Make visualization mode vertical or horizontal optionally.
 # Fix Chat/Users Refresh bug, something to do with the socket. [DONE]
+# Give custom elements a prefix ("UI")
+# Break down larger components into smaller ones
+# Implement Idempotency, with a uuid key for each request, an expiration time for it
+# Show unread messages
+# Make visualization mode vertical or horizontal optionally.
 # Unify login/logout into the auth-provider (handling cookies, socket, state) currently on : login, apps and auth-provider files.
 
 # Not returning the Auth state when refreshing the page. [DONE]
@@ -18,26 +18,17 @@
 # Handle user timeout on socket. [DONE]
 # When resetting rooms, the socket is disconnected prematurely and the users don't receive updates. [DONE]
 # Chat not loading sometimes when first getting to the page. [DONE]
-# Change some buttons on the chat to CustomButton variations.
-# Weird behavior during session timeout on chrome.
-# If user connected recently, set to inactivity status on the socket.
-# Handle online user control on server and socket when removing cookie manually.
 # Add button to copy current room name. [DONE]
-# Fix idempotency when creating user.
 # Allow both first and last name when creating user. [DONE]
 # Handle room/online user list overflow on x axis. [DONE]
 # Make room/online a single list, but highlighting who's online. [DONE]
-# Update the room users when the session expires.
 # Handle name with spaces on the online user list. [DONE]
-# Save user preferences in cookies.
 # Not loading inactive list on start. [DONE]
 # Not removing user from inactive list on logout and login. [DONE]
 # Missing the click on confirming the message edit makes the button disappear. [DONE]
 # Sending unnecessary inactive status requests to socket. [DONE]
-# Inactivity status not loading sometimes when refreshing the page.
 # When confirming an edit on a non freshly created message, the changes aren't applied. [DONE]
 # Entering edit mode and confirming without editing the message clears it. [DONE]
-# previous property on the messageBeingEdited state might not be updating correctly.
 # chat style not updating when the session expires. [DONE]
 # Editing the message and cancelling afterwards makes it blank instead of returning to the last state. [DONE]
 # Clicking the area above the title doesn't remove the user inactive status. [DONE]
@@ -55,6 +46,15 @@
 # Handle repeated names on the chat/socket room user list. (Maybe use a set with their ids/names) [DONE]
 # Adding null to the socket online list when auto-logout is performed due to duplicated sessions. [DONE]
 # User going inactive even when clicking. Scheduling is not resetting properly. [DONE]
+# Change some buttons on the chat to CustomButton variations.
+# Weird behavior during session timeout on chrome.
+# If user connected recently, set to inactivity status on the socket.
+# Handle online user control on server and socket when removing cookie manually.
+# Fix idempotency when creating user.
+# Update the room users when the session expires.
+# Save user preferences in cookies.
+# Inactivity status not loading sometimes when refreshing the page.
+# previous property on the messageBeingEdited state might not be updating correctly.
 # A message is being added to the local chat erroneously for a moment before the chat loads the correct messages.
 # Editing the message fails sometimes.
 # Make list of silenced rooms.
@@ -80,7 +80,6 @@
 # Add a message to the user case there are not messages in the current chat room. [DONE]
 # Change buttons to add a clear log when on the log screen. [DONE]
 # Make log persistent through sessions using cookies. [DONE]
-# Maybe modify the log to firstly show a generic message and then a detailed version upon clicking on it.
 # Make log into an array of objects instead of an array of strings. [DONE]
 # Modify the log to accept global changes. [DONE]
 # Update change socket event to handle the new payload type. [DONE]
@@ -94,6 +93,16 @@
 # useEffect Bug : Receiving double notification messages. [DONE]
 # Returning to the chat screen when logging out, the notification appears as if in session timeout. [DONE]
 # Clicking to reset room sometimes doesn't update on the other end. [DONE]
+# Make log changes in real time. [DONE]
+# Make log notes circular. [DONE]
+# Spam cooldown seems to be cumulative sometimes, check the array to see if it is comparing the correct messages. [DONE]
+# Refreshing prevents the room from staying on cooldown. [DONE]
+# When all users remove all their messages from the room, the room user placeholder appears next to their name. [DONE]
+# When log messages updates, it might not consider the filter mode, setting them always chronologically. [DONE]
+# On auto-logout due to duplicated sessions, the socket stops listening to events. [DONE?]
+# Make notifications specific to rooms the user's currently in. [DONE]
+# Modify notifyUserInRoom function to use the appropriate function for checking the room id. [DONE]
+# Maybe modify the log to firstly show a generic message and then a detailed version upon clicking on it.
 # Use state to require a page refresh to the user.
 # When resetting the rooms, the chat gets stuck on infinite reloading.
 # Make user lists update comparing uuid instead of number of users, or maybe dates.
@@ -105,27 +114,17 @@
 # When server first starts, changing the messages doesn't update the chat on the other end.
 # On the room reset/creation, if the user continues spamming none of the messages get to the other end.
 # useEffect Bug : Auth running on useEffect after sending message. Functions emitting to auth : "addUserToOnlineList, retrieveUserLists".
-# Make log changes in real time. [DONE]
-# Make log notes circular. [DONE]
 # Warn the user about the log being full.
 # Make spam cooldown specific to room and reset along with the rooms.
-# Spam cooldown seems to be cumulative sometimes, check the array to see if it is comparing the correct messages. [DONE]
-# Refreshing prevents the room from staying on cooldown. [DONE]
-# When all users remove all their messages from the room, the room user placeholder appears next to their name. [DONE]
-# When log messages updates, it might not consider the filter mode, setting them always chronologically. [DONE]
-# On auto-logout due to duplicated sessions, the socket stops listening to events. [DONE?]
-# Make notifications specific to rooms the user's currently in. [DONE]
-# Modify sendMessage socket event on the socket useEffect to check if the room id is valid with the appropriate method.
-# Modify notifyUserInRoom function to use the appropriate method for checking the room id.
-# Make notifyUserInRoom use the room id ref instead of the state?
+# Modify sendMessage socket event on the socket useEffect to check if the room id is valid with the appropriate function. [DONE]
 # When deleting all messages, the user no longer appears on the room user list. Is that a problem though?
 
 // Done yesterday
 
-Fix button to revert sort order showing the wrong icon.
-
-// Done today
-
 Create ref for current user id and update the main useEffect to set it correctly.
 Set confirm and delete message events to notify only the room they're emitted from.
 Modify notifyUserInRoom function to check for valid room IDs and only notify the rooms where the user is currently present.
+
+// Done today
+
+Modify sendMessage socket event on the socket useEffect to check if the room id is valid with the appropriate function.
