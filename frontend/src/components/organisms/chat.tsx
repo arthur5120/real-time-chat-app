@@ -131,12 +131,15 @@ const Chat = () => {
 
   const addToLog = (data : TLog) => {
     
-    const dateNow = getFormattedDate()
-    const timeNow = getFormattedTime()    
+    const currentDate = new Date()
+    const dateNow = getFormattedDate(currentDate)
+    const timeNow = getFormattedTime(currentDate)
+
     const {userName, time, content, roomName} =  data
     const newLogEntry : TLog = {
       userName : userName ? userName : `Unknown`,
-      time : time ? time : `${dateNow} ${timeNow}`,
+      time : time ? time : `${currentDate}`,
+      visualTime : time ? time : `${dateNow} ${timeNow}`,
       content : content ? content : `No content provided.`,
       roomName : roomName ? roomName : `global`,
     }

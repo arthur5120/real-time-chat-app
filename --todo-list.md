@@ -118,13 +118,15 @@
 # Make spam cooldown specific to room and reset along with the rooms.
 # Modify sendMessage socket event on the socket useEffect to check if the room id is valid with the appropriate function. [DONE]
 # When deleting all messages, the user no longer appears on the room user list. Is that a problem though?
+# Sorting the log messages by date is not working.
 
 // Done yesterday
 
-Create ref for current user id and update the main useEffect to set it correctly.
-Set confirm and delete message events to notify only the room they're emitted from.
-Modify notifyUserInRoom function to check for valid room IDs and only notify the rooms where the user is currently present.
+Modify sendMessage socket event on the socket useEffect to check if the room id is valid with the appropriate function.
 
 // Done today
 
-Modify sendMessage socket event on the socket useEffect to check if the room id is valid with the appropriate function.
+Change getFormattedTime and getFormattedDate functions to accept a date object as an argument.
+Modify the log type (TLog) to also accept a visual date.
+Update the addToLog function to include both the visual and the sortable versions of the time property.
+Update the log component to display the visual version of the time property and create a type for its props.

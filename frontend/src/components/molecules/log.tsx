@@ -1,4 +1,4 @@
-import { forwardRef, useEffect} from "react"
+import { forwardRef} from "react"
 import { TLog } from "../../utils/types"
 import { capitalizeFirst, sortChronogicallyByAny } from "../../utils/useful-functions"
 import { sortAlphabeticallyByAny } from "../../utils/useful-functions"
@@ -10,7 +10,13 @@ const filterOrder = [
     `room name`,
 ]
 
-const Log = forwardRef<HTMLDivElement, {values : TLog[], order : number, reverseOrder ? : boolean}>(({values, order, reverseOrder}, ref) => {    
+type TProps = {
+    values : TLog[], 
+    order : number, 
+    reverseOrder ? : boolean
+}
+
+const Log = forwardRef<HTMLDivElement, TProps>(({values, order, reverseOrder}, ref) => {    
         
         const getSortedValues = () => {
 
@@ -44,13 +50,13 @@ const Log = forwardRef<HTMLDivElement, {values : TLog[], order : number, reverse
               <h3>{logListTitle}</h3>
               {            
                 values && values.length > 0 ? getSortedValues().map((value, index) => {
-                      const {userName, roomName, time, content} = value                
+                      const {userName, roomName, visualTime, content} = value                
                       return (
                           <span className={`flex flex-col justify-center bg-slate-900 text-white rounded-xl italic m-1 p-1`} key={`log-entry-main-span-${index}`}>
                               <p className={`flextext-center justify-center`} key={`log-entry-p1-${index}`}>
                                   <span className={`text-red-600`} key={`log-entry-main-span-child1-${index}`} >{`${capitalizeFirst(`${userName}`)}`}</span>
                                   <span key={`log-entry-main-span-child2-${index}`} > - </span>
-                                  <span className={`text-orange-600`} key={`log-entry-main-span-child3-${index}`} >{time}</span>                                                        
+                                  <span className={`text-orange-600`} key={`log-entry-main-span-child3-${index}`} >{visualTime}</span>                                                        
                               </p>                        
                               <p className={`flextext-center justify-center`} key={`log-entry-p2-${index}`}>
                                   <span className={`text-white`} key={`log-entry-main-span-child4-${index}`}>{`${capitalizeFirst(`${content}`)} on `}</span>

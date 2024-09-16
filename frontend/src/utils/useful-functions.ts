@@ -26,14 +26,14 @@ export const getTimeElapsed = (value: number) => {
     return timeString.trim()
 }
 
-export const getFormattedDate = () => {
-    const currentDate = new Date()
+export const getFormattedDate = (localDate ? : Date) => {
+    const currentDate = localDate || new Date()
     const formattedDate = `${currentDate.getDate().toString().padStart(2, '0')}/${(currentDate.getMonth() + 1).toString().padStart(2, '0')}/${currentDate.getFullYear()}`
     return formattedDate
 }
 
-export const getFormattedTime = (): string => {
-    const currentDate = new Date()    
+export const getFormattedTime = (localDate ? : Date): string => {
+    const currentDate = localDate || new Date()
     const currentHours = currentDate.getHours().toString().padStart(2, '0')
     const currentMinutes = currentDate.getMinutes().toString().padStart(2, '0')
     const currentSeconds = currentDate.getSeconds().toString().padStart(2, '0')
@@ -66,12 +66,12 @@ export const sortChronogicallyByAny = <T extends {[index: string]: string}>(unso
         const sorted = unsorted.sort((a, b) => {
             const dateA = a[property] ? new Date(a[property]) : null
             const dateB = b[property] ? new Date(b[property]) : null
-            if (!dateA || !dateB) return 0
-            if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) return 0
+            if (!dateA || !dateB) {return 0}
+            if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {return 0}
             if (dateA.getTime() < dateB.getTime()) return -1
             if (dateA.getTime() > dateB.getTime()) return 1
             return 0
-        })
+        })        
         return reverse ? sorted.reverse() : sorted
     } catch(e) {
         return []
