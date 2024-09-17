@@ -1,6 +1,6 @@
-import { baseURL } from "../utils/axios-instance";
-import { TUser } from "../utils/types";
-import { generateUniqueId, getConfig } from "../utils/useful-functions";
+import { baseURL } from "./axios-instance";
+import { TUser } from "./types";
+import { generateUniqueId, getConfig } from "./useful-functions";
 import axios from 'axios'
 
 export const createUser = async(data : TUser) => { // Idempotency

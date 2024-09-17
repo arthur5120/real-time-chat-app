@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
-import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, updateMessage, } from '../../hooks/useAxios'
+import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, updateMessage, } from '../../utils/axios-functions'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest, TLog } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, isThingValid, isThingValidSpecific, sortAlphabeticallyByName, sortByMilliseconds, sortChronogicallyByAny } from '../../utils/useful-functions'
@@ -50,6 +50,7 @@ const Chat = () => {
   const [userActivity, setUserActivity] = useState(true)
   const [message, setMessage] = useState<{senderID ? : string} & TChatMessage>(messagePlaceholder)
   const [messages, setMessages] = useState<TChatMessage[]>([])
+  const [searchText, setSearchText] = useState<string>(``)  
   const [refreshChat, setRefreshChat] = useState(false)
   const [updateUserLists, setUpdateUserLists] = useState(false)
   const [messageBeingEdited, setMessageBeingEdited] = useState<TMessageBeingEdited>(messagePlaceholder)
@@ -70,6 +71,7 @@ const Chat = () => {
   const [isServerOnline, setIsServerOnline] = useState(true)
   const [requireRefresh, setRequireRefresh] = useState(true)
   const [log, setLog] = useState<TLog[]>([])
+  const [filteredLog, setFilteredLog] = useState<TLog[]>([])
   const [showLog, setShowLog] = useState(false)
   const [consecutiveMessages, setConsecutiveMessages] = useState<number[]>([])
   const [showSpamWarning, setShowSpamWarning] = useState(false)
@@ -94,6 +96,17 @@ const Chat = () => {
       if (autoScroll && chatContainerRef.current) {
         chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
       }
+  }
+
+  const filterLog = () => {    
+    const normalizedSearchText = searchText.trim().toLocaleLowerCase() // Refine this normalizing method later.  
+    const newFilteredLog = log.filter((entry) => JSON.stringify(entry).trim().toLocaleLowerCase().includes(normalizedSearchText))
+    newFilteredLog.length > 0 ? setFilteredLog(newFilteredLog) : notifyUser(`No records found for "${cropMessage(searchText)}"`)
+  }
+
+  const clearLogFilter = () => {    
+    setFilteredLog([])
+    setSearchText(``)
   }
 
   const getCookieSpam = () : number => {
@@ -1430,7 +1443,7 @@ const Chat = () => {
           className={`flex flex-col gap-1 ${secondaryDefault} rounded-lg w-80 h-80 overflow-y-scroll`}
           ref={chatContainerRef}>
 
-          { showLog ? <Log values={log} ref={logContainerRef} order={logOrder} reverseOrder={reverseLogOrder}/> : 
+          { showLog ? <Log values={filteredLog.length == 0 ? log : filteredLog} ref={logContainerRef} order={logOrder} reverseOrder={reverseLogOrder}/> : 
           messages?.length <= 0 ? <TextPlaceholder className={`cursor-default`} value={`No messages yet...`}/> : 
           messages?.map((message : TChatMessage, id : number) => {
 
@@ -1559,42 +1572,86 @@ const Chat = () => {
 
         <div className={`flex ${primaryDefault} rounded-lg w-80 h-15 gap-2 p-1`}>
 
-          <textarea
-            name=''
-            id=''
-            className={`items-start ${secondaryDefault} text-white rounded-lg resize-none p-1 m-1 h-full w-full focus:outline-none focus:ring-2 ${showSpamWarning ? `focus:ring-orange-500` : `focus:ring-blue-500`}`}
-            cols={41}
-            rows={3}
-            maxLength={191}
-            onChange={(e) => {onTextareaChange(e)}}
-            placeholder={spamCountdown > 0 ? `Please wait a sec...` : `Say something...`}
-            value={message.content}
-            onKeyDown={(e) => {
-              handleUserActivity()
-              if (e.key === "Enter") {
-                if (e.ctrlKey || e.metaKey) {
-                  sendMessage()
+          {
+            !showLog ? <textarea // Message Textbox
+              name=''
+              id=''
+              className={`items-start ${secondaryDefault} text-white rounded-lg resize-none p-1 m-1 h-full w-full focus:outline-none focus:ring-2 ${showSpamWarning ? `focus:ring-orange-500` : `focus:ring-blue-500`}`}
+              cols={41}
+              rows={3}
+              maxLength={191}
+              onChange={(e) => {onTextareaChange(e)}}
+              placeholder={spamCountdown > 0 ? `Please wait a sec...` : `Say something...`}
+              value={message.content}
+              onKeyDown={(e) => {
+                handleUserActivity()
+                if (e.key === "Enter") {
+                  if (e.ctrlKey || e.metaKey) {
+                    sendMessage()
+                  }
                 }
+              }}
+            /> : <textarea // Search Log Textbox
+              name=''
+              id=''
+              className={`items-start ${secondaryDefault} text-white rounded-lg resize-none p-1 m-1 h-full w-full focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              cols={41}
+              rows={3}
+              disabled={filteredLog.length > 0}
+              maxLength={191}
+              onChange={(e) => {   
+                if (filteredLog.length == 0) {
+                  setSearchText(e.target.value)
+                }
+              }}
+              placeholder={filteredLog.length == 0 ? `Search the log...` : `Log currently filtered for "${cropMessage(searchText)}"`}
+              value={filteredLog.length == 0 ? searchText : ``}
+              onKeyDown={(e) => {
+                handleUserActivity()
+                if (e.key === "Enter") {
+                  if (e.ctrlKey || e.metaKey) {   
+                    filteredLog.length == 0 ? filterLog() : clearLogFilter()
+                  }
+                }
+              }}
+            />
+          }
+          
+          {
+            !showLog ? <CustomButton // Send Message Button
+              value={
+                <span className={`flex flex-col gap-1`}>
+                  <h3 className='text-slate-100 group-hover:text-white'>
+                    Send
+                  </h3>
+                  <h3 className={`font-light text-sm text-slate-200 group-hover:text-slate-100`}>
+                    Ctrl+Enter
+                  </h3>
+                </span>
               }
-            }}
-          />
-
-          <CustomButton
-            value={
-              <span className={`flex flex-col gap-1`}>
-                <h3 className='text-slate-100 group-hover:text-white'>
-                  Send
-                </h3>
-                <h3 className={`font-light text-sm text-slate-200 group-hover:text-slate-100`}>
-                  Ctrl+Enter
-                </h3>
-              </span>
-            }
-            className='p-2 bg-[#aa5a95] text-white rounded-lg m-1 active:bg-[#bd64a5] group'
-            disabled={!!reload || firstLoad || !isServerOnline}
-            onClick={() => sendMessage()}
-            title={`Post a message to current chat (Ctrl + Enter)`}
-          />
+              className='p-2 bg-[#aa5a95] text-white rounded-lg m-1 active:bg-[#bd64a5] group'
+              disabled={!!reload || firstLoad || !isServerOnline}
+              onClick={() => sendMessage()}
+              title={`Post a message to current chat (Ctrl + Enter)`}
+            /> : <CustomButton // Search Log Button
+              value={
+                <span className={`flex flex-col gap-1`}>
+                  <h3 className='text-slate-100 group-hover:text-white'>
+                    {filteredLog.length == 0 ? `Search` : `Clear`}
+                  </h3>
+                  <h3 className={`font-light text-sm text-slate-200 group-hover:text-slate-100`}>
+                    Ctrl+Enter
+                  </h3>
+                </span>
+              }
+              className='p-2 bg-[#aa5a95] text-white rounded-lg m-1 active:bg-[#bd64a5] group'
+              disabled={!!reload || firstLoad || !isServerOnline}
+              onClick={() => {
+                filteredLog.length == 0 ? filterLog() : clearLogFilter()
+              }}
+              title={filteredLog.length == 0 ? `Search the log messages (Ctrl + Enter)` : `Clear the log filter (Ctrl + Enter)`}
+            />
+          }
 
         </div> 
 
@@ -1710,7 +1767,7 @@ const Chat = () => {
           <CustomButton
             value={`Log`}
             variationName='varthree'
-            className={`${showLog ? `bg-yellow-600 active:bg-yellow-600` : `bg-orange-900 active:bg-orange-900`} w-20 h-full max-h-28 m-0 flex items-center justify-center`}
+            className={`${showLog ? `bg-yellow-600 active:bg-yellow-600` : `bg-black active:bg-black`} w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad || !isServerOnline}
             title={`Shows either the history of messages or the chat`}
             onClick={() => {

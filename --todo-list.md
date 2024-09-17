@@ -118,15 +118,21 @@
 # Make spam cooldown specific to room and reset along with the rooms.
 # Modify sendMessage socket event on the socket useEffect to check if the room id is valid with the appropriate function. [DONE]
 # When deleting all messages, the user no longer appears on the room user list. Is that a problem though?
-# Sorting the log messages by date is not working.
+# Sorting the log messages by date is not working. [DONE]
+# Create way to clear the log filters. [DONE]
+# Notify the user of what words are being searched for on the log. [DONE]
+# When searching for the user's names on the log feed, it doesn't work. [DONE]
+# Refine normalizing method for the search term and the entries on the search log method.
+# Handle log filtering in case log changes.
 
 // Done yesterday
-
-Modify sendMessage socket event on the socket useEffect to check if the room id is valid with the appropriate function.
-
-// Done today
 
 Change getFormattedTime and getFormattedDate functions to accept a date object as an argument.
 Modify the log type (TLog) to also accept a visual date.
 Update the addToLog function to include both the visual and the sortable versions of the time property.
 Update the log component to display the visual version of the time property and create a type for its props.
+
+// Done today
+
+Add states to handle the log searching and filtering. Create search button and text box for the log view. Make both log new elements render conditionally depending on the current view.
+Implement functions to add/clear filters based on the user input. Modify the log on the chat component to display the filtered version if available.

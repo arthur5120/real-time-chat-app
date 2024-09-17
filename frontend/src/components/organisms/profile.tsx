@@ -1,4 +1,4 @@
-import { authStatus, getUserById, getChatsByUserId, getMessageByUserId } from "../../hooks/useAxios"
+import { authStatus, getUserById, getChatsByUserId, getMessageByUserId } from "../../utils/axios-functions"
 import { authContext } from "../../utils/contexts/auth-provider"
 import CustomTitle from "../atoms/title"
 import { useContext, useEffect, useState } from "react"
@@ -19,8 +19,7 @@ const Profile = () => {
         
         try {
         
-            const userAuthInfo = await authStatus({}) as {id : string, authenticated : boolean}
-            
+            const userAuthInfo = await authStatus({}) as {id : string, authenticated : boolean}            
             const currentUser = await getUserById(userAuthInfo.id)     
             const chats = await getChatsByUserId(userAuthInfo.id)
             const messages = await getMessageByUserId(userAuthInfo.id)

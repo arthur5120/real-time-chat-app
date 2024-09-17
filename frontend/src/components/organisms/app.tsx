@@ -6,7 +6,7 @@ import { authContext } from "../../utils/contexts/auth-provider"
 import { toastContext } from "../../utils/contexts/toast-provider"
 import { socketContext } from "../../utils/contexts/socket-provider"
 import { TSocketAuthRequest, TRes } from "../../utils/types"
-import { authStatus, getUserById, authLogout } from "../../hooks/useAxios"
+import { authStatus, getUserById, authLogout } from "../../utils/axios-functions"
 
 const App = () => {
 

@@ -4,7 +4,7 @@ import CustomButton from "../atoms/button"
 import { FormEvent, useEffect, useState } from "react"
 import { TUser, TFieldKeys } from "../../utils/types"
 import { userPlaceholder } from "../../utils/placeholders"
-import { createUser, getUsers } from "../../hooks/useAxios"
+import { createUser, getUsers } from "../../utils/axios-functions"
 import { validateUser } from "../../utils/validation-functions"
 import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
 
