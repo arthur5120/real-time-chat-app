@@ -99,8 +99,15 @@ const Chat = () => {
   }
 
   const filterLog = () => {    
-    const normalizedSearchText = searchText.trim().toLocaleLowerCase() // Refine this normalizing method later.  
-    const newFilteredLog = log.filter((entry) => JSON.stringify(entry).trim().toLocaleLowerCase().includes(normalizedSearchText))
+    const normalizedSearchText = searchText.trim().toLocaleLowerCase().replace(/\s+/g, ' ').replace(/\\n/g, '')
+    const newFilteredLog = log.filter((entry) => {
+      const compString = JSON.stringify(entry).trim().toLocaleLowerCase().replace(/\s+/g, ' ').replace(/\\n/g, '')
+      if(compString.includes(normalizedSearchText)) {
+        return entry
+      } else {
+        console.log(`Comp failed : ${normalizedSearchText} with ${compString}`)
+      }
+    })
     newFilteredLog.length > 0 ? setFilteredLog(newFilteredLog) : notifyUser(`No records found for "${cropMessage(searchText)}"`)
   }
 

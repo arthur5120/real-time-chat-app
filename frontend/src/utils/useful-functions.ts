@@ -54,11 +54,21 @@ export const sortByMilliseconds = (unsorted : TChatMessage[]) => {
 
 export const sortAlphabeticallyByName = <T extends { name : string }>(unsorted: T[]) => {
     const sorted = unsorted.sort((a, b) => {
-        if (a.name.trim().replace(/\s+/g, ' ') < b.name.trim().replace(/\s+/g, ' ')) return -1
-        if (a.name.trim().replace(/\s+/g, ' ') > b.name.trim().replace(/\s+/g, ' ')) return 1
+        if (a.name.trim().toLocaleLowerCase().replace(/\s+/g, ' ') < b.name.trim().toLocaleLowerCase().replace(/\s+/g, ' ')) return -1
+        if (a.name.trim().toLocaleLowerCase().replace(/\s+/g, ' ') > b.name.trim().toLocaleLowerCase().replace(/\s+/g, ' ')) return 1
         return 0
     })
     return sorted
+}
+
+export const sortAlphabeticallyByAny = <T extends {[index: string]: string}>(unsorted: T[], property : string, reverse ? : boolean) => {
+    const sorted = unsorted.sort((a, b) => {
+        if (!a[property] || !b[property]) return 0
+        if (a[property].trim().toLocaleLowerCase().replace(/\s+/g, ' ') < b[property].trim().toLocaleLowerCase().replace(/\s+/g, ' ')) return -1
+        if (a[property].trim().toLocaleLowerCase().replace(/\s+/g, ' ') > b[property].trim().toLocaleLowerCase().replace(/\s+/g, ' ')) return 1
+        return 0
+    })
+    return reverse ? sorted.reverse() : sorted
 }
 
 export const sortChronogicallyByAny = <T extends {[index: string]: string}>(unsorted: T[], property : string, reverse ? : boolean) => {    
@@ -76,16 +86,6 @@ export const sortChronogicallyByAny = <T extends {[index: string]: string}>(unso
     } catch(e) {
         return []
     }
-}
-
-export const sortAlphabeticallyByAny = <T extends {[index: string]: string}>(unsorted: T[], property : string, reverse ? : boolean) => {
-    const sorted = unsorted.sort((a, b) => {
-        if (!a[property] || !b[property]) return 0
-        if (a[property].replace(/\s+/g, ' ') < b[property].replace(/\s+/g, ' ')) return -1
-        if (a[property].replace(/\s+/g, ' ') > b[property].replace(/\s+/g, ' ')) return 1
-        return 0
-    })
-    return reverse ? sorted.reverse() : sorted
 }
 
 export const generateUniqueId = () => {
