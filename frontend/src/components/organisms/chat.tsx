@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
-import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, updateMessage, } from '../../utils/axios-functions'
+import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, getUsersByChatId, updateMessage, } from '../../utils/axios-functions'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest, TLog } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
 import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, isThingValid, isThingValidSpecific, sortAlphabeticallyByName, sortByMilliseconds, sortChronogicallyByAny } from '../../utils/useful-functions'
@@ -109,7 +109,7 @@ const Chat = () => {
       }
     })
     newFilteredLog.length > 0 ? setFilteredLog(newFilteredLog) : notifyUser(`No records found for "${cropMessage(searchText)}"`)
-  }
+  }  
 
   const clearLogFilter = () => {    
     setFilteredLog([])
@@ -255,6 +255,31 @@ const Chat = () => {
       console.log(`error : retrieving the current user.`)
     }
 
+  }
+
+  const checkForUserInRoom = async (roomId : string, userId ? : string) => {
+    
+    try {    
+
+      let userIdToFind = userId
+
+      if (!userIdToFind) {
+        if (currentUser.id) {
+          userIdToFind = currentUser.id
+        } else {
+          const authInfo = await authStatus({})          
+          userIdToFind = authInfo.id
+        }
+      }
+      
+      const usersInRoom = await getUsersByChatId(roomId)
+      const foundUser = usersInRoom.find((user : {userId : string}) => user.userId == userIdToFind)
+      return !!foundUser
+
+    } catch (e) {
+      setHasErrors(true)
+    }
+    
   }
 
   const createRoomIfNoneAreFound = async () => {
@@ -565,7 +590,7 @@ const Chat = () => {
         userName: currentUser.name,
         content: creationMessage,
         notification: notificationMessage,
-        //roomName: currentRoom.name, - No room name means global change, needs to notify everyone.        
+        //roomName: currentRoom.name, - No room name means global change, needs to notify everyone.
       }
       
       socket?.emit(`majorChange`, socketPayload)
@@ -809,13 +834,14 @@ const Chat = () => {
       const {id, room} = msg
       const firstMessageId = messages?.length > 0 ? messages[0].id : -1     
       const isRoomIdValid = room && isThingValidSpecific(room) // Redundant check for it to be recognized
+      const isRoomMember = isRoomIdValid ? checkForUserInRoom(room) : false
 
       if (room == currentRoomIdRef.current) {
         if (id != firstMessageId) {
           addMessage(msg)
           setRefreshChat(true)
         }
-      } else if(isRoomIdValid && showNotificationsRef.current) {      
+      } else if(isRoomMember && showNotificationsRef.current) {      
           notifyUserInRoom(room)
       }
 
@@ -825,30 +851,34 @@ const Chat = () => {
     socket?.on(`minorChange`, (msg : TSocketPayload) => {
       const {userName, notification, roomId, roomName, content, notifyRoomOnly} = msg
       const isRoomIdValid = roomId && isThingValidSpecific(roomId) // Redundant check for it to be recognized
-      console.log(`socket on minorChange : ${roomId}`)
-      if(notification && showNotificationsRef.current) {
+      const isRoomMember = isRoomIdValid ? checkForUserInRoom(roomId) : false
+      const shouldNotifyUser = notification && showNotificationsRef.current
+      console.log(`socket on minorChange : ${roomId}`)      
         if(isRoomIdValid) {
-          if (roomId == currentRoomIdRef.current || !notifyRoomOnly) {
-            notifyUserInRoom(roomId, notification)
-          }
+          if (roomId == currentRoomIdRef.current || !notifyRoomOnly) { // if the message's global or if it's in the current room.
+            shouldNotifyUser ? notifyUserInRoom(roomId, notification) : ``
+            addToLog({userName : userName, roomName : roomName, content : content})
+          } else if (isRoomMember) { // if not, but user is currently a member of the room.
+            shouldNotifyUser ? notifyUserInRoom(roomId, notification) : ``
+            addToLog({userName : userName, roomName : roomName, content : content})
+          }          
         } else { // Send it to everyone if room is undefined.
-          notifyUser(notification, `info`)
+          shouldNotifyUser ? notifyUser(notification, `info`) : ``
           addToLog({userName : userName, roomName : roomName, content : content})
         }
-        setRefreshChat(true)
-      }
+        setRefreshChat(true)      
     })
 
     // DEP : currentRoom, useDelayOnEmit, reload
     socket?.on(`majorChange`, (payload : TSocketPayload) => {
       const {userName, roomName, notification, content} = payload      
       console.log(`socket on majorChange : ${currentRoomIdRef.current}`)
-      setUseDelayOnEmit(true)
-      setReload(reload + 1)      
+      setUseDelayOnEmit(true)      
       if (payload?.notification && notification != ``) {
         notifyUser(notification, 'info')
-        addToLog({userName : userName, roomName : roomName, content : content})
-      }
+      }            
+      addToLog({userName : userName, roomName : roomName, content : content})
+      setReload(reload + 1)
     })
 
     // DEP : currentRoom, onlineUsers, refreshChat
@@ -1733,7 +1763,7 @@ const Chat = () => {
 
             variationName='varthree'
             className={`w-20 h-full max-h-28 m-0 flex items-center justify-center group`}
-            disabled={!!reload || firstLoad || !isServerOnline}
+            disabled={!!reload || firstLoad || !isServerOnline || showLog}
             title={`Create a new room`}
             onClick={() => onNewRoomClick()}
 
@@ -1752,6 +1782,7 @@ const Chat = () => {
             disabled={!!reload || firstLoad || !isServerOnline}
             title={`Delete All Records`}
             onClick={() => {
+              clearLogFilter()
               setLog([])
               setCookieLog([])
             }}
@@ -1779,6 +1810,7 @@ const Chat = () => {
             title={`Shows either the history of messages or the chat`}
             onClick={() => {
               setShowLog(!showLog)
+              showLog ? clearLogFilter() : ``
               const scrollDelay = setTimeout(() => {
                 scrollToLatest()
               }, 10)

@@ -42,7 +42,7 @@ const Log = forwardRef<HTMLDivElement, TProps>(({values, order, reverseOrder}, r
 
         }
 
-        const logListTitle = `[sorted by ${order >= 0 ? filterOrder[order] : filterOrder[0]} - ${reverseOrder ? `inverted` : `normal`}]`
+        const logListTitle = `[sorted by ${order >= 0 ? filterOrder[order] : filterOrder[0]} - ${reverseOrder ? `inverted` : `default`}]`
 
         return (
       

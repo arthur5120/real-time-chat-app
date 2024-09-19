@@ -124,15 +124,13 @@
 # When searching for the user's names on the log feed, it doesn't work. [DONE]
 # Refine normalizing method for the search term and the entries on the search log method. [DONE]
 # Normalize functions for sorting alphabetically. [DONE]
-# Handle log filtering in case log changes.
+# Handle log filtering in case log changes. (create new room, leave log screen or clear log)
 # Make the normalization more precise when removing the literal '\n'.
 
 // Done yesterday
 
-Add states to handle the log searching and filtering. Create search button and text box for the log view. Make both log new elements render conditionally depending on the current view.
-Implement functions to add/clear filters based on the user input. Modify the log on the chat component to display the filtered version if available.
+Refine the normalization method for the filterLog function by replacing the consecutive whitespace characters with single ones and removing the literal '\\n' from strings. Enhance the normalization on the functions for sorting alphabetically by trimming strings and converting them to lower case.
 
 // Done today
 
-Refine the normalization method for the filterLog function by replacing the consecutive whitespace characters with single ones and removing the literal '\n' from strings.
-Enhance the normalization on the functions for sorting alphabetically by trimming strings and converting them to lower case.
+Disable the button for creating a new room while on log screen. Create function to find out whether a user is a member of a specific chat room or not. Update majorChange socket event to keep log of the change even with the notifications turned off. Change minorChange socket event to log messages and notify the user if a member of a room, or just log messages if notifications are deactivated. Modify the sendMessage socket event to only notify the user if a member of a given room. Make the button from switching between the chat and the log view clear the log filter if in log view.
