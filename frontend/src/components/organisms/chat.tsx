@@ -99,9 +99,9 @@ const Chat = () => {
   }
 
   const filterLog = () => {    
-    const normalizedSearchText = searchText.trim().toLocaleLowerCase().replace(/\s+/g, ' ').replace(/\\n/g, '')
+    const normalizedSearchText = searchText.trim().toLocaleLowerCase().replace(/\\n/g, '').replace(/\s+/g, ' ')    
     const newFilteredLog = log.filter((entry) => {
-      const compString = JSON.stringify(entry).trim().toLocaleLowerCase().replace(/\s+/g, ' ').replace(/\\n/g, '')
+      const compString = JSON.stringify(entry).trim().toLocaleLowerCase().replace(/\\n/g, '').replace(/\s+/g, ' ')
       if(compString.includes(normalizedSearchText)) {
         return entry
       } else {
