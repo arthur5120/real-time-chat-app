@@ -1,7 +1,7 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, getUsersByChatId, updateMessage, } from '../../utils/axios-functions'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest, TLog } from '../../utils/types'
-import { userPlaceholder, messagePlaceholder } from '../../utils/placeholders'
+import { userPlaceholder, messagePlaceholder, roomsPlaceholder, currentRoomPlaceHolder } from '../../utils/placeholders'
 import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, isThingValid, isThingValidSpecific, sortAlphabeticallyByName, sortByMilliseconds, sortChronogicallyByAny } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
@@ -18,14 +18,7 @@ import Cookies from 'js-cookie'
 import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
 import Log from '../molecules/log'
-
-const roomsPlaceholder = [{id : '-1', name : ''}]
-const currentRoomPlaceHolder = {id : '-1', selectId : 0, name : ''}
-const editMenuButtonPrefix = `--em-btn--`
-const orderText = [`sorted by date`, `sorted by user name`, `sorted by room name`,]
-
-const textColors = ['text-red-400','text-blue-400','text-yellow-400','text-purple-400','text-pink-400','text-cyan-400','text-lime-400','text-indigo-400','text-teal-400','text-sky-400','text-violet-400','text-fuchsia-400','text-rose-400',]
-const emojis = [`🥗`, `🌮`, `🍙`, `🍘`, `🍥`, `🍨`, `☕️`, `🎂`, `🥡`, `🍵`, `🍢`, `🍡`]
+import { editMenuButtonPrefix, emojis, orderText, textColors } from '../../utils/other-resources'
 
 type TCurrentRoom = {id : string, selectId : number, name : string}
 type TRoom = {id : string, name : string}
@@ -292,8 +285,7 @@ const Chat = () => {
       const hasValidRooms = !!localRooms[0]
 
       if(!hasValidRooms) {
-        await createChat()
-        //setReload(reload + 1) // ROOMCHANGE
+        await createChat()        
       }
 
     } catch (e) {
@@ -343,8 +335,7 @@ const Chat = () => {
         })
         const foundUserInChat = chats?.length > 0 ? chats.find((c) => c.chatId == sortedLocalRooms[updatedSelectId].id) : ''
         setIsUserInroom(!!foundUserInChat)
-        setRefreshChat(true)
-        //setReload(reload + 1) ???? ROOMCHANGE
+        setRefreshChat(true)        
       } else {
         const foundUserInChat = chats?.length > 0 ? chats.find((c) => c.chatId == currentRoom.id) : ''
         setIsUserInroom(!!foundUserInChat)
@@ -376,8 +367,7 @@ const Chat = () => {
         }
 
         if(currentRoom.id == '-1') {
-          setRefreshRooms(true)
-          //setReload(reload + 1) ROOMCHANGE
+          setRefreshRooms(true)          
           return
         }
 
@@ -425,7 +415,7 @@ const Chat = () => {
 
   }
 
-  const addMessage = (newMessage : TChatMessage) => { // Removed Async
+  const addMessage = (newMessage : TChatMessage) => {
     setMessages((rest) => ([
       ...rest,
       newMessage,
@@ -656,8 +646,7 @@ const Chat = () => {
       
       await deleteAllChats()
       await retrieveRooms()
-      
-      //setRefreshRooms(true)
+            
       setReload(reload + 1)
       setUseDelayOnEmit(true)
 
@@ -730,7 +719,7 @@ const Chat = () => {
     await retrieveMessages()
   }
 
-  const initializeAppData = async () => { // Segment this later.
+  const initializeAppData = async () => {
     await retrieveCurrentUser()
     await createRoomIfNoneAreFound()
     await retrieveRooms()
@@ -738,11 +727,9 @@ const Chat = () => {
   }
 
   const setInactivityTimer =  async (localUserName = null) => {        
-    if (userActivity) {
-      //notifyUser(`Scheduled Inactivity Activation.`)
+    if (userActivity) {      
       const name = localUserName ? localUserName : currentUser.name
-      const timerId = setTimeout(async () => {                        
-        //notifyUser(`Going Inactive`)
+      const timerId = setTimeout(async () => {                                
         setUserActivity(false)
         const authInfo : TRes = await authStatus({})
         socket?.connect()
@@ -753,8 +740,7 @@ const Chat = () => {
   }
 
   const handleUserActivity = async () => {
-    if (!userActivity) {
-      //notifyUser(`Renewed Activity Status ${userActivity}`)
+    if (!userActivity) {      
       setUserActivity(true)
       const authInfo : TRes = await authStatus({})
       socket?.connect()
@@ -947,9 +933,7 @@ const Chat = () => {
 
     if(reload > 0) {      
       initializeAppData()
-    }
-
-    // Socket Stuff
+    }    
 
     if(currentRoom.id != '-1' && currentRoom.id != '0' && reload > 0) {
       setReload(0)
@@ -958,8 +942,7 @@ const Chat = () => {
     return () => {
 
       if(currentRoom.id == '-1' || currentRoom.id == '0') {
-        if(reload < 100) {
-          //setReload(reload + 1) ROOMCHANGE
+        if(reload < 100) {          
           !refreshRooms ? setRefreshRooms(true) : null
         } else {
           notifyUser(`Something Went Wrong, please try again later`, `warning`)
@@ -973,15 +956,13 @@ const Chat = () => {
       }
 
       setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
-      clearTimeout(timer)
-      
-      // Socket Stuff
+      clearTimeout(timer)          
 
     }  
 
   }, [currentRoom, reload, auth])
 
-  useEffect(() => {    
+  useEffect(() => { // Handle Before Unload 
 
     if(!isServerOnline) {
       return
@@ -1289,6 +1270,9 @@ const Chat = () => {
       onKeyDown={() => {
         handleUserActivity()
         if(!isTyping) {
+          if (showLog) {
+            return
+          }
           setIsTyping(true)
           typingDelay ? clearTimeout(typingDelay) : ''
           const localTypingDelay = setTimeout(() => {
@@ -1402,8 +1386,7 @@ const Chat = () => {
 
         <div className={`flex justify-between ${primaryDefault} rounded-lg w-80`}>          
           <h3 className='bg-transparent justify-start m-2'>            
-            {
-            // 🔘 🔴 🟠 🟡 🟢 🔵 🟣 ⚫️ ⚪️ 🟤
+            {            
             (auth && currentUser?.name) ? 
               `${userActivity ? `🟢` : `🟠`} Chatting as ${cropMessage(currentUser.name, 8)} ` : 
               isServerOnline ? `🔴 Chatting as Guest` : `🔘 Offline`
@@ -1853,7 +1836,7 @@ const Chat = () => {
 
       </section>
              
-      <div className='flex absolute bg-tranparent top-auto bottom-0 m-8 gap-2'>
+      <div className='flex absolute bg-tranparent top-auto bottom-0 m-8 gap-2' > 
         {/*
         <h3 className={`flex mb-5 bg-cyan-600 rounded-lg p-3`}>
           {isTyping ? `💬` : `〰️`}

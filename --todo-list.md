@@ -102,9 +102,18 @@
 # On auto-logout due to duplicated sessions, the socket stops listening to events. [DONE?]
 # Make notifications specific to rooms the user's currently in. [DONE]
 # Modify notifyUserInRoom function to use the appropriate function for checking the room id. [DONE]
+# Modify sendMessage socket event on the socket useEffect to check if the room id is valid with the appropriate function. [DONE]
+# Sorting the log messages by date is not working. [DONE]
+# Create way to clear the log filters. [DONE]
+# Notify the user of what words are being searched for on the log. [DONE]
+# When searching for the user's names on the log feed, it doesn't work. [DONE]
+# Refine normalizing method for the search term and the entries on the search log method. [DONE]
+# Normalize functions for sorting alphabetically. [DONE]
+# Handle log filtering in case log changes. (create new room, leave log screen or clear log) [DONE]
+# Log filter running at each render when on log view. [DONE]
 # Maybe modify the log to firstly show a generic message and then a detailed version upon clicking on it.
 # Use state to require a page refresh to the user.
-# When resetting the rooms, the chat gets stuck on infinite reloading.
+# When resetting the rooms, the chat gets stuck on infinite loading.
 # Make user lists update comparing uuid instead of number of users, or maybe dates.
 # Find a way to update all the lists.
 # When first starting the server, it takes too long to load the page.
@@ -113,28 +122,19 @@
 # Add a context menu to show interactions with a individual given message as well.
 # When server first starts, changing the messages doesn't update the chat on the other end.
 # On the room reset/creation, if the user continues spamming none of the messages get to the other end.
-# useEffect Bug : Auth running on useEffect after sending message. Functions emitting to auth : "addUserToOnlineList, retrieveUserLists".
 # Warn the user about the log being full.
 # Make spam cooldown specific to room and reset along with the rooms.
-# Modify sendMessage socket event on the socket useEffect to check if the room id is valid with the appropriate function. [DONE]
 # When deleting all messages, the user no longer appears on the room user list. Is that a problem though?
-# Sorting the log messages by date is not working. [DONE]
-# Create way to clear the log filters. [DONE]
-# Notify the user of what words are being searched for on the log. [DONE]
-# When searching for the user's names on the log feed, it doesn't work. [DONE]
-# Refine normalizing method for the search term and the entries on the search log method. [DONE]
-# Normalize functions for sorting alphabetically. [DONE]
-# Handle log filtering in case log changes. (create new room, leave log screen or clear log) [DONE]
 # Make the normalization more precise when removing the literal '\n'.
-# Log filter running at each render when on log view. [DONE]
+# useEffect Bug : Auth running on useEffect after sending message. Functions emitting to auth : "addUserToOnlineList, retrieveUserLists".
+# segment the initializeAppData function into smaller ones.
 
 // Done yesterday
-
-Modify the order of replacement operations in the filterLog function to first eliminate newlines and then normalize spaces, fixing issues with searching room names.
-
-// Done today
 
 Modify the Log component to memoize the sorting results, preventing recalculation on every re-render.
 Update the message box on the chat component to display a different title based on whether the user is the sender.
 
+// Done today
 
+Change the key down event to prevent the user typing status from being set to true on log view.
+Move placeholder data and resources to separate files.
