@@ -1509,7 +1509,7 @@ const Chat = () => {
                   className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 ${primaryDefault} flex-shrink-1 rounded max-w-48 h-fit h-min-10 break-words cursor-pointer ${message.content != '' || isMessageSelected ? '' : 'text-slate-400'}`}
                   suppressContentEditableWarning={true}
                   contentEditable={isUserSender && isMessageSelected}
-                  title={`Click to edit/delete a message.`}
+                  title={isUserSender ? `Click to edit/delete this message.` : `Click to view details about this message.`}
                   data-action={`confirm`}
                   onClick={(e) => {
                     if (isUserSender) {

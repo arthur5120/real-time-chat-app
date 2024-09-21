@@ -126,13 +126,15 @@
 # Normalize functions for sorting alphabetically. [DONE]
 # Handle log filtering in case log changes. (create new room, leave log screen or clear log) [DONE]
 # Make the normalization more precise when removing the literal '\n'.
-# Log filter running at each render when on log view.
+# Log filter running at each render when on log view. [DONE]
 
 // Done yesterday
 
-Disable the button for creating a new room while on log screen. Create function to find out whether a user is a member of a specific chat room or not. Update majorChange socket event to keep log of the change even with the notifications turned off. Change minorChange socket event to log messages and notify the user if a member of a room, or just log messages if notifications are deactivated. Modify the sendMessage socket event to only notify the user if a member of a given room. Make the button from switching between the chat and the log view clear the log filter if in log view.
+Modify the order of replacement operations in the filterLog function to first eliminate newlines and then normalize spaces, fixing issues with searching room names.
 
 // Done today
 
-Modify the order of replacement operations in the filterLog function to first eliminate newlines and then normalize spaces, fixing issues with searching room names.
+Modify the Log component to memoize the sorting results, preventing recalculation on every re-render.
+Update the message box on the chat component to display a different title based on whether the user is the sender.
+
 

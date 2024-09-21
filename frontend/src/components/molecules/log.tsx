@@ -1,4 +1,4 @@
-import { forwardRef} from "react"
+import { forwardRef, useMemo} from "react"
 import { TLog } from "../../utils/types"
 import { capitalizeFirst, sortChronogicallyByAny } from "../../utils/useful-functions"
 import { sortAlphabeticallyByAny } from "../../utils/useful-functions"
@@ -16,7 +16,9 @@ type TProps = {
     reverseOrder ? : boolean
 }
 
-const Log = forwardRef<HTMLDivElement, TProps>(({values, order, reverseOrder}, ref) => {    
+const Log = forwardRef<HTMLDivElement, TProps>(({values, order, reverseOrder}, ref) => {  
+    
+        const logListTitle = `[sorted by ${order >= 0 ? filterOrder[order] : filterOrder[0]} - ${reverseOrder ? `inverted` : `default`}]`
         
         const getSortedValues = () => {
 
@@ -41,15 +43,17 @@ const Log = forwardRef<HTMLDivElement, TProps>(({values, order, reverseOrder}, r
             }
 
         }
-
-        const logListTitle = `[sorted by ${order >= 0 ? filterOrder[order] : filterOrder[0]} - ${reverseOrder ? `inverted` : `default`}]`
+        
+        const memoizedSortedValues = useMemo(() => {
+            return getSortedValues()
+        }, [values, order, reverseOrder])
 
         return (
       
          <div className={`flex flex-col text-center`} ref={ref} id={`logdiv`}>            
               <h3>{logListTitle}</h3>
               {            
-                values && values.length > 0 ? getSortedValues().map((value, index) => {
+                values && values.length > 0 ? memoizedSortedValues.map((value, index) => {
                       const {userName, roomName, visualTime, content} = value                
                       return (
                           <span className={`flex flex-col justify-center bg-slate-900 text-white rounded-xl italic m-1 p-1`} key={`log-entry-main-span-${index}`}>
