@@ -111,7 +111,7 @@ const Chat = () => {
 
   const getCookieSpam = () : number => {
     try {
-      const cookieSpam = Cookies.get(`spam`)    
+      const cookieSpam = Cookies.get(`spam`)
       const cookieSpamResult = cookieSpam ? parseInt(cookieSpam) : 0
       return cookieSpamResult
     } catch (e) {
@@ -723,7 +723,7 @@ const Chat = () => {
     await retrieveCurrentUser()
     await createRoomIfNoneAreFound()
     await retrieveRooms()
-    await retrieveMessages()    
+    await retrieveMessages()
   }
 
   const setInactivityTimer =  async (localUserName = null) => {        
@@ -796,14 +796,11 @@ const Chat = () => {
 
   useEffect(() => { // Socket
 
-    if(!isServerOnline) {
-      return
-    }
-
     console.log(`Running Socket useEffect Current Room Id : ${currentRoomIdRef.current}`)
 
-    // Get DEPs: currentRoom, messages
-    // Set DEPs : refreshChat, useDelayOnEmit, reload, onlineUsers, inactiveUsers, typingUsers
+    if(!isServerOnline) {
+      return
+    }    
 
     if(socket?.disconnected) {
       socket?.connect()
@@ -811,7 +808,6 @@ const Chat = () => {
     
     retrieveUserLists()
 
-    // DEP : currentRoom, messages, refreshChat    
     socket?.on(`sendMessage`, (payload : {message : TChatMessage} & TRoomLists) => {
 
       console.log(`socket on sendMessage : ${currentRoomIdRef.current}`)
@@ -832,8 +828,7 @@ const Chat = () => {
       }
 
     })
-    
-    // DEP : currentRoom, refreshChat
+        
     socket?.on(`minorChange`, (msg : TSocketPayload) => {
       const {userName, notification, roomId, roomName, content, notifyRoomOnly} = msg
       const isRoomIdValid = roomId && isThingValidSpecific(roomId) // Redundant check for it to be recognized
@@ -854,8 +849,7 @@ const Chat = () => {
         }
         setRefreshChat(true)      
     })
-
-    // DEP : currentRoom, useDelayOnEmit, reload
+    
     socket?.on(`majorChange`, (payload : TSocketPayload) => {
       const {userName, roomName, notification, content} = payload      
       console.log(`socket on majorChange : ${currentRoomIdRef.current}`)
@@ -866,22 +860,19 @@ const Chat = () => {
       addToLog({userName : userName, roomName : roomName, content : content})
       setReload(reload + 1)
     })
-
-    // DEP : currentRoom, onlineUsers, refreshChat
+    
     socket?.on(`auth`, (currentOnlineUsers : {id : string, name : string}[]) => {
       console.log(`socket on auth : ${currentRoomIdRef.current}`)
       setOnlineUsers(currentOnlineUsers)
       setRefreshChat(true)
     })
-
-    // DEP : currentRoom, inactiveUsers, refreshChat
+    
     socket?.on(`updateInactive`, (currentInactiveUsers : {id : string, name : string}[]) => {
       console.log(`socket on updateInactive : ${currentRoomIdRef.current}`)
       setInactiveUsers(currentInactiveUsers)
       setRefreshChat(true)
     })
-
-    // DEP : typingUsers
+    
     socket?.on(`updateTyping`, (payload : TRoomUser & {isTyping : boolean}) => {
       console.log(`socket on updateTyping : ${currentRoomIdRef.current}`)
       const {id, name, isTyping} = payload
@@ -905,7 +896,7 @@ const Chat = () => {
 
   }, [socket])
 
-  useEffect(() => { // Main        
+  useEffect(() => { // Main
     
     if(!isServerOnline) {
       return
@@ -981,7 +972,6 @@ const Chat = () => {
       }, 200)      
          
       const handleBeforeUnload =  async () => {
-        //const authInfo : TRes = await authStatus({})
         const authInfo = {id : currentUser.id}
         socket?.connect()
         socket?.emit(`updateInactive`, {id : authInfo.id, name: currentUser.name, inactive: true, beforeUnloadEvent : true})
@@ -1119,7 +1109,7 @@ const Chat = () => {
       return
     }
     showNotificationsRef.current = showNotifications
-  }, [showNotifications])  
+  }, [showNotifications])    
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -1514,8 +1504,7 @@ const Chat = () => {
                     onBlurEditableMessage(e)
                   }}
 
-                  onKeyDown={(e) => {
-                    // handleUserActivity()
+                  onKeyDown={(e) => {                    
                     if (e.key === "Enter") {
                       if (e.ctrlKey || e.metaKey) {
                         onClickEditModeIcon(e)

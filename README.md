@@ -6,17 +6,17 @@ A real time chat application with authentication/authorization features, message
 
 ## 2. Technologies
 
-Typescript
-React
-Socket.io
-Prisma
-MySQL
-JsonWebToken
-bcrypt
-uuid
-Tailwind CSS
-React Toast Messages
-Axios
+- Typescript
+- React
+- Socket.io
+- Prisma
+- MySQL
+- JsonWebToken
+- bcrypt
+- uuid
+- Tailwind CSS
+- React Toast Messages
+- Axios
 
 ## 3. Functionalities
 
@@ -90,7 +90,3 @@ Axios
 - Using cookies, it retains up to ten messages and upon reaching the limit, the oldest ones are deleted with each new entry.
 - The log messages can be filtered chronologically or alphabetically by room name or user name, and each filter can be optionally displayed in reverse order.
 - Upon switching to the log view, it is possible to search for a specific string within the log messages.
-
-
-
-

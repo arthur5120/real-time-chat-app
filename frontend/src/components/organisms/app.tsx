@@ -20,6 +20,16 @@ const App = () => {
   const location = useLocation()
   const navigate = useNavigate()
 
+  const requestSocketListUpdate = async () => {
+    const authInfo : TRes = await authStatus({})
+    if(authInfo.id != `none`) {
+      console.log(`app : Requesting socket list update`)
+      socket?.connect()
+      socket?.emit(`authList`)
+      socket?.emit(`inactiveList`)
+    }
+  }
+
   const handleSocketOnlineList = async () => {        
 
     const authInfo : TRes = await authStatus({})
@@ -108,6 +118,11 @@ const App = () => {
     }
 
   }, [location, auth]) 
+
+  useEffect(() => {    
+    requestSocketListUpdate()
+    //handleSocketOnlineList()    
+  }, [])
 
   return (
 
