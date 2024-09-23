@@ -90,3 +90,65 @@ A real time chat application with authentication/authorization features, message
 - Using cookies, it retains up to ten messages and upon reaching the limit, the oldest ones are deleted with each new entry.
 - The log messages can be filtered chronologically or alphabetically by room name or user name, and each filter can be optionally displayed in reverse order.
 - Upon switching to the log view, it is possible to search for a specific string within the log messages.
+
+# ☑️ How to Run it
+
+The following tutorial provides a brief guide on installing dependencies and running the app. 
+
+## 1. Getting the Application Files
+
+| Direct Download |
+| :---        |
+
+To acquire the app files by downloading them directly, click the green "Code" button in the top-right corner, then click "Download ZIP". Then, extract the downloaded ZIP file to a directory of your preference.
+ 
+| Git Destkop |
+| :---        |
+
+Alternatively, you can clone the repository using GitHub Desktop. To do this, click "File" > "Clone Repository". Then paste the repository URL, choose a local folder, and click "Clone".
+
+| Git Bash |
+| :---        |
+
+If you are using Git Bash, you can also clone the repository by navigating to the folder you chose and running the following command, followed by the repository **URL** (Replace **REPOSITORY-URL** with the actual **URL** of the repository) 🔽
+
+~~~~
+git clone REPOSITORY-URL
+~~~~
+
+## 2. Backend Folder
+
+Create the **.env** file with the following content, filling the blanks 🔽
+
+~~~
+PORT="3000"
+DATABASE_URL=""
+SECRET_KEY=""
+SECRET_SALT=10
+~~~
+
+Now on the terminal run the following to initialize the server 🔽
+
+~~~
+npm install
+npx prisma generate
+npm start
+~~~
+
+## 3. Frontend Folder
+
+Then navigate to the frontend folder and run the command bellow 🔽
+
+~~~
+npm run dev
+~~~
+
+## 4. Socket Folder
+
+Finally for the real-time feature, go to the socket folder and run this one 🔽
+
+~~~
+nodemon server
+~~~
+
+
