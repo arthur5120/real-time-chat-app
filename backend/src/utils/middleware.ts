@@ -5,35 +5,14 @@ import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
 import cookieParser from 'cookie-parser'
 import { v4 as uuidv4 } from 'uuid'
+import { roomAdjectives, roomColors, roomCreatures, roomNames } from './other-resources'
 
 dotenv.config()
 
 const secretKey = process.env.SECRET_KEY as string
 const secretSalt = parseInt(process.env.SECRET_SALT as string)
 
-const adjectives = [
-    'Vigilant', 'Mysterious', 'Brave',
-    'Whimsical', 'Fierce', 'Ethereal',
-    'Tenacious','Luminous', 'Enigmatic', 'Dazzling',
-]
-  
-const colors = [
-    'Crimson', 'Latte', 'Mint',
-    'Indigo', 'Cobalt', 'Ambar',
-    'Plum', 'Ivory', 'Rose', 'Obsidian',
-]
 
-const creatures  = [
-    'Phoenix', 'Gryphon', 'Sphinx',
-    'Chimera', 'Harpy', 'Gorgon',
-    'Hippogriff', 'Kappa', 'Manticore', 'Cerberus',
-]
-
-const rooms = [
-    'Space','Place', 'Area',
-    'Chamber', 'Cabin', 'Cell',
-    'Alcove','Closet',
-]
 
 export const midSetCors = Cors({
     origin : ['http://localhost:5173', 'http://localhost:3000'],
@@ -66,13 +45,13 @@ export const midGenerateToken = (payload : Object) => {
 export const midGetRandomName = () => {
 
     const randomNumber = Math.floor(Math.random() * 999)
-    const randomRoomNumber = Math.floor(Math.random() * (rooms.length - 1))
-    const roomName = rooms[randomRoomNumber]
+    const randomRoomNumber = Math.floor(Math.random() * (roomNames.length - 1))
+    const roomName = roomNames[randomRoomNumber]
     
     const generatedName = `
-      ${adjectives[randomNumber % 10]}
-      ${colors[Math.floor(randomNumber / 10) % 10]}  
-      ${creatures[Math.floor(randomNumber / 100) % 10]} 
+      ${roomAdjectives[randomNumber % 10]}
+      ${roomColors[Math.floor(randomNumber / 10) % 10]}  
+      ${roomCreatures[Math.floor(randomNumber / 100) % 10]} 
       ${roomName}
     `
 

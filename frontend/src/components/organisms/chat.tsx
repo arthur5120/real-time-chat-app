@@ -205,8 +205,7 @@ const Chat = () => {
 
   const requestSocketListUpdate = async () => {
     const authInfo : TRes = await authStatus({})
-    if(authInfo.id != `none`) {
-      notifyUser(`Sending`)
+    if(authInfo.id != `none`) {      
       socket?.connect()
       const user = await getUserById(authInfo.id)
       socket?.emit(`updateInactive`, { id : authInfo.id, name: user.name, inactive: false})
@@ -806,15 +805,15 @@ const Chat = () => {
 
   useEffect(() => { // Socket
 
-    console.log(`Running Socket useEffect Current Room Id : ${currentRoomIdRef.current}`)
+    console.log(`Running Socket useEffect Current Room Id : ${currentRoomIdRef.current}`)    
 
     if(!isServerOnline) {
       return
-    }
+    }       
 
-    if(socket?.disconnected) {
-      socket?.connect()
-    }
+    setTimeout(() => {
+      requestSocketListUpdate()
+    }, 1000)
     
     retrieveUserLists()
 
@@ -839,13 +838,13 @@ const Chat = () => {
 
     })
         
-    socket?.on(`minorChange`, (msg : TSocketPayload) => {      
+    socket?.on(`minorChange`, (msg : TSocketPayload) => {
       const {userName, notification, roomId, roomName, content, notifyRoomOnly} = msg
       const isRoomIdValid = roomId && isThingValidSpecific(roomId) // Redundant check for it to be recognized
       const isRoomMember = isRoomIdValid ? checkForUserInRoom(roomId) : false
       const shouldNotifyUser = notification && showNotificationsRef.current
       const shouldAddToLog = userName && roomName && content
-      console.log(`socket on minorChange : ${roomId}`)      
+      console.log(`socket on minorChange : ${roomId}`)
         if(isRoomIdValid) {
           if (roomId == currentRoomIdRef.current || !notifyRoomOnly) { // if the message's global or if it's in the current room.
             shouldNotifyUser ? notifyUserInRoom(roomId, notification) : ``
@@ -902,7 +901,7 @@ const Chat = () => {
 
     return () => {      
         socket?.off()
-        socket?.disconnect()      
+        socket?.disconnect()
     }
 
   }, [socket])
@@ -911,7 +910,7 @@ const Chat = () => {
     
     if(!isServerOnline) {
       return
-    }
+    }    
 
     currentRoomIdRef.current = currentRoom.id
     currentUserIdRef.current = currentUser.id
@@ -1120,7 +1119,7 @@ const Chat = () => {
       return
     }
     showNotificationsRef.current = showNotifications
-  }, [showNotifications])
+  }, [showNotifications]) 
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -1829,7 +1828,7 @@ const Chat = () => {
               socket?.connect()
               socket?.emit(`updateInactive`, { id : authInfo.id, name: currentUser.name, inactive: false })
               inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
-              //setSpam((lastSpam) => !lastSpam)
+              //setSpam((lastSpam) => !lastSpam)              
             }}
           /> 
           */}
