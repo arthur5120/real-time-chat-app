@@ -203,6 +203,16 @@ const Chat = () => {
     return spamResult
   }  
 
+  const requestSocketListUpdate = async () => {
+    const authInfo : TRes = await authStatus({})
+    if(authInfo.id != `none`) {
+      notifyUser(`Sending`)
+      socket?.connect()
+      const user = await getUserById(authInfo.id)
+      socket?.emit(`updateInactive`, { id : authInfo.id, name: user.name, inactive: false})
+    }
+  }
+
   const addUserToOnlineList = async () => {
     const authInfo = await authStatus({})
     const isUserOnList = onlineUsers.find((u) => u.id == authInfo.id)
@@ -356,7 +366,7 @@ const Chat = () => {
     
       try {
 
-        if(firstLoad) {
+        if(firstLoad) {          
           const cookieSpam = getCookieSpam()
           if(cookieSpam > 0) {
             setShowSpamWarning(true)
@@ -723,7 +733,7 @@ const Chat = () => {
     await retrieveCurrentUser()
     await createRoomIfNoneAreFound()
     await retrieveRooms()
-    await retrieveMessages()
+    await retrieveMessages()    
   }
 
   const setInactivityTimer =  async (localUserName = null) => {        
@@ -751,15 +761,15 @@ const Chat = () => {
 
   const retrieveUserLists = async () => {      
     try {
-      socket?.connect()
+      socket?.connect()            
       socket?.emit(`authList`, null, (value : TRoomUser[]) => { // payload, callback
         if (isThingValid(value)) {
           setOnlineUsers(value)
         }         
       })
-      socket?.emit(`inactiveList`, null, (value : TRoomUser[]) => { // payload, callback
+      socket?.emit(`inactiveList`, null, (value : TRoomUser[]) => { // payload, callback        
         if (isThingValid(value)) {
-          setInactiveUsers(value)
+          setInactiveUsers(value)          
         }
       })
       socket?.emit(`typingList`, null, (value : TRoomUser[]) => { // payload, callback
@@ -800,7 +810,7 @@ const Chat = () => {
 
     if(!isServerOnline) {
       return
-    }    
+    }
 
     if(socket?.disconnected) {
       socket?.connect()
@@ -814,7 +824,7 @@ const Chat = () => {
       
       const {message : msg} = payload // currentRoomUsers, currentOnlineUsers, currentInactiveUsers
       const {id, room} = msg
-      const firstMessageId = messages?.length > 0 ? messages[0].id : -1     
+      const firstMessageId = messages?.length > 0 ? messages[0].id : -1
       const isRoomIdValid = room && isThingValidSpecific(room) // Redundant check for it to be recognized
       const isRoomMember = isRoomIdValid ? checkForUserInRoom(room) : false
 
@@ -823,29 +833,30 @@ const Chat = () => {
           addMessage(msg)
           setRefreshChat(true)
         }
-      } else if(isRoomMember && showNotificationsRef.current) {      
+      } else if(isRoomMember && showNotificationsRef.current) {
           notifyUserInRoom(room)
       }
 
     })
         
-    socket?.on(`minorChange`, (msg : TSocketPayload) => {
+    socket?.on(`minorChange`, (msg : TSocketPayload) => {      
       const {userName, notification, roomId, roomName, content, notifyRoomOnly} = msg
       const isRoomIdValid = roomId && isThingValidSpecific(roomId) // Redundant check for it to be recognized
       const isRoomMember = isRoomIdValid ? checkForUserInRoom(roomId) : false
       const shouldNotifyUser = notification && showNotificationsRef.current
+      const shouldAddToLog = userName && roomName && content
       console.log(`socket on minorChange : ${roomId}`)      
         if(isRoomIdValid) {
           if (roomId == currentRoomIdRef.current || !notifyRoomOnly) { // if the message's global or if it's in the current room.
             shouldNotifyUser ? notifyUserInRoom(roomId, notification) : ``
-            addToLog({userName : userName, roomName : roomName, content : content})
+            shouldAddToLog ? addToLog({userName : userName, roomName : roomName, content : content}) : ``
           } else if (isRoomMember) { // if not, but user is currently a member of the room.
             shouldNotifyUser ? notifyUserInRoom(roomId, notification) : ``
-            addToLog({userName : userName, roomName : roomName, content : content})
+            shouldAddToLog ? addToLog({userName : userName, roomName : roomName, content : content}) : ``
           }          
         } else { // Send it to everyone if room is undefined.
           shouldNotifyUser ? notifyUser(notification, `info`) : ``
-          addToLog({userName : userName, roomName : roomName, content : content})
+          shouldAddToLog ? addToLog({userName : userName, roomName : roomName, content : content}) : ``
         }
         setRefreshChat(true)      
     })
@@ -1109,7 +1120,7 @@ const Chat = () => {
       return
     }
     showNotificationsRef.current = showNotifications
-  }, [showNotifications])    
+  }, [showNotifications])
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -1806,7 +1817,6 @@ const Chat = () => {
               notifyUser(`${bugsToFix[i]}`)
             }}
           />          
-          
           <CustomButton
             value={`Test 🦾`}
             variationName='varthree'
@@ -1814,10 +1824,14 @@ const Chat = () => {
             disabled={!!reload || firstLoad || !isServerOnline}
             title={`Currently spamming the chat.`}
             onClick={ async () => {
-              setSpam((lastSpam) => !lastSpam)
+              setUserActivity(true)
+              const authInfo : TRes = await authStatus({})
+              socket?.connect()
+              socket?.emit(`updateInactive`, { id : authInfo.id, name: currentUser.name, inactive: false })
+              inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
+              //setSpam((lastSpam) => !lastSpam)
             }}
           /> 
-          
           */}
 
        </div>

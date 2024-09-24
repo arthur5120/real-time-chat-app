@@ -109,9 +109,9 @@ io.on('connection', (socket) => {
     
     socket?.on(`disconnect`, (reason) => {
         if (reason == `client namespace disconnect`) {
-            //console.log(`scheduled disconnect`)
+            console.log(`scheduled disconnect`)
         } else {
-            //console.log(`id : ${socket.id}, reason : ${reason}`)
+            console.log(`id : ${socket.id}, reason : ${reason}`)
         }
     })
 
@@ -237,8 +237,9 @@ io.on('connection', (socket) => {
         //     roomId: string;
         //     notifyRoomOnly: boolean;
         // }>
+        
+        console.log(message?.notification ? message.notification : `Major change notification : Failed`)
 
-        console.log(message?.notification ? message.notification : `Change notification : Failed`)
         if (callback != null) {
             callback(true)
         }
@@ -254,8 +255,8 @@ io.on('connection', (socket) => {
         //     roomName?: string | undefined;
         //     roomId?: string | undefined;
         //     notifyRoomOnly?: boolean | undefined;
-        // }
-        console.log(message.notification.trim().replace(/\s+/g, ' '))
+        // }        
+        console.log(message?.notification ? message.notification.trim().replace(/\s+/g, ' ') : `Minor change notification : Failed`)                    
         if (callback != null) {
             callback(onlineUsers.length)
         }

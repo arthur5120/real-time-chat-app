@@ -18,17 +18,7 @@ const App = () => {
   const [previousAuth, setPreviousAuth] = useState(auth)
   const [hasSessionExpired, setHasSessionExpired] = useState(false)  
   const location = useLocation()
-  const navigate = useNavigate()
-
-  const requestSocketListUpdate = async () => {
-    const authInfo : TRes = await authStatus({})
-    if(authInfo.id != `none`) {
-      console.log(`app : Requesting socket list update`)
-      socket?.connect()
-      socket?.emit(`authList`)
-      socket?.emit(`inactiveList`)
-    }
-  }
+  const navigate = useNavigate() 
 
   const handleSocketOnlineList = async () => {        
 
@@ -45,12 +35,11 @@ const App = () => {
           const authRequest : TSocketAuthRequest = {user : {id : ``}, isConnecting : false}
           socket?.emit(`auth`, authRequest)
           socket?.emit(`authList`)
-          socket?.emit(`inactiveList`)          
+          socket?.emit(`inactiveList`)
           setHasSessionExpired(false)
         }
   
-        if (auth && authInfo.id != `none` && !clickedToLogout) { // Login
-          
+        if (auth && authInfo.id != `none` && !clickedToLogout) { // Login          
           //notifyUser(`Login.`)
           const user = await getUserById(authInfo.id)
           setRole ? setRole(authInfo.role) : ''
@@ -112,17 +101,12 @@ const App = () => {
   
   useEffect(() => {
     
-    if (auth != previousAuth) {            
+    if (auth != previousAuth) {
       handleSocketOnlineList()
       setPreviousAuth(auth)
     }
 
-  }, [location, auth]) 
-
-  useEffect(() => {    
-    requestSocketListUpdate()
-    //handleSocketOnlineList()    
-  }, [])
+  }, [location, auth])
 
   return (
 
