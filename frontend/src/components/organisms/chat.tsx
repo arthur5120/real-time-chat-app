@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef, useState, Fragment } from 'react'
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, getUsersByChatId, updateMessage, } from '../../utils/axios-functions'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest, TLog } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder, roomsPlaceholder, currentRoomPlaceHolder } from '../../utils/placeholders'
-import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, isThingValid, isThingValidSpecific, sortAlphabeticallyByName, sortByMilliseconds, sortChronogicallyByAny } from '../../utils/useful-functions'
+import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, isThingValid, isThingValidSpecific, sortAlphabeticallyByAny, sortAlphabeticallyByName, sortByMilliseconds, sortChronogicallyByAny } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
@@ -412,9 +412,11 @@ const Chat = () => {
 
         })
             
+        const unsortedRoomUserList = roomUserList as {id : string, name : string}[]
+        const sortedRoomUserList = sortAlphabeticallyByAny(unsortedRoomUserList, `name`)
         const sortedMessages = sortByMilliseconds(convertedMessages)
 
-        setRoomUsers(roomUserList)
+        setRoomUsers(sortedRoomUserList)
         setMessages(sortedMessages)
 
       } catch (e) {
@@ -541,8 +543,13 @@ const Chat = () => {
             notification : `${capitalizeFirst(currentUser.name)} has entered ${currentRoom.name}`,
             notifyRoomOnly : true,
           }
-
-          setRoomUsers([...roomUsers, {id : authInfo.id, name : currentUser.name}])
+          
+          setRoomUsers(() => {
+            type TRoomUserPartial = {id: string, name: string}
+            const unsortedList = [...roomUsers, {id : authInfo.id, name : currentUser.name}] as TRoomUserPartial[]
+            const sortedList = sortAlphabeticallyByAny(unsortedList, `name`)
+            return sortedList
+          })
           setIsUserInroom(true)
           socket?.emit(`minorChange`, socketPayload)
 

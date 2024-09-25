@@ -61,9 +61,9 @@ export const sortAlphabeticallyByName = <T extends { name : string }>(unsorted: 
     return sorted
 }
 
-export const sortAlphabeticallyByAny = <T extends {[index: string]: string}>(unsorted: T[], property : string, reverse ? : boolean) => {
+export const sortAlphabeticallyByAny = <T extends {[index: string]: string}>(unsorted: T[], property ? : string, reverse ? : boolean) => {
     const sorted = unsorted.sort((a, b) => {
-        if (!a[property] || !b[property]) return 0
+        if (!property || !a[property] || !b[property]) return 0
         if (a[property].trim().toLocaleLowerCase().replace(/\s+/g, ' ') < b[property].trim().toLocaleLowerCase().replace(/\s+/g, ' ')) return -1
         if (a[property].trim().toLocaleLowerCase().replace(/\s+/g, ' ') > b[property].trim().toLocaleLowerCase().replace(/\s+/g, ' ')) return 1
         return 0
