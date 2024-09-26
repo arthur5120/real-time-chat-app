@@ -201,15 +201,6 @@ const Chat = () => {
     }
 
     return spamResult
-  }  
-
-  const requestSocketListUpdate = async () => {
-    const authInfo : TRes = await authStatus({})
-    if(authInfo.id != `none`) {      
-      socket?.connect()
-      const user = await getUserById(authInfo.id)
-      socket?.emit(`updateInactive`, { id : authInfo.id, name: user.name, inactive: false})
-    }
   }
 
   const addUserToOnlineList = async () => {
@@ -816,11 +807,7 @@ const Chat = () => {
 
     if(!isServerOnline) {
       return
-    }       
-
-    setTimeout(() => {
-      requestSocketListUpdate()
-    }, 1000)
+    }           
     
     retrieveUserLists()
 

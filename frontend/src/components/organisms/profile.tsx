@@ -15,14 +15,22 @@ const Profile = () => {
     const [messagesCounter, setMessagesCounter] = useState(0)    
     const navigate = useNavigate()
 
-    const getUserInfo = async () => {  
+    const handleStart = async () => {  
         
         try {
         
-            const userAuthInfo = await authStatus({}) as {id : string, authenticated : boolean}            
+            const userAuthInfo = await authStatus({}) as {id : string, authenticated : boolean}
+            const hasAuthToken = userAuthInfo ? userAuthInfo.authenticated : false
+
+            if(!hasAuthToken) {
+                navigate('/login')
+                return
+            }
+
             const currentUser = await getUserById(userAuthInfo.id)     
             const chats = await getChatsByUserId(userAuthInfo.id)
             const messages = await getMessageByUserId(userAuthInfo.id)
+            
             setChatsCounter(chats.length)
             setMessagesCounter(messages.length)
             setUser(currentUser)
@@ -33,12 +41,8 @@ const Profile = () => {
         }
     }
     
-    useEffect(() => {
-        if(auth) {
-            getUserInfo()
-        } else {
-            navigate('/login')
-        }        
+    useEffect(() => {              
+        handleStart()
     }, [])
 
     return (

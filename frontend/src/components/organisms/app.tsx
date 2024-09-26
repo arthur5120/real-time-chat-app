@@ -20,6 +20,15 @@ const App = () => {
   const location = useLocation()
   const navigate = useNavigate() 
 
+  const requestSocketListUpdate = async () => { 
+    const authInfo : TRes = await authStatus({})
+    if(authInfo.id != `none`) {      
+      socket?.connect()
+      const user = await getUserById(authInfo.id)
+      socket?.emit(`updateInactive`, { id : authInfo.id, name: user.name, inactive: false})
+    }
+  }
+
   const handleSocketOnlineList = async () => {        
 
     const authInfo : TRes = await authStatus({})
@@ -107,6 +116,12 @@ const App = () => {
     }
 
   }, [location, auth])
+
+  useEffect(() => {
+    setTimeout(() => {
+      requestSocketListUpdate()
+    }, 1000)    
+  }, [socket])
 
   return (
 
