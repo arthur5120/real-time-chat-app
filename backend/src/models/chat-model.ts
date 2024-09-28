@@ -13,7 +13,8 @@ export const modCreateChat = async (req : Request, res : Response) => {
             data : {...newChat, name : midGetRandomName()}
         })
     } catch (e) {
-        return e
+        console.log(e)
+        return
     }
 
 }
@@ -33,7 +34,8 @@ export const modAddUserToChat = async (req : Request, res : Response) => {
         })
 
     } catch (e) {
-        return e
+        console.log(e)
+        return
     }
 
 }
@@ -54,7 +56,8 @@ export const modRemoveUserFromChat = async (req : Request, res : Response) => {
         })
 
     } catch (e) {
-        return e
+        console.log(e)
+        return
     }
 
 }
@@ -70,7 +73,8 @@ export const modDeleteChat = async (req : Request, res : Response) => {
             }
         })
     } catch (e)     {
-        return e
+        console.log(e)
+        return
     }
 
 }
@@ -82,7 +86,8 @@ export const modDeleteAllChats = async (req : Request, res : Response) => { // F
         await prisma.chat.deleteMany() // For testing purposes
 
     } catch (e) {
-        return e
+        console.log(e)
+        return
     }
 
 }
@@ -95,7 +100,8 @@ export const modGetChats = async (req : Request, res : Response) => {
         return chats
 
     } catch (e) {
-        return e
+        console.log(e)
+        return
     }
 
 }
@@ -115,7 +121,8 @@ export const modGetChatById = async (req : Request, res : Response) => {
         return chat
 
     } catch (e) {
-        return e
+        console.log(e)
+        return
     }
 
 }
@@ -135,7 +142,8 @@ export const getChatsByUserId = async (req : Request, res : Response) => {
         return chats
 
     } catch (e) {
-        return e
+        console.log(e)
+        return
     }
 
 }
@@ -155,7 +163,8 @@ export const modGetUsersByChatId = async (req : Request, res : Response) => {
         return users
 
     } catch (e) {
-        return e
+        console.log(e)
+        return
     }
 
 }

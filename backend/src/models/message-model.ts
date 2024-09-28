@@ -13,7 +13,8 @@ export const modCreateMessage = async (req : Request, res : Response) => {
         await prisma.message.create({data : newMessage})
         return newMessageId
     } catch (e) {
-        return e
+        console.log(e)
+        return
     }
 
 }
@@ -31,7 +32,8 @@ export const modUpdateMessage = async (req : Request, res : Response) => {
             where : {id : messageId}
         })
     } catch (e) {
-        return e
+        console.log(e)
+        return
     }
     
 }
@@ -43,7 +45,8 @@ export const modDeleteMessage = async (req : Request, res : Response) => {
     try {
         await prisma.message.delete({where : {id : messageId}})
     } catch (e) {
-        return e
+        console.log(e)
+        return
     }
     
 }
@@ -54,7 +57,8 @@ export const modGetMessages = async () => {
         const message = await prisma.message.findMany()
         return message
     } catch (e) {
-        return e
+        console.log(e)
+        return
     }
 
 }
@@ -67,7 +71,8 @@ export const modGetMessageById = async (req : Request, res : Response) => {
         const message = await prisma.message.findUnique({where : {id : messageId}})
         return message
     } catch (e) {
-        return e
+        console.log(e)
+        return
     }
     
 }
@@ -87,7 +92,8 @@ export const modGetMessagesByUserId = async (req : Request, res : Response) => {
         return messages
         
     } catch (e) {
-        return e
+        console.log(e)
+        return
     }
     
 }

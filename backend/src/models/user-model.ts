@@ -14,7 +14,8 @@ export const modCreateUser = async (req : Request, res : Response) => {
             data : {...newUser, password : hashedPassword}
         })
     } catch(e) {    
-        return e
+        console.log(e)
+        return
     }
 
 }
@@ -29,7 +30,8 @@ export const modUpdateUser = async (req : Request, res : Response) => {
             data : req.body
         })
     } catch(e) {
-        return e
+        console.log(e)
+        return
     }
 }
 
@@ -42,7 +44,8 @@ export const modDeleteUser = async (req : Request, res : Response) => {
             where : {id : userId}
         })
     } catch(e) {
-        return e
+        console.log(e)
+        return
     }
 }
 
@@ -61,7 +64,8 @@ export const modGetUsers = async (req : Request, res : Response) => {
         })
         return await users
     } catch(e) {
-        return e
+        console.log(e)
+        return
     }
 }
 
@@ -83,7 +87,8 @@ export const modGetUserById = async (req : Request, res : Response) => {
         })
         return await user
     } catch(e) {
-        return e
+        console.log(e)
+        return
     }
 }
 
@@ -104,6 +109,7 @@ export const modGetUserByEmail = async (req : Request, res : Response) => {
         })
         return await user
     } catch(e) {
-        return e
+        console.log(e)
+        return
     }
 }
