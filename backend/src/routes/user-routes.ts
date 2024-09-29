@@ -8,13 +8,13 @@ import {
     conUpdateUser,    
 } from '../controllers/user-controller'
 
-import { midBodyParsers } from '../utils/middleware'
+import { csrfProtection, midBodyParsers } from '../utils/middleware'
 
 const userRouter = express.Router()
 
-userRouter.post('/create-user', midBodyParsers, conCreateUser)
-userRouter.put('/update-user/:id', midBodyParsers, conUpdateUser)
-userRouter.delete('/delete-user/:id', midBodyParsers, conDeleteUser)
+userRouter.post('/create-user', midBodyParsers, csrfProtection, conCreateUser)
+userRouter.put('/update-user/:id', midBodyParsers, csrfProtection, conUpdateUser)
+userRouter.delete('/delete-user/:id', midBodyParsers, csrfProtection, conDeleteUser)
 userRouter.get('/users', midBodyParsers, conGetUsers)
 userRouter.get('/users/:id', midBodyParsers, conGetUserById)
 

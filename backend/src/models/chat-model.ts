@@ -73,7 +73,7 @@ export const modDeleteChat = async (req : Request, res : Response) => {
             }
         })
     } catch (e)     {
-        console.log(e)
+        console.log(e)        
         return
     }
 

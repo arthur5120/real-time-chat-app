@@ -9,7 +9,7 @@ const app = express()
 const PORT = process.env.PORT
 
 app.use(
-    midSetCors,   
+    midSetCors,    
     ...router
 )
 

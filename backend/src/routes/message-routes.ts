@@ -10,15 +10,16 @@ import {
 } from '../controllers/message-controllers'
 
 import { 
+    csrfProtection,
     midBodyParsers, 
     midCheckAuth,    
 } from '../utils/middleware'
 
 const messageRouter = express.Router()
     
-    messageRouter.post('/create-message', midBodyParsers, midCheckAuth, conCreateMessage)
-    messageRouter.put('/update-message/:id', midBodyParsers, midCheckAuth, conUpdateMessage)
-    messageRouter.delete('/delete-message/:id', midBodyParsers, midCheckAuth, conDeleteMessage)
+    messageRouter.post('/create-message', midBodyParsers, csrfProtection, midCheckAuth, conCreateMessage)
+    messageRouter.put('/update-message/:id', midBodyParsers, csrfProtection, midCheckAuth, conUpdateMessage)
+    messageRouter.delete('/delete-message/:id', midBodyParsers, csrfProtection, midCheckAuth, conDeleteMessage)
     messageRouter.get('/messages', conGetMessages)
     messageRouter.get('/messages/:id', conGetMessageById)
     messageRouter.get('/users/:id/messages', conGetMessagesByUserId)

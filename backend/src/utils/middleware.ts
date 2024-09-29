@@ -6,25 +6,32 @@ import jwt from 'jsonwebtoken'
 import cookieParser from 'cookie-parser'
 import { v4 as uuidv4 } from 'uuid'
 import { roomAdjectives, roomColors, roomCreatures, roomNames } from './other-resources'
+import csrf from 'csurf'
 
 dotenv.config()
 
 const secretKey = process.env.SECRET_KEY as string
 const secretSalt = parseInt(process.env.SECRET_SALT as string)
 
-
+export const csrfProtection = csrf({ 
+    cookie: {
+        httpOnly: false,
+        secure: false,
+        sameSite: 'strict',
+    }
+})
 
 export const midSetCors = Cors({
     origin : ['http://localhost:5173', 'http://localhost:3000'],
     credentials : true,
     methods : ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders : ['Content-Type', 'Authorization', 'Idempotency-Key']
+    allowedHeaders : ['Content-Type', 'Authorization', 'Idempotency-Key', 'X-CSRF-Token']
 })
 
 export const midBodyParsers = [    
-    cookieParser(),
+    cookieParser(),    
     express.json(),
-    express.text()
+    express.text(),
 ]
 
 export const midHashPassword = async (password : string) => {

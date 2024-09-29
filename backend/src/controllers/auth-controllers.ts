@@ -1,11 +1,10 @@
 import { modGetUserByEmail } from "../models/user-model"
 import { midGenerateToken } from "../utils/middleware"
-import { Request, Response } from "express"
+import { Request, Response, NextFunction } from "express"
 import { generateUniqueId } from "../utils/middleware"
 import { expirationCheck } from "../utils/middleware"
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
-
 
 dotenv.config()
 const secretKey = process.env.SECRET_KEY as string
@@ -52,7 +51,7 @@ export const conAuth = async (req : Request, res : Response) => {
                 expires: new Date(Date.now() + 1000 * 60 * 15),
                 httpOnly: true,
                 maxAge: 1000 * 60 * 15,                
-                sameSite: 'strict'                
+                sameSite: 'strict'
             }).json({success : true})
                     
     } catch (e) {
@@ -110,4 +109,15 @@ export const conLogout = async (req : Request, res : Response) => {
         console.log(e)
         return await res.json({'message' : 'Something went wrong'})
     }
+}
+
+export const getCSRFToken = async (req: Request, res: Response) => {    
+   try {        
+        return res.json({ 
+            CSRFToken: req.csrfToken()
+        })
+   } catch (e) {
+        console.log(e)
+        return await res.json({'message' : 'Something went wrong'})
+   }
 }

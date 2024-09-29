@@ -71,7 +71,7 @@ export const modGetMessageById = async (req : Request, res : Response) => {
         const message = await prisma.message.findUnique({where : {id : messageId}})
         return message
     } catch (e) {
-        console.log(e)
+        console.log(e) // throw new Error('Database retrieval error')
         return
     }
     
