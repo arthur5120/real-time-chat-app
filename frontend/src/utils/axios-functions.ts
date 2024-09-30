@@ -280,3 +280,18 @@ export const getMessageByUserId = async (userId : string) => {
         }
     }
 }
+
+export const getCSRFToken = async () => {
+    try {
+        const res = await baseURL.get(`get-csrf-token`)
+        return res.data
+    } catch (e) {
+        if (axios.isAxiosError(e) && e?.response?.status) {
+            return e.response.data
+        }
+    }
+}
+
+export const setAxiosCSRFToken = async (csrfToken : string) => {
+    baseURL.defaults.headers.common['X-CSRF-Token'] = csrfToken    
+}

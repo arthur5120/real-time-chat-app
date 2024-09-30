@@ -25,7 +25,7 @@ const Login = () => {
   const {auth, setAuth} = useContext(authContext)
   const [data, setData] = useState<TUser>(mockUserData)
   const [message, setMessage] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false)  
 
   const navigate = useNavigate() 
   
@@ -36,11 +36,11 @@ const Login = () => {
 
     if (setAuth != null) {
       try {
-        const serverResponse = await authLogin(data)
-        setMessage(`${serverResponse.success ? 'Authenticated' : 'Invalid Credentials'}`)        
-        serverResponse.success ? setAuth(true) : '' 
+        const serverResponse = await authLogin(data)        
+        setMessage(`${serverResponse.success ? 'Authenticated' : 'Invalid Credentials'}`)
+        serverResponse.success ? setAuth(true) : ''         
       } catch (e) {
-        setMessage(`Invalid Credentials`)
+        setMessage(`Something went wrong, please try again later.`)
       }
       setLoading(false)
     }

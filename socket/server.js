@@ -107,13 +107,13 @@ const disconnectUser = (userId) => { // string
 
 io.on('connection', (socket) => {
     
-    socket?.on(`disconnect`, (reason) => {
-        if (reason == `client namespace disconnect`) {
-            console.log(`scheduled disconnect`)
-        } else {
-            console.log(`id : ${socket.id}, reason : ${reason}`)
-        }
-    })
+    // socket?.on(`disconnect`, (reason) => {
+    //     if (reason == `client namespace disconnect`) {
+    //         console.log(`scheduled disconnect`)
+    //     } else {
+    //         console.log(`id : ${socket.id}, reason : ${reason}`)
+    //     }
+    // })
 
     socket.on(`updateInactive`, (user) => {
                        

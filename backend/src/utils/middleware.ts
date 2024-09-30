@@ -1,9 +1,8 @@
-import express, { Response, Request, NextFunction } from 'express'
+import express, { Response, Request, NextFunction, ErrorRequestHandler } from 'express'
 import Cors from 'cors'
 import bcrypt from 'bcrypt'
 import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
-import cookieParser from 'cookie-parser'
 import { v4 as uuidv4 } from 'uuid'
 import { roomAdjectives, roomColors, roomCreatures, roomNames } from './other-resources'
 import csrf from 'csurf'
@@ -21,6 +20,15 @@ export const csrfProtection = csrf({
     }
 })
 
+export const handleCsrfError : ErrorRequestHandler = (err, req, res, next) => {
+    if (err.code === 'EBADCSRFTOKEN') {        
+        return res.status(403).json({
+            message: 'Something went wrong. Please refresh the page and try again.'
+        })
+    }
+    next(err)
+}
+
 export const midSetCors = Cors({
     origin : ['http://localhost:5173', 'http://localhost:3000'],
     credentials : true,
@@ -28,8 +36,7 @@ export const midSetCors = Cors({
     allowedHeaders : ['Content-Type', 'Authorization', 'Idempotency-Key', 'X-CSRF-Token']
 })
 
-export const midBodyParsers = [    
-    cookieParser(),    
+export const midBodyParsers = [        
     express.json(),
     express.text(),
 ]

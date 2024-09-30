@@ -1,7 +1,8 @@
 import express from 'express'
 import dotenv from 'dotenv'
-import { midSetCors } from './utils/middleware'
+import { csrfProtection, midSetCors, handleCsrfError } from './utils/middleware'
 import { router } from './utils/router'
+import cookieParser from 'cookie-parser'
 
 dotenv.config()
 
@@ -9,8 +10,11 @@ const app = express()
 const PORT = process.env.PORT
 
 app.use(
-    midSetCors,    
-    ...router
+    midSetCors,
+    cookieParser(),
+    csrfProtection,
+    ...router,    
+    handleCsrfError,
 )
 
 app.listen(PORT, () => {

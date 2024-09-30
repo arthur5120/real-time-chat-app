@@ -7,6 +7,8 @@ import { toastContext } from "../../utils/contexts/toast-provider"
 import { socketContext } from "../../utils/contexts/socket-provider"
 import { TSocketAuthRequest, TRes } from "../../utils/types"
 import { authStatus, getUserById, authLogout } from "../../utils/axios-functions"
+import { getCSRFToken, setAxiosCSRFToken } from "../../utils/axios-functions"
+import Cookies from 'js-cookie'
 
 const App = () => {
 
@@ -15,8 +17,9 @@ const App = () => {
   const {auth, setAuth, setRole, getAuthTokenStatus, clickedToLogout, setClickedToLogout} = useContext(authContext)
   
   const [checkAuthStatus, setCheckAuthStatus] = useState(false)
+  const [checkCSFToken, setCheckCSFToken] = useState(false)
   const [previousAuth, setPreviousAuth] = useState(auth)
-  const [hasSessionExpired, setHasSessionExpired] = useState(false)  
+  const [hasSessionExpired, setHasSessionExpired] = useState(false) 
   const location = useLocation()
   const navigate = useNavigate() 
 
@@ -26,6 +29,18 @@ const App = () => {
       socket?.connect()
       const user = await getUserById(authInfo.id)
       socket?.emit(`updateInactive`, { id : authInfo.id, name: user.name, inactive: false})
+    }
+  }
+
+  const retrieveCSRFToken = async () => {    
+    try {
+      const res = await getCSRFToken()            
+      if(res?.CSRFToken) {
+        setAxiosCSRFToken(res.CSRFToken)      
+      }
+    } catch (e) {
+      console.log(e)
+      notifyUser(`Something Went Wrong`, `warning`)
     }
   }
 
@@ -93,6 +108,7 @@ const App = () => {
   
   const timer = setInterval(() => {
     setCheckAuthStatus(!checkAuthStatus)
+    setCheckCSFToken((prev) => !prev)
   }, 15000)
 
   useEffect(() => {     
@@ -122,6 +138,17 @@ const App = () => {
       requestSocketListUpdate()
     }, 1000)    
   }, [socket])
+
+  useEffect(() => {
+    const hasCRFCCookie = Cookies.get(`_csrf`)
+    if(!hasCRFCCookie) {
+      retrieveCSRFToken()
+    }
+  }, [checkCSFToken])
+
+  useEffect(() => {
+    retrieveCSRFToken()
+  }, [])
 
   return (
 

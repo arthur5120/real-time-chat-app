@@ -32,7 +32,7 @@ const Chat = () => {
 
   const [rooms, setRooms] = useState<TRoom[]>(roomsPlaceholder)
   const [currentRoom, setCurrentRoom] = useState<TCurrentRoom>(currentRoomPlaceHolder)
-  const [isUserInRoom, setIsUserInroom] = useState(false)
+  const [isUserInRoom, setIsUserInRoom] = useState(false)
   const [refreshRooms, setRefreshRooms] = useState(false)
   const [currentUser, setCurrentUser] = useState<TFullUser>(userPlaceholder)
   const [roomUsers, setRoomUsers] = useState<TRoomUser[]>([]) // Turn all these user lists into one later.
@@ -123,7 +123,11 @@ const Chat = () => {
   const setCookieSpam = (lifespanSeconds : number) => {
     const lifespanDays = lifespanSeconds/(24*60*60)
     const lifespanSecondsString = JSON.stringify(lifespanSeconds)
-    Cookies.set(`spam`, lifespanSecondsString, { expires: lifespanDays, path: `/` })
+    Cookies.set(`spam`, lifespanSecondsString, {
+      expires: lifespanDays,
+      path: `/`,
+      sameSite : `strict`,
+    })
   }
 
   const getCookieLog = () : TLog[] => {
@@ -138,8 +142,12 @@ const Chat = () => {
   }
   
   const setCookieLog = (logArray : TLog[]) => {
-    const logString = JSON.stringify(logArray)
-    Cookies.set(`log`, logString, {expires : 3, path: '/'})
+    const logString = JSON.stringify(logArray)     
+    Cookies.set( `log`, logString, { 
+      expires : 3, 
+      path: `/`, 
+      sameSite : `strict`,
+    })
   }
 
   const addToLog = (data : TLog) => {
@@ -324,7 +332,7 @@ const Chat = () => {
         })
 
         const foundUserInChat = chats?.length > 0 ? chats.find((c) => c.chatId == sortedLocalRooms[0].id) : ''
-        setIsUserInroom(!!foundUserInChat)
+        setIsUserInRoom(!!foundUserInChat)
 
       } else if (!isNumberOfRoomsTheSame!) {
         const updatedSelectId = sortedLocalRooms.findIndex((room) => room.id.trim() == currentRoom.id.trim())
@@ -334,11 +342,11 @@ const Chat = () => {
           name : sortedLocalRooms[updatedSelectId].name
         })
         const foundUserInChat = chats?.length > 0 ? chats.find((c) => c.chatId == sortedLocalRooms[updatedSelectId].id) : ''
-        setIsUserInroom(!!foundUserInChat)
+        setIsUserInRoom(!!foundUserInChat)
         setRefreshChat(true)        
       } else {
         const foundUserInChat = chats?.length > 0 ? chats.find((c) => c.chatId == currentRoom.id) : ''
-        setIsUserInroom(!!foundUserInChat)
+        setIsUserInRoom(!!foundUserInChat)
       }
 
       setRooms(sortedLocalRooms)
@@ -465,7 +473,9 @@ const Chat = () => {
         return
       }
 
-      await addUserToChat(authInfo.id, currentRoom.id) // Adding user to chat without checking if it exists.
+      if (!isUserInRoom) {
+        await addUserToChat(authInfo.id, currentRoom.id) // Adding user to chat without checking if it exists.
+      }
   
       const savedMessageId = await createMessage(
         authInfo.id,
@@ -541,7 +551,7 @@ const Chat = () => {
             const sortedList = sortAlphabeticallyByAny(unsortedList, `name`)
             return sortedList
           })
-          setIsUserInroom(true)
+          setIsUserInRoom(true)
           socket?.emit(`minorChange`, socketPayload)
 
         }
@@ -1855,6 +1865,7 @@ const Chat = () => {
         socket {socket?.connected ? 'on' : 'off'}
         </h3>
         <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
+          {JSON.stringify(isUserInRoom)}
         </h3>
         */}
       </div>
