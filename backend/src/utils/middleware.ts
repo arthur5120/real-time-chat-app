@@ -6,11 +6,18 @@ import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
 import { roomAdjectives, roomColors, roomCreatures, roomNames } from './other-resources'
 import csrf from 'csurf'
+import rateLimit from 'express-rate-limit'
 
 dotenv.config()
 
 const secretKey = process.env.SECRET_KEY as string
 const secretSalt = parseInt(process.env.SECRET_SALT as string)
+
+export const midRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // time frame
+    max: 100, // number of requests
+    message: "Too many requests from this IP, please try again later.",
+})
 
 export const csrfProtection = csrf({ 
     cookie: {

@@ -14,7 +14,7 @@ app.use(
     cookieParser(),
     csrfProtection,
     ...router,    
-    handleCsrfError,
+    handleCsrfError,    
 )
 
 app.listen(PORT, () => {
