@@ -5,6 +5,7 @@ import { useContext, useEffect, useState } from "react"
 import { authContext } from "../../utils/contexts/auth-provider"
 import { toastContext } from "../../utils/contexts/toast-provider"
 import { socketContext } from "../../utils/contexts/socket-provider"
+import { healthContext } from "../../utils/contexts/health-provider"
 import { TSocketAuthRequest, TRes } from "../../utils/types"
 import { authStatus, getUserById, authLogout } from "../../utils/axios-functions"
 import { getCSRFToken, setAxiosCSRFToken } from "../../utils/axios-functions"
@@ -15,6 +16,7 @@ const App = () => {
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
   const {auth, setAuth, setRole, getAuthTokenStatus, clickedToLogout, setClickedToLogout} = useContext(authContext)
+  const {updateServerStatus} = useContext(healthContext)
   
   const [checkAuthStatus, setCheckAuthStatus] = useState(false)
   const [checkCSFToken, setCheckCSFToken] = useState(false)
@@ -111,11 +113,15 @@ const App = () => {
     setCheckCSFToken((prev) => !prev)
   }, 15000)
 
-  useEffect(() => {     
+  useEffect(() => {
 
     const delay = setTimeout(() => { // avoids flicking on the UI
-      handleSessionExpiration()      
-    }, 200)
+      handleSessionExpiration()
+    }, 200)    
+
+    if(updateServerStatus) {
+      updateServerStatus()
+    }
 
     return () => {  
       clearTimeout(delay)
@@ -148,7 +154,7 @@ const App = () => {
 
   useEffect(() => {
     retrieveCSRFToken()
-  }, [])
+  }, [])  
 
   return (
 

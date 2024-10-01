@@ -6,6 +6,7 @@ import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, getFormatt
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
+import { healthContext } from '../../utils/contexts/health-provider'
 import { primaryDefault, secondaryDefault } from '../../utils/tailwindVariations'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { 
@@ -60,8 +61,7 @@ const Chat = () => {
   const [useDelayOnEmit, setUseDelayOnEmit] = useState(false)
   const [firstLoad, setFirstLoad] = useState(true)
   const [reload, setReload] = useState(1)
-  const [hasErrors, setHasErrors] = useState(false)
-  const [isServerOnline, setIsServerOnline] = useState(true)
+  const [hasErrors, setHasErrors] = useState(false)  
   const [requireRefresh, setRequireRefresh] = useState(true)
   const [log, setLog] = useState<TLog[]>([])
   const [filteredLog, setFilteredLog] = useState<TLog[]>([])
@@ -84,6 +84,7 @@ const Chat = () => {
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
   const {auth} = useContext(authContext)
+  const {serverStatus} = useContext(healthContext)
 
   const scrollToLatest = () => {
       if (autoScroll && chatContainerRef.current) {
@@ -815,7 +816,7 @@ const Chat = () => {
 
     console.log(`Running Socket useEffect Current Room Id : ${currentRoomIdRef.current}`)    
 
-    if(!isServerOnline) {
+    if(!serverStatus) {
       return
     }           
     
@@ -912,7 +913,7 @@ const Chat = () => {
 
   useEffect(() => { // Main
     
-    if(!isServerOnline) {
+    if(!serverStatus) {
       return
     }    
 
@@ -950,9 +951,8 @@ const Chat = () => {
         if(reload < 100) {          
           !refreshRooms ? setRefreshRooms(true) : null
         } else {
-          notifyUser(`Something Went Wrong, please try again later`, `warning`)
-          setIsServerOnline(false)
-          setHasErrors(false)          
+          notifyUser(`Something Went Wrong, please try again later`, `warning`)          
+          setHasErrors(false)
           setReload(0)
         }
       } else {
@@ -969,7 +969,7 @@ const Chat = () => {
 
   useEffect(() => { // Handle Before Unload 
 
-    if(!isServerOnline) {
+    if(!serverStatus) {
       return
     }
 
@@ -1005,7 +1005,7 @@ const Chat = () => {
   }, [currentUser.name])
 
   useEffect(() => {  // Handles Inactivity    
-    if(!isServerOnline) {
+    if(!serverStatus) {
       return
     }    
     handleUserActivityRef.current = handleUserActivity
@@ -1019,7 +1019,7 @@ const Chat = () => {
   }, [userActivity])
 
   useEffect(() => { // Typing status
-    if(!isServerOnline) {
+    if(!serverStatus) {
       return
     }
     if(firstLoad || currentUser.name == '') {
@@ -1039,7 +1039,7 @@ const Chat = () => {
   }, [isTyping])   
 
   useEffect(() => { // Spam
-    if(!isServerOnline) {
+    if(!serverStatus) {
       return
     }
     const spamInterval = setInterval(() => {
@@ -1056,7 +1056,7 @@ const Chat = () => {
   }, [spam])
 
   useEffect(() => { // Spam count
-    if(!isServerOnline) {
+    if(!serverStatus) {
       return
     }
     if(!showSpamWarning || spamCountdown == 0) {
@@ -1073,7 +1073,7 @@ const Chat = () => {
   }, [showSpamWarning, spamCountdown])
 
   useEffect(() => { // Scrolls to the bottom
-    if(!isServerOnline) {
+    if(!serverStatus) {
       return
     }
     if (!messageBeingEdited.id && !showLog) {
@@ -1082,7 +1082,7 @@ const Chat = () => {
   }, [messages.length])
 
   useEffect(() => {  // Refresh the chat
-    if(!isServerOnline) {
+    if(!serverStatus) {
       return
     }
     if (refreshChat) {      
@@ -1092,14 +1092,14 @@ const Chat = () => {
   }, [refreshChat])
 
   useEffect(() => { // Handles authentication related reloads
-    if(!isServerOnline) {
+    if(!serverStatus) {
       return
     }
     setReload(reload + 1)
   }, [auth])  
 
   useEffect(() => { // User lists
-    if(!isServerOnline) {
+    if(!serverStatus) {
       return
     }
     if (updateUserLists) {
@@ -1109,7 +1109,7 @@ const Chat = () => {
   }, [updateUserLists])  
 
   useEffect(() => { // Refreshes Chat Rooms
-    if(!isServerOnline) {
+    if(!serverStatus) {
       return
     }
     if(refreshRooms) {
@@ -1119,11 +1119,11 @@ const Chat = () => {
   }, [refreshRooms])
   
   useEffect(() => { // Notification Status
-    if(!isServerOnline) {
+    if(!serverStatus) {
       return
     }
     showNotificationsRef.current = showNotifications
-  }, [showNotifications]) 
+  }, [showNotifications])   
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -1393,7 +1393,7 @@ const Chat = () => {
             {            
             (auth && currentUser?.name) ? 
               `${userActivity ? `🟢` : `🟠`} Chatting as ${cropMessage(currentUser.name, 8)} ` : 
-              isServerOnline ? `🔴 Chatting as Guest` : `🔘 Offline`
+              serverStatus ? `🔴 Chatting as Guest` : `🔘 Server Offline`
             }
           </h3>
         
@@ -1402,7 +1402,7 @@ const Chat = () => {
             {
               !showLog ? <button 
                 title={`Toggle auto-scrolling : ${autoScroll ? `on` : `off`}`}
-                disabled={!!reload || firstLoad || !isServerOnline}
+                disabled={!!reload || firstLoad || !serverStatus}
                 className={
                   ` ${autoScroll ? `bg-[#050D20] hover:bg-black` : `bg-[#050D20] hover:bg-black`}
                   rounded-lg disabled:cursor-not-allowed`
@@ -1416,7 +1416,7 @@ const Chat = () => {
                 <FontAwesomeIcon icon={faPause} width={48} height={48}/>}
               </button> : <button 
                 title={`${orderText[logOrder]}`}
-                disabled={!!reload || firstLoad || !isServerOnline}
+                disabled={!!reload || firstLoad || !serverStatus}
                 className={
                   ` ${autoScroll ? `bg-[#050D20] hover:bg-black` : `bg-[#050D20] hover:bg-black`}
                   rounded-lg disabled:cursor-not-allowed`
@@ -1436,7 +1436,7 @@ const Chat = () => {
             {            
               !showLog ? <button
                 title={`Toggle hide/show message notifications from other chats`}
-                disabled={!!reload || firstLoad || !isServerOnline}
+                disabled={!!reload || firstLoad || !serverStatus}
                 className={`bg-[#050D20] hover:bg-black rounded-lg disabled:cursor-not-allowed`}
                 onClick={() => {
                   setShowNotifications((prev) => !prev)
@@ -1447,7 +1447,7 @@ const Chat = () => {
                 <FontAwesomeIcon icon={faEye} width={48} height={48}/>}
               </button> : <button
                 title={`Invert sort order`}
-                disabled={!!reload || firstLoad || !isServerOnline}
+                disabled={!!reload || firstLoad || !serverStatus}
                 className={`bg-[#050D20] hover:bg-black rounded-lg disabled:cursor-not-allowed`}
                 onClick={() => {
                   setReverseLogOrder((prev) => !prev)
@@ -1653,7 +1653,7 @@ const Chat = () => {
                 </span>
               }
               className='p-2 bg-[#aa5a95] text-white rounded-lg m-1 active:bg-[#bd64a5] group'
-              disabled={!!reload || firstLoad || !isServerOnline}
+              disabled={!!reload || firstLoad || !serverStatus}
               onClick={() => sendMessage()}
               title={`Post a message to current chat (Ctrl + Enter)`}
             /> : <CustomButton // Search Log Button
@@ -1668,7 +1668,7 @@ const Chat = () => {
                 </span>
               }
               className='p-2 bg-[#aa5a95] text-white rounded-lg m-1 active:bg-[#bd64a5] group'
-              disabled={!!reload || firstLoad || !isServerOnline}
+              disabled={!!reload || firstLoad || !serverStatus}
               onClick={() => {
                 filteredLog.length == 0 ? filterLog() : clearLogFilter()
               }}
@@ -1693,7 +1693,7 @@ const Chat = () => {
                 name='current-chat-room'
                 createLabel={false}
                 ref={chatRoomContainerRef}
-                disabled={!!reload || firstLoad || !isServerOnline}
+                disabled={!!reload || firstLoad || !serverStatus}
                 onChange={(e) => onSelectChange(e)}
                 className={`bg-slate-900 text-center hover:bg-black w-full h-full`}
                 title={`Messages : ${messages.length}, Users : ${roomUsers.length}`}
@@ -1708,7 +1708,7 @@ const Chat = () => {
                 /> : 
               <CustomSelect
                 name=''
-                disabled={!!reload || firstLoad || !isServerOnline}
+                disabled={!!reload || firstLoad || !serverStatus}
                 className={`bg-slate-900 text-center hover:bg-black w-full h-full`}
                 values={[{name : '...'}]}
               />
@@ -1718,7 +1718,7 @@ const Chat = () => {
             <button 
               title={`Copy room name to clipboard`}
               onClick={() => copyRoomNameToClipboard()}
-              disabled={!!reload || firstLoad || !isServerOnline}
+              disabled={!!reload || firstLoad || !serverStatus}
               className={`${copiedToClipboard ? `bg-green-700 hover:bg-green-600` : `bg-[#050D20] hover:bg-black`} rounded-lg disabled:cursor-not-allowed h-full w-[48px]`}
             >
               {copiedToClipboard ? 
@@ -1749,7 +1749,7 @@ const Chat = () => {
 
             variationName='varthree'
             className={`w-20 h-full max-h-28 m-0 flex items-center justify-center group`}
-            disabled={!!reload || firstLoad || !isServerOnline || showLog}
+            disabled={!!reload || firstLoad || !serverStatus || showLog}
             title={`Create a new room`}
             onClick={() => onNewRoomClick()}
 
@@ -1765,7 +1765,7 @@ const Chat = () => {
             }
             variationName='vartwo'
             className={`w-20 h-full max-h-28 m-0 flex items-center justify-center group`}
-            disabled={!!reload || firstLoad || !isServerOnline}
+            disabled={!!reload || firstLoad || !serverStatus}
             title={`Delete All Records`}
             onClick={() => {
               clearLogFilter()
@@ -1783,7 +1783,7 @@ const Chat = () => {
             }
             variationName='vartwo'
             className={`w-20 h-full max-h-28 m-0 flex items-center justify-center group`}
-            disabled={!!reload || firstLoad || !isServerOnline}
+            disabled={!!reload || firstLoad || !serverStatus}
             title={`Delete all rooms`}
             onClick={() => onResetRoomsClick()}
           />}
@@ -1792,7 +1792,7 @@ const Chat = () => {
             value={`Log`}
             variationName='varthree'
             className={`${showLog ? `bg-yellow-600 active:bg-yellow-600` : `bg-black active:bg-black`} w-20 h-full max-h-28 m-0 flex items-center justify-center`}
-            disabled={!!reload || firstLoad || !isServerOnline}
+            disabled={!!reload || firstLoad || !serverStatus}
             title={`Shows either the history of messages or the chat`}
             onClick={() => {
               setShowLog(!showLog)
@@ -1812,7 +1812,7 @@ const Chat = () => {
             value={`Get 🐜`}
             variationName='varthree'
             className={`bg-purple-900 active:bg-purple-800 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
-            disabled={!!reload || firstLoad || !isServerOnline}
+            disabled={!!reload || firstLoad || !serverStatus}
             onClick={() => {
               const length = bugsToFix.length - 1
               const randomNumber = Math.random()
@@ -1824,7 +1824,7 @@ const Chat = () => {
             value={`Test 🦾`}
             variationName='varthree'
             className={`${spam ? `bg-yellow-500` : `bg-black`} active:bg-gray-900 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
-            disabled={!!reload || firstLoad || !isServerOnline}
+            disabled={!!reload || firstLoad || !serverStatus}
             title={`Currently spamming the chat.`}
             onClick={ async () => {
               setUserActivity(true)
@@ -1861,13 +1861,13 @@ const Chat = () => {
         <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
         {`Reload : ${reload}`}
         </h3>
-        <h3 className={`flex mb-5 ${socket?.connected ? `bg-green-600` : `bg-red-600` } rounded-lg p-3`}>
-        socket {socket?.connected ? 'on' : 'off'}
+        */}
+        <h3 className={`flex mb-5 ${serverStatus ? `bg-green-600` : `bg-red-600` } rounded-lg p-3`}>
+          server {serverStatus ? 'on' : 'off'}
         </h3>
         <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
-          {JSON.stringify(isUserInRoom)}
+          {renderCounter}
         </h3>
-        */}
       </div>
      
     </section>

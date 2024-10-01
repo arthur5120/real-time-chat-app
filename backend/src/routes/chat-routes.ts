@@ -11,7 +11,6 @@ import {
 } from "../controllers/chat-controllers"
 
 import { 
-    csrfProtection,
     midBodyParsers, 
     midCheckAllowed, 
     midCheckAuth 

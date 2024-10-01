@@ -10,16 +10,16 @@ import {
 
 import { authStatus } from '../axios-functions';
 
-type TAuth = {
-  auth ? : boolean,
-  setAuth ? : Dispatch<SetStateAction<boolean>>
-  role ? : string,
-  setRole ? : Dispatch<SetStateAction<string>>
-  clickedToLogout ? : boolean
-  setClickedToLogout ? : Dispatch<SetStateAction<boolean>>
-  getAuthTokenStatus ? : Function
-  logout ? : Function,
-}
+type TAuth = Partial<{
+  auth : boolean,
+  setAuth : Dispatch<SetStateAction<boolean>>,
+  role : string,
+  setRole : Dispatch<SetStateAction<string>>,
+  clickedToLogout : boolean,
+  setClickedToLogout : Dispatch<SetStateAction<boolean>>,
+  getAuthTokenStatus : Function,
+  logout : Function,
+}>
 
 export const authContext = createContext<TAuth>({})
 

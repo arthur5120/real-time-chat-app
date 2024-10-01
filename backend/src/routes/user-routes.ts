@@ -8,7 +8,7 @@ import {
     conUpdateUser,    
 } from '../controllers/user-controller'
 
-import { csrfProtection, midBodyParsers } from '../utils/middleware'
+import { midBodyParsers } from '../utils/middleware'
 
 const userRouter = express.Router()
 
