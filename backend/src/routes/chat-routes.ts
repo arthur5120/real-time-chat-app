@@ -1,3 +1,5 @@
+import { Router } from "express"
+
 import { 
     conCreateChat,
     conAddUserToChat,
@@ -17,18 +19,17 @@ import {
     midRateLimiter,
 } from "../utils/middleware"
 
-import express from "express"
+const chatRouter = Router()
+const chatRateLimiter = midRateLimiter()
 
-const chatRouter = express.Router()
-
-chatRouter.post('/create-chat', midBodyParsers, midRateLimiter, conCreateChat)
-chatRouter.post('/add-user-to-chat/:id', midBodyParsers, midRateLimiter, midCheckAuth, conAddUserToChat)
-chatRouter.delete('/remove-user-from-chat/:id', midBodyParsers, midRateLimiter, midCheckAuth, conRemoveUserFromChat)
-chatRouter.delete('/delete-chat/:id', midBodyParsers, midRateLimiter, midCheckAuth, midCheckAllowed, conDeleteChat)
-chatRouter.delete('/delete-all-chats/', midBodyParsers, midRateLimiter, midCheckAuth, midCheckAllowed, conDeleteAllChats)
+chatRouter.post('/create-chat', midBodyParsers, chatRateLimiter, conCreateChat)
+chatRouter.post('/add-user-to-chat/:id', midBodyParsers, chatRateLimiter, midCheckAuth, conAddUserToChat)
+chatRouter.delete('/remove-user-from-chat/:id', midBodyParsers, chatRateLimiter, midCheckAuth, conRemoveUserFromChat)
+chatRouter.delete('/delete-chat/:id', midBodyParsers, chatRateLimiter, midCheckAuth, midCheckAllowed, conDeleteChat)
+chatRouter.delete('/delete-all-chats/', midBodyParsers, chatRateLimiter, midCheckAuth, midCheckAllowed, conDeleteAllChats)
 chatRouter.get('/chats', conGetChats)
 chatRouter.get('/chats/:id', conGetChatById)
-chatRouter.get('/chats/:id/users', midBodyParsers, midRateLimiter, midCheckAuth, midCheckAllowed, conGetUsersByChatId)
-chatRouter.get('/users/:id/chats', midBodyParsers, midRateLimiter, midCheckAuth, conGetChatsByUserId)
+chatRouter.get('/chats/:id/users', midBodyParsers, chatRateLimiter, midCheckAuth, midCheckAllowed, conGetUsersByChatId)
+chatRouter.get('/users/:id/chats', midBodyParsers, chatRateLimiter, midCheckAuth, conGetChatsByUserId)
 
 export default chatRouter

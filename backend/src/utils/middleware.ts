@@ -13,13 +13,18 @@ dotenv.config()
 const secretKey = process.env.SECRET_KEY as string
 const secretSalt = parseInt(process.env.SECRET_SALT as string)
 
-export const midRateLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // time frame
-    max: 100, // number of requests
-    message: "Too many requests from this IP, please try again later.",
-})
+export const midRateLimiter = (windowMs : number = 60 * 1000, max : number = 1000 ) => {
 
-export const csrfProtection = csrf({ 
+    const midRateLimiter = rateLimit({
+        windowMs: windowMs, // time frame
+        max: max, // number of requests
+        message: "Too many requests from this IP, please try again later.",
+    })
+
+    return midRateLimiter
+}
+
+export const midCSRFProtection = csrf({ 
     cookie: {
         httpOnly: false,
         secure: false,

@@ -44,7 +44,7 @@ const App = () => {
       console.log(e)
       notifyUser(`Something Went Wrong`, `warning`)
     }
-  }
+  }  
 
   const handleSocketOnlineList = async () => {        
 
@@ -154,7 +154,7 @@ const App = () => {
 
   useEffect(() => {
     retrieveCSRFToken()
-  }, [])  
+  }, [])
 
   return (
 

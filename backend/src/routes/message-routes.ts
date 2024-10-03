@@ -1,4 +1,4 @@
-import express from 'express'
+import { Router } from 'express'
 
 import { 
     conCreateMessage, 
@@ -15,11 +15,12 @@ import {
     midRateLimiter,    
 } from '../utils/middleware'
 
-const messageRouter = express.Router()
+const messageRouter = Router()
+const messageRateLimiter = midRateLimiter()
     
-    messageRouter.post('/create-message', midBodyParsers, midRateLimiter, midCheckAuth, conCreateMessage)
-    messageRouter.put('/update-message/:id', midBodyParsers, midRateLimiter, midCheckAuth, conUpdateMessage)
-    messageRouter.delete('/delete-message/:id', midBodyParsers, midRateLimiter, midCheckAuth, conDeleteMessage)
+    messageRouter.post('/create-message', midBodyParsers, messageRateLimiter, midCheckAuth, conCreateMessage)
+    messageRouter.put('/update-message/:id', midBodyParsers, messageRateLimiter, midCheckAuth, conUpdateMessage)
+    messageRouter.delete('/delete-message/:id', midBodyParsers, messageRateLimiter, midCheckAuth, conDeleteMessage)
     messageRouter.get('/messages', conGetMessages)
     messageRouter.get('/messages/:id', conGetMessageById)
     messageRouter.get('/users/:id/messages', conGetMessagesByUserId)

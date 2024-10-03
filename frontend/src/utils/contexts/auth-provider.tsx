@@ -39,7 +39,7 @@ const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
     try {
       const {authenticated} = await authStatus({})
       return authenticated
-    } catch(e) {      
+    } catch(e) {
       return false
     }
   }

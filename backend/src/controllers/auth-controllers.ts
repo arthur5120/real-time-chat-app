@@ -60,7 +60,7 @@ export const conAuth = async (req : Request, res : Response) => {
     
 }
 
-export const conGetAuth = async (req : Request, res : Response) => {   
+export const conGetAuth = async (req : Request, res : Response) => {    
     
     const noAuthResponse = {
         id : 'none',
@@ -111,7 +111,7 @@ export const conLogout = async (req : Request, res : Response) => {
     }
 }
 
-export const getCSRFToken = async (req: Request, res: Response) => {    
+export const conGetCSRFToken = async (req: Request, res: Response) => {    
    try {        
         return res.json({ 
             CSRFToken: req.csrfToken()

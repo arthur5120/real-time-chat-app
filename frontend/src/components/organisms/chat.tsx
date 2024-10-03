@@ -1858,16 +1858,15 @@ const Chat = () => {
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
         Render : {renderCounter}
         </h3>
-        <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>
-        {`Reload : ${reload}`}
+        <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>          
         </h3>
-        */}
         <h3 className={`flex mb-5 ${serverStatus ? `bg-green-600` : `bg-red-600` } rounded-lg p-3`}>
           server {serverStatus ? 'on' : 'off'}
         </h3>
         <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
           {renderCounter}
         </h3>
+        */}
       </div>
      
     </section>

@@ -1,19 +1,26 @@
-import express from 'express'
-
-import { conAuth, conGetAuth, conLogout, getCSRFToken } from "../controllers/auth-controllers"
+import { Router } from 'express'
 
 import { 
-    csrfProtection, 
+    conAuth, 
+    conGetAuth, 
+    conLogout, 
+    conGetCSRFToken 
+} from "../controllers/auth-controllers"
+
+import { 
+    midCSRFProtection, 
     midBodyParsers, 
-    midCheckAuth, 
-    midRateLimiter 
+    midCheckAuth,
+    midRateLimiter,     
 } from '../utils/middleware'
 
-const authRouter = express.Router()
+const authRouter = Router()
+const authRateLimiter = midRateLimiter()
+const getAuthRateLimiter = midRateLimiter()
 
-authRouter.post('/auth', midBodyParsers, midRateLimiter, conAuth)
-authRouter.post('/get-auth', midBodyParsers, conGetAuth)
-authRouter.post('/logout', midBodyParsers, midCheckAuth, conLogout)
-authRouter.get('/get-csrf-token', midBodyParsers, csrfProtection, getCSRFToken)
+authRouter.post('/auth', midBodyParsers, authRateLimiter, conAuth)
+authRouter.post('/get-auth', midBodyParsers, getAuthRateLimiter, conGetAuth)
+authRouter.post('/logout', midBodyParsers, authRateLimiter, midCheckAuth, conLogout)
+authRouter.get('/get-csrf-token', midBodyParsers, midCSRFProtection, conGetCSRFToken)
 
 export default authRouter

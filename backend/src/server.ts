@@ -1,6 +1,6 @@
 import express from 'express'
 import dotenv from 'dotenv'
-import { csrfProtection, midSetCors, handleCsrfError } from './utils/middleware'
+import { midCSRFProtection, midSetCors, handleCsrfError } from './utils/middleware'
 import { router } from './utils/router'
 import cookieParser from 'cookie-parser'
 
@@ -12,7 +12,7 @@ const PORT = process.env.PORT
 app.use(
     midSetCors,
     cookieParser(),
-    csrfProtection,
+    midCSRFProtection,
     ...router,    
     handleCsrfError,    
 )

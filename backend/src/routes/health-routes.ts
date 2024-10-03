@@ -1,6 +1,6 @@
-import express from 'express'
+import { Router } from 'express'
 import { conCheckHealth } from '../controllers/health-controllers'
 
-export const healthRouter = express.Router()
+export const healthRouter = Router()
 
 healthRouter.get(`/check-health`, conCheckHealth)
