@@ -76,7 +76,7 @@ export const conGetAuth = async (req : Request, res : Response) => {
         
         if (usersToLogoutId != -1) {            
             usersToLogout.splice(usersToLogoutId, 1)
-            return await res.clearCookie('auth').json(noAuthResponse)
+            return await res.status(200).clearCookie('auth').json(noAuthResponse)
         }
 
         res.json({
@@ -100,24 +100,24 @@ export const conLogout = async (req : Request, res : Response) => {
         
         if (verifiedUser?.id) {
             onlineUserId != -1 ? onlineUsers.splice(onlineUserId, 1) : ''
-            return await res.clearCookie('auth').json({'message':'logged off'})
+            return await res.status(200).clearCookie('auth').json({message:'logged off'})
         } else {
-            return await res.json({'message' : 'Something went wrong'})    
+            return await res.status(500).json({message : 'Something went wrong'})    
         }
 
     } catch (e) {
         console.log(e)
-        return await res.json({'message' : 'Something went wrong'})
+        return await res.status(500).json({message : 'Something went wrong'})
     }
 }
 
 export const conGetCSRFToken = async (req: Request, res: Response) => {    
    try {        
-        return res.json({ 
+        return res.status(200).json({ 
             CSRFToken: req.csrfToken()
         })
    } catch (e) {
         console.log(e)
-        return await res.json({'message' : 'Something went wrong'})
+        return await res.status(500).json({message : 'Something went wrong'})
    }
 }

@@ -165,6 +165,7 @@ const Chat = () => {
       content : content ? content : `No content provided.`,
       roomName : roomName ? roomName : `global`,
     }
+    
     setLog((data) => {
       let newLog = data
       if (newLog.length >= 10) {
@@ -175,6 +176,7 @@ const Chat = () => {
       setCookieLog(newLog)
       return newLog
     })
+    
   }
 
   const isSpamming = (hereNow : number) => {

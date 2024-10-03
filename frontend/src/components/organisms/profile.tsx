@@ -20,7 +20,7 @@ const Profile = () => {
         try {
         
             const userAuthInfo = await authStatus({}) as {id : string, authenticated : boolean}
-            const hasAuthToken = userAuthInfo ? userAuthInfo.authenticated : false
+            const hasAuthToken = userAuthInfo ? userAuthInfo.authenticated : false            
 
             if(!hasAuthToken) {
                 navigate('/login')
@@ -42,7 +42,12 @@ const Profile = () => {
     }
     
     useEffect(() => {              
-        handleStart()
+        const delay = setTimeout(() => {
+            handleStart()
+        }, 200)
+        return () => {
+            clearTimeout(delay)
+        }
     }, [])
 
     return (

@@ -13,7 +13,7 @@ app.use(
     midSetCors,
     cookieParser(),
     midCSRFProtection,
-    ...router,    
+    ...router,
     handleCsrfError,    
 )
 
