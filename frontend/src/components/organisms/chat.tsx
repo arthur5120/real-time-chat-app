@@ -821,7 +821,7 @@ const Chat = () => {
     if(!serverStatus) {
       return
     }           
-    
+      
     retrieveUserLists()
 
     socket?.on(`sendMessage`, (payload : {message : TChatMessage} & TRoomLists) => {
@@ -1100,14 +1100,14 @@ const Chat = () => {
     setReload(reload + 1)
   }, [auth])  
 
-  useEffect(() => { // User lists
+  useEffect(() => { // User lists        
     if(!serverStatus) {
       return
     }
     if (updateUserLists) {
       retrieveUserLists()
       setUpdateUserLists(false)
-    }
+    } 
   }, [updateUserLists])  
 
   useEffect(() => { // Refreshes Chat Rooms
@@ -1125,7 +1125,16 @@ const Chat = () => {
       return
     }
     showNotificationsRef.current = showNotifications
-  }, [showNotifications])   
+  }, [showNotifications])
+
+  useEffect(() => {
+    const listTimeout = setTimeout(() => {
+      setUpdateUserLists(true)
+    }, 200)
+    return () => {
+      clearTimeout(listTimeout)
+    }
+  }, [])
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
@@ -1840,7 +1849,6 @@ const Chat = () => {
           */}
 
        </div>
-
 
       </section>
              
