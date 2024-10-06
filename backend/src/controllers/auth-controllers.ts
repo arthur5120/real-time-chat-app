@@ -55,7 +55,7 @@ export const conAuth = async (req : Request, res : Response) => {
             }).json({success : true})
                     
     } catch (e) {
-        return res.status(404).json({success : false})
+        return res.status(404).json({success : false, message : `Invalid email or password.`})
     }
     
 }

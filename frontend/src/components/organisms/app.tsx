@@ -17,9 +17,7 @@ const App = () => {
   const {notifyUser} = useContext(toastContext)
   const {auth, setAuth, setRole, getAuthTokenStatus, clickedToLogout, setClickedToLogout} = useContext(authContext)
   const {updateServerStatus} = useContext(healthContext)
-  
-  const [checkAuthStatus, setCheckAuthStatus] = useState(false)
-  const [checkCSFToken, setCheckCSFToken] = useState(false)
+  const {serverStatus} = useContext(healthContext)  
   const [previousAuth, setPreviousAuth] = useState(auth)
   const [hasSessionExpired, setHasSessionExpired] = useState(false) 
   const location = useLocation()
@@ -36,10 +34,10 @@ const App = () => {
 
   const retrieveCSRFToken = async () => {    
     try {
-      const res = await getCSRFToken()            
+      const res = await getCSRFToken()
       if(res?.CSRFToken) {
-        setAxiosCSRFToken(res.CSRFToken)      
-      }
+        setAxiosCSRFToken(res.CSRFToken)
+      }      
     } catch (e) {
       console.log(e)
       notifyUser(`Something Went Wrong`, `warning`)
@@ -108,27 +106,35 @@ const App = () => {
     }
   }
   
-  const timer = setInterval(() => {
-    setCheckAuthStatus(!checkAuthStatus)
-    setCheckCSFToken((prev) => !prev)
-  }, 15000)
-
   useEffect(() => {
 
-    const delay = setTimeout(() => { // avoids flicking on the UI
-      handleSessionExpiration()
-    }, 200)    
+    let delay : NodeJS.Timeout | null = null
 
-    if(updateServerStatus) {
-      updateServerStatus()
-    }
-
-    return () => {  
-      clearTimeout(delay)
+    const timer = setInterval(async () => {
+      const currentServerStatus = updateServerStatus ? await updateServerStatus() : ``      
+      if(!currentServerStatus) {
+        return
+      }
+      if (delay) {
+        clearTimeout(delay)
+      }  
+      delay = setTimeout(() => { // avoids flicking on the UI        
+        handleSessionExpiration()
+      }, 200)
+      const hasCRFCCookie = Cookies.get(`_csrf`)
+      if(!hasCRFCCookie) {
+        retrieveCSRFToken()
+      }
+    }, 15000)
+    
+    return () => {   
+      if (delay) {
+        clearTimeout(delay)
+      }
       clearInterval(timer)
     }
 
-  }, [location, checkAuthStatus])
+  }, [location])
   
   useEffect(() => {  
     if (auth != previousAuth) {
@@ -137,22 +143,17 @@ const App = () => {
     }
   }, [location, auth])
 
-  useEffect(() => {
+  useEffect(() => {      
     setTimeout(() => {
       requestSocketListUpdate()
-    }, 1000)    
-  }, [socket])
+    }, 1000)
+  }, [socket])  
 
-  useEffect(() => {
-    const hasCRFCCookie = Cookies.get(`_csrf`)
-    if(!hasCRFCCookie) {
+  useEffect(() => { 
+    if(!serverStatus) {
       retrieveCSRFToken()
     }
-  }, [checkCSFToken])
-
-  useEffect(() => {
-    retrieveCSRFToken()
-  }, [])
+  }, [serverStatus])  
 
   return (
 

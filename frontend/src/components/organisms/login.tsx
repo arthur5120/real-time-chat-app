@@ -20,6 +20,8 @@ const mockUserData = {
   password : 'Password@123'
 }
 
+const defaultFeedback = `Something went wrong, please try again later.`
+
 const Login = () => {  
 
   const {auth, setAuth} = useContext(authContext)
@@ -34,16 +36,21 @@ const Login = () => {
     e.preventDefault()  
     setLoading(true)    
 
-    if (setAuth != null) {
+    if (setAuth != null) {      
       try {
-        const serverResponse = await authLogin(data)        
-        setMessage(`${serverResponse.success ? 'Authenticated' : 'Invalid Credentials'}`)
-        serverResponse.success ? setAuth(true) : ''         
+        const serverResponse = await authLogin(data)
+        if(serverResponse.success) {
+          setMessage(`Authenticated`)
+          setAuth(true)
+        } else {          
+          setMessage(serverResponse?.message ? serverResponse.message : defaultFeedback)
+        }
       } catch (e) {
-        setMessage(`Something went wrong, please try again later.`)
-      }
-      setLoading(false)
+        setMessage(defaultFeedback)
+      }      
     }
+
+    setLoading(false)
     
   }
 

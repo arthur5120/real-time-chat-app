@@ -11,7 +11,7 @@ export const healthContext = createContext<THealthContext>({})
 
 export const HealthProvider : FC<{children : ReactNode}> = ({children}) => {
   
-    const [serverStatus, setServerStatus] = useState<boolean>(false)  
+    const [serverStatus, setServerStatus] = useState<boolean>(false)    
 
     const updateServerStatus = async () => {
         try {
@@ -26,8 +26,8 @@ export const HealthProvider : FC<{children : ReactNode}> = ({children}) => {
         }
     }
 
-    useEffect(() => {  
-        updateServerStatus()                      
+    useEffect(() => {        
+        updateServerStatus()
     },[])
     
     return (
