@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef, useState, Fragment } from 'react'
 import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, getUsersByChatId, updateMessage, } from '../../utils/axios-functions'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest, TLog } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder, roomsPlaceholder, currentRoomPlaceHolder } from '../../utils/placeholders'
-import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, isThingValid, isThingValidSpecific, sortAlphabeticallyByAny, sortAlphabeticallyByName, sortByMilliseconds, sortChronogicallyByAny } from '../../utils/useful-functions'
+import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, hasCSRFCookie, isThingValid, isThingValidSpecific, sortAlphabeticallyByAny, sortAlphabeticallyByName, sortByMilliseconds, sortChronogicallyByAny } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
@@ -129,7 +129,7 @@ const Chat = () => {
       path: `/`,
       sameSite : `strict`,
     })
-  }
+  }  
 
   const getCookieLog = () : TLog[] => {
     try {
@@ -137,7 +137,7 @@ const Chat = () => {
       const logArray = logString ? JSON.parse(logString) : []
       return logArray
     } catch (e) {
-      setHasErrors(true)
+      setHasErrors(true)      
       return []
     }
   }
@@ -447,7 +447,14 @@ const Chat = () => {
     try {
 
       const dateTimeNow = Date.now()
-      const isSpammingResult = isSpamming(dateTimeNow)      
+      const isSpammingResult = isSpamming(dateTimeNow) 
+      const isCookiePresent = hasCSRFCookie()
+      
+      if(!isCookiePresent) {
+        notifyUser(`Something went wrong, please refresh the page.`, `warning`)
+        resetMessageContent()
+        return
+      }
 
       if(isSpammingResult) {
         notifyUser(`Slow down! Too many messages!`, `warning`)
@@ -703,6 +710,14 @@ const Chat = () => {
 
   const onResetRoomsClick = async () => {
 
+    const isCookiePresent = hasCSRFCookie()
+
+      if(!isCookiePresent) {
+        notifyUser(`Something went wrong, please refresh the page.`, `warning`)
+        resetMessageContent()
+        return
+      }
+
     if(!cooldown) {
       
       const userInfo = await authStatus({})
@@ -725,6 +740,12 @@ const Chat = () => {
   }
   
   const onNewRoomClick = async () => {
+    const isCookiePresent = hasCSRFCookie()
+    if(!isCookiePresent) {
+      notifyUser(`Something went wrong, please refresh the page.`, `warning`)
+      resetMessageContent()
+      return
+    }
     if(!cooldown) {
       await createRoom()
       setCooldown(5000)
@@ -1509,7 +1530,13 @@ const Chat = () => {
                   contentEditable={isUserSender && isMessageSelected}
                   title={isUserSender ? `Click to edit/delete this message.` : `Click to view details about this message.`}
                   data-action={`confirm`}
-                  onClick={(e) => {
+                  onClick={(e) => {                    
+                    const isCookiePresent = hasCSRFCookie()
+                    if(!isCookiePresent) {
+                      notifyUser(`Something went wrong, please refresh the page.`, `warning`)
+                      resetMessageContent()
+                      return
+                    }
                     if (isUserSender) {
                       if (!messageBeingEdited.content) {
                         onEnterMessageEditMode(e)
@@ -1805,7 +1832,7 @@ const Chat = () => {
             className={`${showLog ? `bg-yellow-600 active:bg-yellow-600` : `bg-black active:bg-black`} w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad || !serverStatus}
             title={`Shows either the history of messages or the chat`}
-            onClick={() => {
+            onClick={() => {              
               setShowLog(!showLog)
               showLog ? clearLogFilter() : ``
               const scrollDelay = setTimeout(() => {
@@ -1868,10 +1895,11 @@ const Chat = () => {
         <h3 className={`flex mb-5 bg-purple-600 rounded-lg p-3`}>
         Render : {renderCounter}
         </h3>
-        <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>          
-        </h3>
         <h3 className={`flex mb-5 ${serverStatus ? `bg-green-600` : `bg-red-600` } rounded-lg p-3`}>
-          server {serverStatus ? 'on' : 'off'}
+        server {serverStatus ? 'on' : 'off'}
+        </h3>
+        <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>    
+        {`!!reload : ${!!reload} || firstLoad : ${firstLoad} || !serverStatus ${!serverStatus} || showLog ${showLog}`}
         </h3>
         <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
           {renderCounter}

@@ -9,7 +9,7 @@ import { healthContext } from "../../utils/contexts/health-provider"
 import { TSocketAuthRequest, TRes } from "../../utils/types"
 import { authStatus, getUserById, authLogout } from "../../utils/axios-functions"
 import { getCSRFToken, setAxiosCSRFToken } from "../../utils/axios-functions"
-import Cookies from 'js-cookie'
+import { hasCSRFCookie } from "../../utils/useful-functions"
 
 const App = () => {
 
@@ -121,8 +121,8 @@ const App = () => {
       delay = setTimeout(() => { // avoids flicking on the UI        
         handleSessionExpiration()
       }, 200)
-      const hasCRFCCookie = Cookies.get(`_csrf`)
-      if(!hasCRFCCookie) {
+      const isCookiePresent = hasCSRFCookie()
+      if(!isCookiePresent) {
         retrieveCSRFToken()
       }
     }, 15000)
@@ -136,7 +136,7 @@ const App = () => {
 
   }, [location])
   
-  useEffect(() => {  
+  useEffect(() => {     
     if (auth != previousAuth) {
       handleSocketOnlineList()
       setPreviousAuth(auth)
@@ -150,10 +150,17 @@ const App = () => {
   }, [socket])  
 
   useEffect(() => { 
-    if(!serverStatus) {
-      retrieveCSRFToken()
+    if(!serverStatus) {  
+      return
     }
-  }, [serverStatus])  
+    const delay = setTimeout(() => { // avoids flicking on the UI        
+      handleSessionExpiration()
+    }, 200)
+    retrieveCSRFToken()      
+    return () => {
+     clearTimeout(delay) 
+    }    
+  }, [serverStatus])
 
   return (
 

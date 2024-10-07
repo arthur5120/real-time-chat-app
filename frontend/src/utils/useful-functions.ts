@@ -1,6 +1,6 @@
-import { TChatMessage } from "./types";
-
-import { v4 as uuidv4 } from "uuid";
+import { TChatMessage } from "./types"
+import { v4 as uuidv4 } from "uuid"
+import Cookies from 'js-cookie'
 
 export const capitalizeFirst = (string : string) : string => {
     const newString = string.charAt(0).toUpperCase() + string.slice(1);
@@ -161,4 +161,9 @@ export const isThingValidSpecific = (input : any) : boolean => {
    } catch (e) {
         return false
    }   
+}
+
+export const hasCSRFCookie = () => {
+    const result = !!Cookies.get(`_csrf`)
+    return result
 }
