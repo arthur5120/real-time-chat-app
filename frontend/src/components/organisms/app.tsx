@@ -10,6 +10,7 @@ import { TSocketAuthRequest, TRes } from "../../utils/types"
 import { authStatus, getUserById, authLogout } from "../../utils/axios-functions"
 import { getCSRFToken, setAxiosCSRFToken } from "../../utils/axios-functions"
 import { hasCSRFCookie } from "../../utils/useful-functions"
+import Cookies from 'js-cookie'
 
 const App = () => {
 
@@ -34,8 +35,9 @@ const App = () => {
 
   const retrieveCSRFToken = async () => {    
     try {
+      Cookies.remove(`_csrf`)
       const res = await getCSRFToken()
-      if(res?.CSRFToken) {
+      if(res?.CSRFToken) {           
         setAxiosCSRFToken(res.CSRFToken)
       }      
     } catch (e) {

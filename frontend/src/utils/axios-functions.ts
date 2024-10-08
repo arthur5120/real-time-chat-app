@@ -292,8 +292,8 @@ export const getCSRFToken = async () => {
     }
 }
 
-export const setAxiosCSRFToken = async (csrfToken : string) => {
-    baseURL.defaults.headers.common['X-CSRF-Token'] = csrfToken    
+export const setAxiosCSRFToken = async (csrfToken : string) => {    
+    baseURL.defaults.headers.common['X-CSRF-Token'] = csrfToken
 }
 
 export const getServerHealth = async () => {    

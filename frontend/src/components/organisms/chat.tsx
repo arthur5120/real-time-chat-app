@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
-import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, getUsersByChatId, updateMessage, } from '../../utils/axios-functions'
+import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, getUsersByChatId, setAxiosCSRFToken, updateMessage, } from '../../utils/axios-functions'
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest, TLog } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder, roomsPlaceholder, currentRoomPlaceHolder } from '../../utils/placeholders'
 import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, hasCSRFCookie, isThingValid, isThingValidSpecific, sortAlphabeticallyByAny, sortAlphabeticallyByName, sortByMilliseconds, sortChronogicallyByAny } from '../../utils/useful-functions'
@@ -1870,7 +1870,11 @@ const Chat = () => {
               socket?.connect()
               socket?.emit(`updateInactive`, { id : authInfo.id, name: currentUser.name, inactive: false })
               inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
-              //setSpam((lastSpam) => !lastSpam)              
+              //setSpam((lastSpam) => !lastSpam)
+              //Cookies.remove(`_csrf`)
+              //const fakeToken = `whatever_fake_cookie`
+              //setAxiosCSRFToken(fakeToken)
+              //Cookies.set(`_csrf`, fakeToken)
             }}
           /> 
           */}
