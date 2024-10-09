@@ -20,7 +20,9 @@ const App = () => {
   const {updateServerStatus} = useContext(healthContext)
   const {serverStatus} = useContext(healthContext)  
   const [previousAuth, setPreviousAuth] = useState(auth)
-  const [hasSessionExpired, setHasSessionExpired] = useState(false) 
+  const [hasSessionExpired, setHasSessionExpired] = useState(false)
+  const [requireRefresh, setRequireRefresh] = useState(true)
+  const [firstLoad, setFirstLoad] = useState(true)
   const location = useLocation()
   const navigate = useNavigate() 
 
@@ -147,15 +149,23 @@ const App = () => {
 
   useEffect(() => {      
     setTimeout(() => {
-      requestSocketListUpdate()
+      requestSocketListUpdate()      
     }, 1000)
   }, [socket])  
 
-  useEffect(() => { 
-    if(!serverStatus) {  
+  useEffect(() => {     
+    if(!serverStatus) {
+      if(!firstLoad) {
+        notifyUser(`Lost connection to the server.`)
+        setRequireRefresh(true)
+      }
       return
+    }   
+    if(requireRefresh && !firstLoad) {
+      console.log(`Server Restarted`)      
+      window.location.reload()
     }
-    const delay = setTimeout(() => { // avoids flicking on the UI        
+    const delay = setTimeout(() => { // avoids flicking on the UI      
       handleSessionExpiration()
     }, 200)
     retrieveCSRFToken()      
@@ -163,6 +173,15 @@ const App = () => {
      clearTimeout(delay) 
     }    
   }, [serverStatus])
+
+  useEffect(() => {    
+    const delay = setTimeout(() => {      
+      setFirstLoad(false)
+    }, 500)
+    return () => {
+      clearTimeout(delay)
+    }
+  }, [])
 
   return (
 

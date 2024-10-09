@@ -62,7 +62,7 @@ const Chat = () => {
   const [firstLoad, setFirstLoad] = useState(true)
   const [reload, setReload] = useState(1)
   const [hasErrors, setHasErrors] = useState(false)  
-  const [requireRefresh, setRequireRefresh] = useState(true)
+  
   const [log, setLog] = useState<TLog[]>([])
   const [filteredLog, setFilteredLog] = useState<TLog[]>([])
   const [showLog, setShowLog] = useState(false)
@@ -70,7 +70,7 @@ const Chat = () => {
   const [showSpamWarning, setShowSpamWarning] = useState(false)
   const [spamCountdown, setSpamCountdown] = useState(0)
   const [logOrder, setLogOrder] = useState(0)  
-  const [reverseLogOrder, setReverseLogOrder] = useState(false)
+  const [reverseLogOrder, setReverseLogOrder] = useState(false)  
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let logContainerRef = useRef<HTMLDivElement>(null)
@@ -1155,7 +1155,7 @@ const Chat = () => {
     return () => {
       clearTimeout(listTimeout)
     }
-  }, [])
+  }, [])  
 
   const onEnterMessageEditMode = async (e : React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
 
