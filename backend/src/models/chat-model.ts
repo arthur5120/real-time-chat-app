@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client"
 import { Request, Response } from "express"
 import { midGetRandomName } from "../utils/middleware"
+import { getError } from "../utils/other-resources"
 
 const prisma = new PrismaClient()
 
@@ -14,7 +15,7 @@ export const modCreateChat = async (req : Request, res : Response) => {
         })
     } catch (e) {
         console.log(e)
-        return
+        throw getError(`Failed to Create User`)
     }
 
 }
@@ -35,10 +36,11 @@ export const modAddUserToChat = async (req : Request, res : Response) => {
 
     } catch (e) {
         console.log(e)
-        return
+        throw getError(`Failed to Add User to Chat`)
     }
 
 }
+
 export const modRemoveUserFromChat = async (req : Request, res : Response) => {
 
     const chatId = req.params.id
@@ -57,7 +59,7 @@ export const modRemoveUserFromChat = async (req : Request, res : Response) => {
 
     } catch (e) {
         console.log(e)
-        return
+        throw getError(`Failed to Remove User From Chat`)
     }
 
 }
@@ -74,7 +76,7 @@ export const modDeleteChat = async (req : Request, res : Response) => {
         })
     } catch (e)     {
         console.log(e)        
-        return
+        throw getError(`Failed to Delete Chat`)
     }
 
 }
@@ -87,7 +89,7 @@ export const modDeleteAllChats = async (req : Request, res : Response) => { // F
 
     } catch (e) {
         console.log(e)
-        return
+        throw getError(`Failed to Delete All Chat Rooms `)
     }
 
 }
@@ -101,7 +103,7 @@ export const modGetChats = async (req : Request, res : Response) => {
 
     } catch (e) {
         console.log(e)
-        return
+        throw getError(`Failed to Get Chats`)
     }
 
 }
@@ -122,7 +124,7 @@ export const modGetChatById = async (req : Request, res : Response) => {
 
     } catch (e) {
         console.log(e)
-        return
+        throw getError(`Failed to Get Chat`)
     }
 
 }
@@ -143,7 +145,7 @@ export const getChatsByUserId = async (req : Request, res : Response) => {
 
     } catch (e) {
         console.log(e)
-        return
+        throw getError(`Failed to Get Chats`)
     }
 
 }
@@ -164,7 +166,7 @@ export const modGetUsersByChatId = async (req : Request, res : Response) => {
 
     } catch (e) {
         console.log(e)
-        return
+        throw getError(`Failed to Get Users`)
     }
 
 }

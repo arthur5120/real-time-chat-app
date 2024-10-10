@@ -32,7 +32,7 @@ export const midCSRFProtection = csrf({
     }
 })
 
-export const handleCsrfError : ErrorRequestHandler = (err, req, res, next) => {
+export const midHandleCSRFError : ErrorRequestHandler = (err, req, res, next) => {
     if (err.code === 'EBADCSRFTOKEN') {        
         return res.status(403).json({
             message: 'Something went wrong. Please refresh the page and try again.'
@@ -113,28 +113,28 @@ export const midCheckAllowed = async (req : Request, res : Response, next : Next
 
 }
 
-export const midCheckDuplicated = (req : Request, requestKeys : string[]) => {  
+export const midCheckDuplicate = (req : Request, requestKeys : string[]) => {  
     
     const {auth} = req.cookies
     const authInfo = jwt.verify(auth, secretKey) as {id : string}
     const receivedKey = req.headers['idempotency-key'] as string
     const idempotencyKey = `${authInfo.id}${receivedKey}`
-    const isDuplicated = requestKeys.find(key => key == idempotencyKey)
+    const isDuplicate = requestKeys.find(key => key == idempotencyKey)
  
-    if(!isDuplicated) {
+    if(!isDuplicate) {
         requestKeys.push(idempotencyKey)
     }
     
-    return isDuplicated
+    return isDuplicate
 
 }
 
-export const generateUniqueId = () => {
+export const midGenerateUniqueId = () => {
     const optimisticId = uuidv4()
     return optimisticId
 }
 
-export const expirationCheck = (expirationTime : number) => {
+export const midExpirationCheck = (expirationTime : number) => {
     const dateNow = Date.now()
     return (dateNow - expirationTime) >= 0
 }

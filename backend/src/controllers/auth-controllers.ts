@@ -1,8 +1,9 @@
 import { modGetUserByEmail } from "../models/user-model"
 import { midGenerateToken } from "../utils/middleware"
-import { Request, Response, NextFunction } from "express"
-import { generateUniqueId } from "../utils/middleware"
-import { expirationCheck } from "../utils/middleware"
+import { Request, Response } from "express"
+import { midGenerateUniqueId } from "../utils/middleware"
+import { midExpirationCheck } from "../utils/middleware"
+import { getErrorMessage } from "../utils/other-resources"
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
 
@@ -16,11 +17,11 @@ let nextExpirationCheck = -1
 
 setInterval(() => {
     const dateNow = Date.now()
-    if (expirationCheck(nextExpirationCheck) || nextExpirationCheck == -1) {
+    if (midExpirationCheck(nextExpirationCheck) || nextExpirationCheck == -1) {
         console.log(`Running Expiration Check`)        
         nextExpirationCheck = dateNow + (60 * 1000 * 5)
         if(onlineUsers.length > 0) {
-            const newList = onlineUsers.filter((user) => !expirationCheck(user.expirationTime))
+            const newList = onlineUsers.filter((user) => !midExpirationCheck(user.expirationTime))
             onlineUsers = newList
         }
     }
@@ -32,7 +33,7 @@ export const conAuth = async (req : Request, res : Response) => {
     try {
 
         const user = await modGetUserByEmail(req, res) as {id : string}
-        const guid = generateUniqueId()
+        const guid = midGenerateUniqueId()
         const payload = {...user, guid : guid}
         const token = midGenerateToken(payload)
         const expirationTime = Date.now() + 1000 * 60 * 15
@@ -102,12 +103,12 @@ export const conLogout = async (req : Request, res : Response) => {
             onlineUserId != -1 ? onlineUsers.splice(onlineUserId, 1) : ''
             return await res.status(200).clearCookie('auth').json({message:'logged off'})
         } else {
-            return await res.status(500).json({message : 'Something went wrong'})    
+            return await res.status(500).json(getErrorMessage())
         }
 
     } catch (e) {
         console.log(e)
-        return await res.status(500).json({message : 'Something went wrong'})
+        return await res.status(500).json(getErrorMessage(e))
     }
 }
 
@@ -118,6 +119,6 @@ export const conGetCSRFToken = async (req: Request, res: Response) => {
         })
    } catch (e) {
         console.log(e)
-        return await res.status(500).json({message : 'Something went wrong'})
+        return await res.status(500).json(getErrorMessage(e))
    }
 }

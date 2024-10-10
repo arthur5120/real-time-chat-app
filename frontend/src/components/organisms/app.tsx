@@ -18,7 +18,7 @@ const App = () => {
   const {notifyUser} = useContext(toastContext)
   const {auth, setAuth, setRole, getAuthTokenStatus, clickedToLogout, setClickedToLogout} = useContext(authContext)
   const {updateServerStatus} = useContext(healthContext)
-  const {serverStatus} = useContext(healthContext)  
+  const {serverStatus} = useContext(healthContext)
   const [previousAuth, setPreviousAuth] = useState(auth)
   const [hasSessionExpired, setHasSessionExpired] = useState(false)
   const [requireRefresh, setRequireRefresh] = useState(true)

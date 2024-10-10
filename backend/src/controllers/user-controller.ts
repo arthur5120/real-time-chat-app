@@ -8,28 +8,20 @@ import {
     modUpdateUser 
 } from "../models/user-model"
 
-// import { midCheckDuplicated } from "../utils/middleware"
-
-const requestKeys : string[] = []
+import {
+    getErrorMessage
+} from "../utils/other-resources"
 
 export const conCreateUser = async (req : Request, res : Response) => {
 
     try {
-
-        // const isDuplicated = midCheckDuplicated(req, requestKeys)
-
-        // if(isDuplicated) {        
-        //     return res.status(400).json({message : `Duplicated Request`})
-        // }
     
         await modCreateUser(req, res)
         return res.status(200).json({message : 'User Created Successfully'})
 
     } catch (e) {
         console.log(e)
-        return res.status(500).json({
-            message : 'Internal Error'
-        })
+        return res.status(500).json(getErrorMessage(e))
     }
     
 }
@@ -42,9 +34,7 @@ export const conUpdateUser = async (req : Request, res : Response) => {
 
     } catch (e) {
         console.log(e)
-        return res.status(500).json({
-            message : 'Internal Error'
-        })
+        return res.status(500).json(getErrorMessage(e))
     }
 }
 
@@ -55,9 +45,7 @@ export const conDeleteUser = async (req : Request, res : Response) => {
         return res.status(200).json({message : 'User Delete Successfully'})
     } catch (e) {
         console.log(e)
-        return res.status(500).json({
-            message : 'Internal Error'            
-        })
+        return res.status(500).json(getErrorMessage(e))
     }
 }
 
@@ -68,9 +56,7 @@ export const conGetUserById = async (req : Request, res : Response) => {
         return res.status(200).send(user)
     } catch (e) {
         console.log(e)
-        return res.status(500).json({
-            message : 'Internal Error'            
-        })
+        return res.status(500).json(getErrorMessage(e))
     }
 }
 
@@ -81,8 +67,6 @@ export const conGetUsers = async (req : Request, res : Response) => {
         return res.status(200).send(users)
     } catch (e) {
         console.log(e)
-        return res.status(500).json({
-            message : 'Internal Error'
-        })
+        return res.status(500).json(getErrorMessage(e))
     }
 }
