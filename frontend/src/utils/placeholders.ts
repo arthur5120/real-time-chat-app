@@ -28,3 +28,10 @@ export const currentRoomPlaceHolder = {
     selectId : 0, 
     name : ''
 }
+
+export const errorMessagePlaceholder = `Something Went Wrong, please try again later`
+
+export const errorObjectPlaceholder = {
+    expired : true,
+    message : errorMessagePlaceholder
+}

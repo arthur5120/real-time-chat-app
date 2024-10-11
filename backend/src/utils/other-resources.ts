@@ -28,11 +28,12 @@ export const getError = (desc ? : string) => {
     return newError
 }
 
-export const getErrorMessage = (e ? : unknown) => {  
+export const getErrorMessage = (e ? : unknown) => {    
     
     const defaultError = {
-        success : false,
-        message : `Internal Error`,    
+        error : `Internal Error`,
+        success : false,        
+        message : `Something went wrong`,    
         timestamp: new Date().toISOString(),
         statusCode: 500,
     }
@@ -40,9 +41,9 @@ export const getErrorMessage = (e ? : unknown) => {
     if (e instanceof Error) {
         return { 
             ...defaultError, 
-            message: e.message || `Internal Error`,
-            timestamp: new Date().toISOString(),            
+            message: e.message || `Something went wrong`,            
         }
     }
+
     return defaultError
 }

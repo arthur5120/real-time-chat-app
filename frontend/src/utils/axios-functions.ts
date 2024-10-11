@@ -11,7 +11,7 @@ export const createUser = async(data : TUser) => { // Idempotency
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -22,7 +22,7 @@ export const updateUser = async(id : string) => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -33,7 +33,7 @@ export const deleteUser = async(id : string) => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -44,7 +44,7 @@ export const getUsers = async() => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -55,7 +55,7 @@ export const getUserById = async(id : string) => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -66,7 +66,7 @@ export const authLogin = async(data : TUser) => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -77,7 +77,7 @@ export const authLogout = async(data : any) => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -88,7 +88,7 @@ export const authStatus = async(data : any) => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -102,7 +102,7 @@ export const createChat = async () => { // Idempotency
         return res.data
     } catch (e) {              
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }  
 }
@@ -113,7 +113,7 @@ export const deleteChat = async (chatId : string) => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -124,7 +124,7 @@ export const deleteAllChats = async () => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -146,7 +146,7 @@ export const removeUserFromChat = async(userId : string, chatId : string) => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -157,7 +157,7 @@ export const getChats = async() => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -168,7 +168,7 @@ export const getChatById = async(id : string) => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -179,7 +179,7 @@ export const getChatsByUserId = async (userId : string) => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -190,7 +190,7 @@ export const getUsersByChatId = async (chatId : string) => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -214,7 +214,7 @@ export const createMessage = async(senderId : string, chatId : string, content :
         
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
  
@@ -231,7 +231,7 @@ export const updateMessage = async(messageId : string, content : string) => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
  
@@ -243,7 +243,7 @@ export const deleteMessage = async(messageId : string) => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -254,7 +254,7 @@ export const getMessages = async() => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -265,7 +265,7 @@ export const getMessageById = async (messageId : string) => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -276,7 +276,7 @@ export const getMessageByUserId = async (userId : string) => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -287,7 +287,7 @@ export const getCSRFToken = async () => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }
@@ -302,7 +302,7 @@ export const getServerHealth = async () => {
         return res.data
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
-            return e.response.data
+            throw e.response.data
         }
     }
 }

@@ -1,7 +1,23 @@
 import { useContext, useEffect, useRef, useState, Fragment } from 'react'
-import { addUserToChat, authStatus, createChat, createMessage, deleteAllChats, deleteMessage, getChatById, getChats, getChatsByUserId, getMessages, getUserById, getUsersByChatId, setAxiosCSRFToken, updateMessage, } from '../../utils/axios-functions'
+
+import { 
+  addUserToChat, 
+  authStatus, 
+  createChat, 
+  createMessage, 
+  deleteAllChats, 
+  deleteMessage, 
+  getChatById, 
+  getChats, 
+  getChatsByUserId, 
+  getMessages, 
+  getUserById, 
+  getUsersByChatId, 
+  updateMessage, 
+} from '../../utils/axios-functions'
+
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest, TLog } from '../../utils/types'
-import { userPlaceholder, messagePlaceholder, roomsPlaceholder, currentRoomPlaceHolder } from '../../utils/placeholders'
+import { userPlaceholder, messagePlaceholder, roomsPlaceholder, currentRoomPlaceHolder, errorMessagePlaceholder, errorObjectPlaceholder } from '../../utils/placeholders'
 import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, hasCSRFCookie, isThingValid, isThingValidSpecific, sortAlphabeticallyByAny, sortAlphabeticallyByName, sortByMilliseconds, sortChronogicallyByAny } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
@@ -60,8 +76,8 @@ const Chat = () => {
   const [cooldown, setCooldown] = useState(0)
   const [useDelayOnEmit, setUseDelayOnEmit] = useState(false)
   const [firstLoad, setFirstLoad] = useState(true)
-  const [reload, setReload] = useState(1)
-  const [hasErrors, setHasErrors] = useState(false)  
+  const [reload, setReload] = useState(1)  
+  const [currentError, setCurrentError] = useState(errorObjectPlaceholder)
   
   const [log, setLog] = useState<TLog[]>([])
   const [filteredLog, setFilteredLog] = useState<TLog[]>([])
@@ -110,13 +126,21 @@ const Chat = () => {
     setSearchText(``)
   }
 
+  const notifyError = (e ? : any) => {
+    const hasMessage =  e?.error && e?.message  
+      setCurrentError({
+        expired : false,
+        message : hasMessage ? e.message : errorMessagePlaceholder
+      })          
+  }
+
   const getCookieSpam = () : number => {
     try {
       const cookieSpam = Cookies.get(`spam`)
       const cookieSpamResult = cookieSpam ? parseInt(cookieSpam) : 0
       return cookieSpamResult
     } catch (e) {
-      setHasErrors(true)
+      notifyError(e)
       return 0
     }
   }
@@ -137,7 +161,7 @@ const Chat = () => {
       const logArray = logString ? JSON.parse(logString) : []
       return logArray
     } catch (e) {
-      setHasErrors(true)      
+      notifyError(e)
       return []
     }
   }
@@ -212,13 +236,13 @@ const Chat = () => {
     }
 
     return spamResult
-  }
+  }  
 
   const addUserToOnlineList = async () => {
-    const authInfo = await authStatus({})
+    const authInfo = await authStatus({})    
     const isUserOnList = onlineUsers.find((u) => u.id == authInfo.id)
     if(!isUserOnList) {
-      const userInfo = await getUserById(authInfo.id)
+      const userInfo = await getUserById(authInfo.id)      
       const authRequest : TSocketAuthRequest = {
         user : {id : authInfo.id, name : userInfo.name},
         isConnecting : true
@@ -255,7 +279,7 @@ const Chat = () => {
       }
 
     } catch(e) {
-      setHasErrors(true)
+      notifyError(e)
       console.log(`error : retrieving the current user.`)
     }
 
@@ -281,7 +305,7 @@ const Chat = () => {
       return !!foundUser
 
     } catch (e) {
-      setHasErrors(true)
+      notifyError(e)
     }
     
   }
@@ -300,7 +324,7 @@ const Chat = () => {
       }
 
     } catch (e) {
-      setHasErrors(true)
+      notifyError(e)
       console.log(`error : creating room if none are found.`)
     }
 
@@ -355,7 +379,7 @@ const Chat = () => {
       setRooms(sortedLocalRooms)
 
     } catch (e) {      
-      setHasErrors(true)
+      notifyError(e)
       console.log(`error : retrieving rooms.`)
     }
     
@@ -422,7 +446,7 @@ const Chat = () => {
         setMessages(sortedMessages)
 
       } catch (e) {
-        setHasErrors(true)
+        notifyError(e)
         console.log(`error : retrieving messages.`)
       }
 
@@ -484,7 +508,7 @@ const Chat = () => {
       }
 
       if (!isUserInRoom) {
-        await addUserToChat(authInfo.id, currentRoom.id) // Adding user to chat without checking if it exists.
+        const res = await addUserToChat(authInfo.id, currentRoom.id)        
       }
   
       const savedMessageId = await createMessage(
@@ -540,7 +564,7 @@ const Chat = () => {
             console.log(`Message Sent Successfully : ${received}`)
 
           } else {
-            setHasErrors(true)
+            notifyError()
             console.log(`error : failed when sending message to socket.`)
           }
 
@@ -575,7 +599,7 @@ const Chat = () => {
       setUseDelayOnEmit(false)
 
     } catch (e) {
-      setHasErrors(true)
+      notifyError(e)
       console.log(`error : when sending message.`)
       setUseDelayOnEmit(false)
     }
@@ -617,7 +641,7 @@ const Chat = () => {
       setReload(reload + 1)
 
     } catch (e) {
-      setHasErrors(true)
+      notifyError(e)
       console.log(`error : when creating a new room.`)
     }
 
@@ -640,7 +664,7 @@ const Chat = () => {
       }
 
     } catch (e) {
-      setHasErrors(true)
+      notifyError(e)
       console.log(`error : when notifying the user in room. ${e}`)
     }
 
@@ -678,7 +702,7 @@ const Chat = () => {
       setUseDelayOnEmit(true)
 
     } catch (e) {
-      setHasErrors(true)
+      notifyError(e)
       console.log(`error : when deleting all rooms.`)
     }
 
@@ -808,9 +832,8 @@ const Chat = () => {
           setTypingUsers(value)
         }
       })
-    } catch (e) {
-      notifyUser(`Something Went Wrong, please try again later`, `warning`)
-      setHasErrors(false)
+    } catch (e) {      
+      notifyError(e)
     }
   }
 
@@ -955,11 +978,6 @@ const Chat = () => {
       setCopiedToClipboard(false)
     }
 
-    if(hasErrors) {
-      notifyUser(`Something Went Wrong, please try again later`, `warning`)
-      setHasErrors(false)
-    }
-
     if(reload > 0) {      
       initializeAppData()
     }    
@@ -973,9 +991,8 @@ const Chat = () => {
       if(currentRoom.id == '-1' || currentRoom.id == '0') {
         if(reload < 100) {          
           !refreshRooms ? setRefreshRooms(true) : null
-        } else {
-          notifyUser(`Something Went Wrong, please try again later`, `warning`)          
-          setHasErrors(false)
+        } else {          
+          notifyError()
           setReload(0)
         }
       } else {
@@ -1147,6 +1164,14 @@ const Chat = () => {
     }
     showNotificationsRef.current = showNotifications
   }, [showNotifications])
+
+  useEffect(() => {
+    const {expired, message} = currentError
+    if(!expired) {                    
+      notifyUser(message, `warning`)
+      setCurrentError(errorObjectPlaceholder)
+    }
+  }, [currentError])
 
   useEffect(() => {
     const listTimeout = setTimeout(() => {
@@ -1870,6 +1895,7 @@ const Chat = () => {
               socket?.connect()
               socket?.emit(`updateInactive`, { id : authInfo.id, name: currentUser.name, inactive: false })
               inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
+
               //setSpam((lastSpam) => !lastSpam)
               //Cookies.remove(`_csrf`)
               //const fakeToken = `whatever_fake_cookie`
