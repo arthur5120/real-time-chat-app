@@ -33,5 +33,7 @@ export const errorMessagePlaceholder = `Something Went Wrong, please try again l
 
 export const errorObjectPlaceholder = {
     expired : true,
-    message : errorMessagePlaceholder
+    isDuplicate : false,
+    message : errorMessagePlaceholder,
+    timestamp : 0,
 }

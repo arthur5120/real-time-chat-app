@@ -44,6 +44,7 @@ type TFullUser = {id ? : string} & TUser & {diff ? : {nameEmoji ? : string, name
 type TMessageBeingEdited = TChatMessage & {previous ? : string, wasEdited : boolean}
 type TSocketPayload = Partial<{userId : string, userName : string, content : string, notification : string, roomName : string, roomId : string, notifyRoomOnly : boolean}>
 type TRoomLists = Partial<{currentOnlineUsers : number, currentInactiveUsers : number, currentRoomUsers : number, currentTypingUsers : number}>
+type TErrorObject = {expired : boolean, message : string, isDuplicate : boolean, timestamp : number,}
 
 const Chat = () => {
 
@@ -77,7 +78,7 @@ const Chat = () => {
   const [useDelayOnEmit, setUseDelayOnEmit] = useState(false)
   const [firstLoad, setFirstLoad] = useState(true)
   const [reload, setReload] = useState(1)  
-  const [currentError, setCurrentError] = useState(errorObjectPlaceholder)
+  const [currentError, setCurrentError] = useState<TErrorObject>(errorObjectPlaceholder)
   
   const [log, setLog] = useState<TLog[]>([])
   const [filteredLog, setFilteredLog] = useState<TLog[]>([])
@@ -126,12 +127,21 @@ const Chat = () => {
     setSearchText(``)
   }
 
-  const notifyError = (e ? : any) => {
-    const hasMessage =  e?.error && e?.message  
-      setCurrentError({
-        expired : false,
-        message : hasMessage ? e.message : errorMessagePlaceholder
-      })          
+  const notifyError = (e ? : any) => {    
+    setCurrentError((lastError) => {
+      const message = e?.error && e?.message ? e.message : errorMessagePlaceholder
+      const isRepeatedMessage = message == lastError.message
+      const timestampNow = Date.now()
+      const isWithinRange = lastError.timestamp == 0 || timestampNow - lastError.timestamp > 1000
+      const isDuplicate = isRepeatedMessage && !isWithinRange
+      const expired = isDuplicate && lastError.expired
+      return {
+        expired : expired,
+        isDuplicate : isDuplicate,
+        message : message,
+        timestamp : isDuplicate ? lastError.timestamp : timestampNow,
+      }
+    })     
   }
 
   const getCookieSpam = () : number => {
@@ -1165,15 +1175,18 @@ const Chat = () => {
     showNotificationsRef.current = showNotifications
   }, [showNotifications])
 
-  useEffect(() => {
+  useEffect(() => { // Error Notifications
     const {expired, message} = currentError
     if(!expired) {                    
       notifyUser(message, `warning`)
-      setCurrentError(errorObjectPlaceholder)
+      setCurrentError((lastError) => ({
+        ...lastError,
+        expired : true
+      }))
     }
   }, [currentError])
 
-  useEffect(() => {
+  useEffect(() => { // Update User List
     const listTimeout = setTimeout(() => {
       setUpdateUserLists(true)
     }, 200)
@@ -1894,13 +1907,7 @@ const Chat = () => {
               const authInfo : TRes = await authStatus({})
               socket?.connect()
               socket?.emit(`updateInactive`, { id : authInfo.id, name: currentUser.name, inactive: false })
-              inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
-
-              //setSpam((lastSpam) => !lastSpam)
-              //Cookies.remove(`_csrf`)
-              //const fakeToken = `whatever_fake_cookie`
-              //setAxiosCSRFToken(fakeToken)
-              //Cookies.set(`_csrf`, fakeToken)
+              inactivityTimerId ? clearTimeout(inactivityTimerId) : ''              
             }}
           /> 
           */}
@@ -1932,7 +1939,7 @@ const Chat = () => {
         {`!!reload : ${!!reload} || firstLoad : ${firstLoad} || !serverStatus ${!serverStatus} || showLog ${showLog}`}
         </h3>
         <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
-          {renderCounter}
+          {JSON.stringify(currentError)}
         </h3>
         */}
       </div>
