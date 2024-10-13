@@ -15,14 +15,19 @@ export const getTimeElapsed = (value: number) => {
     const timeSeconds = Math.floor((diff / 1000) % 60)
     const timeMinutes = Math.floor((diff / 60000) % 60)
     const timeHours = Math.floor((diff / 3600000) % 24)
-    const timeDays = Math.floor(diff / 86400000)
-
-    const timeString = `${timeDays > 0 ? timeDays + 'd' : ''}
-    ${timeHours > 0 ? timeHours + 'h' : ''}
-    ${timeMinutes > 0 ? timeMinutes + 'm' : ''}
-    ${timeSeconds > 0 ? timeSeconds + 's' : ''}
-    ${diff < 1000 ? 'Now' : 'ago'}`
-
+    const timeDays = Math.floor(diff / 86400000)    
+    const timeYears = Math.floor(timeDays / 365)
+    const timeMonths = Math.floor((timeDays % 365) / 30)
+    
+    const timeYearsStr = timeYears > 0 ? `${timeYears}y` : ``
+    const timeMonthsStr = timeMonths > 0 ? `${timeMonths}mo` : ``
+    const timeDaysStr = timeDays > 0 ? `${timeDays}d` : ``
+    const timeHoursStr = timeHours > 0 ? `${timeHours}h` : ``
+    const timeMinutesStr = timeMinutes > 0 ? `${timeMinutes}m` : ``
+    const timeSecondsStr = timeSeconds > 0 ? `${timeSeconds}s` : ``
+    
+    const timeString = `${timeYearsStr} ${timeMonthsStr} ${timeDaysStr} ${timeHoursStr} ${timeMinutesStr} ${timeSecondsStr} ${diff < 1000 ? 'Now' : 'ago'}`
+    
     return timeString.trim()
 }
 

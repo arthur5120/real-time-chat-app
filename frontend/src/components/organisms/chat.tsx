@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState, Fragment } from 'react'
+import { useContext, useEffect, useRef, useState, Fragment, useMemo } from 'react'
 
 import { 
   addUserToChat, 
@@ -1548,6 +1548,9 @@ const Chat = () => {
             const isMessageFocused = document.activeElement == messageContainerRef.current
             const userEmoji = currentUser.diff?.nameEmoji ? currentUser.diff?.nameEmoji : `🍣`
             const userName = currentUser.name ? currentUser.name : `You`
+            const showUpdatedAt = message.created_at != message.updated_at
+            const messageCreatedAt = getTimeElapsed(message.created_at)
+            const messageUpdatedAt = showUpdatedAt ? getTimeElapsed(message.updated_at) : ``            
             
             return (
 
@@ -1655,9 +1658,13 @@ const Chat = () => {
                 </span>
 
                 <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-2 p-1 justify-end bg-transparent`}>
-                  <h5 key={`msg-created_at-${id}`}  className='bg-transparent text-sm'>
-                    <time>{`${getTimeElapsed(message.created_at)}`}</time>
-                    <time className={`text-slate-300 italic`}>{message.created_at != message.updated_at ? ` 📝(${getTimeElapsed(message.updated_at)})` : ``}</time>
+                  <h5 key={`msg-created_at-${id}`}  className='bg-transparent text-sm cursor-pointer' title={`Created : ${messageCreatedAt}\nUpdated : ${messageUpdatedAt}`}>
+                    <time>
+                      {cropMessage(messageCreatedAt, 15)}
+                    </time>
+                    <time key={`msg-update_at-${id}`} className={`text-slate-300 italic`}>
+                      {showUpdatedAt ? ` 📝(${cropMessage(messageUpdatedAt, 15)})` : ``}
+                    </time>
                   </h5>
                 </span>
 
