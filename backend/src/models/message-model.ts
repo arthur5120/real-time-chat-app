@@ -1,13 +1,12 @@
 import { Request, Response } from "express"
 import { PrismaClient } from "@prisma/client"
-import { midGenerateUniqueId } from "../utils/middleware"
-import { getError } from "../utils/other-resources"
+import { genGenerateUniqueId, genGetError } from "../utils/general-functions"
 
 const prisma = new PrismaClient()
 
 export const modCreateMessage = async (req : Request, res : Response) => {            
 
-    const newMessageId = midGenerateUniqueId()
+    const newMessageId = genGenerateUniqueId()
     const newMessage = {id : newMessageId, ...req.body}
     
     try {
@@ -15,7 +14,7 @@ export const modCreateMessage = async (req : Request, res : Response) => {
         return newMessageId
     } catch (e) {
         console.log(e)
-        throw getError(`Failed to Create Message`)
+        throw genGetError(`Failed to Create Message`)
     }
 
 }
@@ -34,7 +33,7 @@ export const modUpdateMessage = async (req : Request, res : Response) => {
         })
     } catch (e) {
         console.log(e)
-        throw getError(`Failed to Update Message`)
+        throw genGetError(`Failed to Update Message`)
     }
     
 }
@@ -47,7 +46,7 @@ export const modDeleteMessage = async (req : Request, res : Response) => {
         await prisma.message.delete({where : {id : messageId}})
     } catch (e) {
         console.log(e)
-        throw getError(`Failed to Delete Message`)
+        throw genGetError(`Failed to Delete Message`)
     }
     
 }
@@ -59,7 +58,7 @@ export const modGetMessages = async () => {
         return message
     } catch (e) {
         console.log(e)
-        throw getError(`Failed to Get Messages`)
+        throw genGetError(`Failed to Get Messages`)
     }
 
 }
@@ -73,7 +72,7 @@ export const modGetMessageById = async (req : Request, res : Response) => {
         return message
     } catch (e) {
         console.log(e) // throw new Error('Database retrieval error')
-        throw getError(`Failed to Get Message`)
+        throw genGetError(`Failed to Get Message`)
     }
     
 }
@@ -94,7 +93,7 @@ export const modGetMessagesByUserId = async (req : Request, res : Response) => {
         
     } catch (e) {
         console.log(e)
-        throw getError(`Failed to Get Messages`)
+        throw genGetError(`Failed to Get Messages`)
     }
     
 }

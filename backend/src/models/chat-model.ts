@@ -1,7 +1,6 @@
 import { PrismaClient } from "@prisma/client"
 import { Request, Response } from "express"
-import { midGetRandomName } from "../utils/middleware"
-import { getError } from "../utils/other-resources"
+import { genGetRandomName, genGetError } from "../utils/general-functions"
 
 const prisma = new PrismaClient()
 
@@ -11,11 +10,11 @@ export const modCreateChat = async (req : Request, res : Response) => {
 
     try {
         await prisma.chat.create({
-            data : {...newChat, name : midGetRandomName()}
+            data : {...newChat, name : genGetRandomName()}
         })
     } catch (e) {
         console.log(e)
-        throw getError(`Failed to Create User`)
+        throw genGetError(`Failed to Create User`)
     }
 
 }
@@ -36,7 +35,7 @@ export const modAddUserToChat = async (req : Request, res : Response) => {
 
     } catch (e) {
         console.log(e)
-        throw getError(`Failed to Add User to Chat`)
+        throw genGetError(`Failed to Add User to Chat`)
     }
 
 }
@@ -59,7 +58,7 @@ export const modRemoveUserFromChat = async (req : Request, res : Response) => {
 
     } catch (e) {
         console.log(e)
-        throw getError(`Failed to Remove User From Chat`)
+        throw genGetError(`Failed to Remove User From Chat`)
     }
 
 }
@@ -76,7 +75,7 @@ export const modDeleteChat = async (req : Request, res : Response) => {
         })
     } catch (e)     {
         console.log(e)        
-        throw getError(`Failed to Delete Chat`)
+        throw genGetError(`Failed to Delete Chat`)
     }
 
 }
@@ -89,7 +88,7 @@ export const modDeleteAllChats = async (req : Request, res : Response) => { // F
 
     } catch (e) {
         console.log(e)
-        throw getError(`Failed to Delete All Chat Rooms `)
+        throw genGetError(`Failed to Delete All Chat Rooms `)
     }
 
 }
@@ -103,7 +102,7 @@ export const modGetChats = async (req : Request, res : Response) => {
 
     } catch (e) {
         console.log(e)
-        throw getError(`Failed to Get Chats`)
+        throw genGetError(`Failed to Get Chats`)
     }
 
 }
@@ -124,7 +123,7 @@ export const modGetChatById = async (req : Request, res : Response) => {
 
     } catch (e) {
         console.log(e)
-        throw getError(`Failed to Get Chat`)
+        throw genGetError(`Failed to Get Chat`)
     }
 
 }
@@ -145,7 +144,7 @@ export const getChatsByUserId = async (req : Request, res : Response) => {
 
     } catch (e) {
         console.log(e)
-        throw getError(`Failed to Get Chats`)
+        throw genGetError(`Failed to Get Chats`)
     }
 
 }
@@ -166,7 +165,7 @@ export const modGetUsersByChatId = async (req : Request, res : Response) => {
 
     } catch (e) {
         console.log(e)
-        throw getError(`Failed to Get Users`)
+        throw genGetError(`Failed to Get Users`)
     }
 
 }

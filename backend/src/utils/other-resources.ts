@@ -21,29 +21,3 @@ export const roomNames = [
     'Chamber', 'Cabin', 'Cell',
     'Alcove','Closet',
 ]
-
-export const getError = (desc ? : string) => {    
-    const newError = new Error(desc || `Unknown Error`)
-    newError.name = `CustomError`
-    return newError
-}
-
-export const getErrorMessage = (e ? : unknown) => {    
-    
-    const defaultError = {
-        error : `Internal Error`,
-        success : false,        
-        message : `Something went wrong`,    
-        timestamp: new Date().toISOString(),
-        statusCode: 500,
-    }
-    
-    if (e instanceof Error) {
-        return { 
-            ...defaultError, 
-            message: e.message || `Something went wrong`,            
-        }
-    }
-
-    return defaultError
-}

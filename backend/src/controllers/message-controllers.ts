@@ -10,12 +10,10 @@ import {
 } from "../models/message-model"
 
 import { 
-    getErrorMessage 
-} from "../utils/other-resources"
-
-import { 
-    midCheckDuplicate 
+    midCheckDuplicate,    
 } from "../utils/middleware"
+
+import { genGetErrorMessage } from "../utils/general-functions"
 
 const requestKeys : string[] = []
 
@@ -34,7 +32,7 @@ export const conCreateMessage = async (req : Request, res : Response) => {
         
     } catch (e) {
         console.log(e)
-        return res.status(500).json(getErrorMessage(e))
+        return res.status(500).json(genGetErrorMessage(e))
     }
 
 }
@@ -46,7 +44,7 @@ export const conUpdateMessage = async (req : Request, res : Response) => {
         return res.status(200).json({message : 'Success'})
     } catch (e) {
         console.log(e)
-        return res.status(500).json(getErrorMessage(e))
+        return res.status(500).json(genGetErrorMessage(e))
     }
 
 }
@@ -58,7 +56,7 @@ export const conDeleteMessage = async (req : Request, res : Response) => {
         return res.status(200).send(msg)
     } catch (e) {
         console.log(e)
-        return res.status(500).json(getErrorMessage(e))
+        return res.status(500).json(genGetErrorMessage(e))
     }
 
 }
@@ -70,7 +68,7 @@ export const conGetMessages = async (req : Request, res : Response) => {
         return res.status(200).send(msg)
     } catch (e) {
         console.log(e)
-        return res.status(500).json(getErrorMessage(e))
+        return res.status(500).json(genGetErrorMessage(e))
     }
 
 }
@@ -82,7 +80,7 @@ export const conGetMessageById = async (req : Request, res : Response) => {
         return res.status(200).send(msg)
     } catch (e) {
         console.log(e)
-        return res.status(500).json(getErrorMessage(e))
+        return res.status(500).json(genGetErrorMessage(e))
     }
 
 }
@@ -94,7 +92,7 @@ export const conGetMessagesByUserId = async (req : Request, res : Response) => {
         return res.status(200).send(msg)
     } catch (e) {
         console.log(e)
-        return res.status(500).json(getErrorMessage(e))
+        return res.status(500).json(genGetErrorMessage(e))
     }
 
 }

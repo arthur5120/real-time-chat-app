@@ -1,17 +1,13 @@
 import express, { Response, Request, NextFunction, ErrorRequestHandler } from 'express'
 import Cors from 'cors'
-import bcrypt from 'bcrypt'
 import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
-import { v4 as uuidv4 } from 'uuid'
-import { roomAdjectives, roomColors, roomCreatures, roomNames } from './other-resources'
 import csrf from 'csurf'
 import rateLimit from 'express-rate-limit'
 
 dotenv.config()
 
 const secretKey = process.env.SECRET_KEY as string
-const secretSalt = parseInt(process.env.SECRET_SALT as string)
 
 export const midRateLimiter = (windowMs : number = 60 * 1000, max : number = 1000 ) => {
 
@@ -52,37 +48,6 @@ export const midBodyParsers = [
     express.json(),
     express.text(),
 ]
-
-export const midHashPassword = async (password : string) => {
-    const hashedPassword = await bcrypt.hash(password, secretSalt)
-    return hashedPassword
-}
-
-export const midComparePasswrod = (password : string, hashedPassword : string) => {
-    const result = bcrypt.compare(password, hashedPassword)
-    return result
-}
-
-export const midGenerateToken = (payload : Object) => {
-    const Token = jwt.sign(payload, secretKey)
-    return Token
-}
-
-export const midGetRandomName = () => {
-
-    const randomNumber = Math.floor(Math.random() * 999)
-    const randomRoomNumber = Math.floor(Math.random() * (roomNames.length - 1))
-    const roomName = roomNames[randomRoomNumber]
-    
-    const generatedName = `
-      ${roomAdjectives[randomNumber % 10]}
-      ${roomColors[Math.floor(randomNumber / 10) % 10]}  
-      ${roomCreatures[Math.floor(randomNumber / 100) % 10]} 
-      ${roomName}
-    `
-
-    return `${generatedName}`
-}
 
 export const midCheckAuth = async (req : Request, res : Response, next : NextFunction) => {               
     try {
@@ -129,12 +94,3 @@ export const midCheckDuplicate = (req : Request, requestKeys : string[]) => {
 
 }
 
-export const midGenerateUniqueId = () => {
-    const optimisticId = uuidv4()
-    return optimisticId
-}
-
-export const midExpirationCheck = (expirationTime : number) => {
-    const dateNow = Date.now()
-    return (dateNow - expirationTime) >= 0
-}

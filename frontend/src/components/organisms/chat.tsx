@@ -77,7 +77,7 @@ const Chat = () => {
   const [cooldown, setCooldown] = useState(0)
   const [useDelayOnEmit, setUseDelayOnEmit] = useState(false)
   const [firstLoad, setFirstLoad] = useState(true)
-  const [reload, setReload] = useState(1)  
+  const [reload, setReload] = useState(1)
   const [currentError, setCurrentError] = useState<TErrorObject>(errorObjectPlaceholder)
   
   const [log, setLog] = useState<TLog[]>([])
@@ -86,8 +86,8 @@ const Chat = () => {
   const [consecutiveMessages, setConsecutiveMessages] = useState<number[]>([])
   const [showSpamWarning, setShowSpamWarning] = useState(false)
   const [spamCountdown, setSpamCountdown] = useState(0)
-  const [logOrder, setLogOrder] = useState(0)  
-  const [reverseLogOrder, setReverseLogOrder] = useState(false)  
+  const [logOrder, setLogOrder] = useState(0)
+  const [reverseLogOrder, setReverseLogOrder] = useState(false)
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let logContainerRef = useRef<HTMLDivElement>(null)
@@ -141,7 +141,7 @@ const Chat = () => {
         message : message,
         timestamp : isDuplicate ? lastError.timestamp : timestampNow,
       }
-    })     
+    })
   }
 
   const getCookieSpam = () : number => {

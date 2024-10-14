@@ -8,9 +8,7 @@ import {
     modUpdateUser 
 } from "../models/user-model"
 
-import {
-    getErrorMessage
-} from "../utils/other-resources"
+import { genGetErrorMessage } from "../utils/general-functions"
 
 export const conCreateUser = async (req : Request, res : Response) => {
 
@@ -21,7 +19,7 @@ export const conCreateUser = async (req : Request, res : Response) => {
 
     } catch (e) {
         console.log(e)
-        return res.status(500).json(getErrorMessage(e))
+        return res.status(500).json(genGetErrorMessage(e))
     }
     
 }
@@ -34,7 +32,7 @@ export const conUpdateUser = async (req : Request, res : Response) => {
 
     } catch (e) {
         console.log(e)
-        return res.status(500).json(getErrorMessage(e))
+        return res.status(500).json(genGetErrorMessage(e))
     }
 }
 
@@ -45,7 +43,7 @@ export const conDeleteUser = async (req : Request, res : Response) => {
         return res.status(200).json({message : 'User Delete Successfully'})
     } catch (e) {
         console.log(e)
-        return res.status(500).json(getErrorMessage(e))
+        return res.status(500).json(genGetErrorMessage(e))
     }
 }
 
@@ -56,7 +54,7 @@ export const conGetUserById = async (req : Request, res : Response) => {
         return res.status(200).send(user)
     } catch (e) {
         console.log(e)
-        return res.status(500).json(getErrorMessage(e))
+        return res.status(500).json(genGetErrorMessage(e))
     }
 }
 
@@ -67,6 +65,6 @@ export const conGetUsers = async (req : Request, res : Response) => {
         return res.status(200).send(users)
     } catch (e) {
         console.log(e)
-        return res.status(500).json(getErrorMessage(e))
+        return res.status(500).json(genGetErrorMessage(e))
     }
 }

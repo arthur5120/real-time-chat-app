@@ -1,14 +1,13 @@
 import { PrismaClient } from "@prisma/client"
 import { Request, Response } from "express"
-import { midHashPassword } from "../utils/middleware"
-import { getError } from "../utils/other-resources"
+import { genHashPassword, genGetError } from "../utils/general-functions"
 
 const prisma = new PrismaClient()
 
 export const modCreateUser = async (req : Request, res : Response) => {  
     
     const {password, ...newUser} = req.body
-    const hashedPassword = await midHashPassword(password)       
+    const hashedPassword = await genHashPassword(password)       
 
     try {
         await prisma.user.create({
@@ -16,7 +15,7 @@ export const modCreateUser = async (req : Request, res : Response) => {
         })
     } catch(e) {    
         console.log(e)
-        throw getError(`Failed to Create User`)
+        throw genGetError(`Failed to Create User`)
     }
 
 }
@@ -32,7 +31,7 @@ export const modUpdateUser = async (req : Request, res : Response) => {
         })
     } catch(e) {
         console.log(e)
-        throw getError(`Failed to Update User`)
+        throw genGetError(`Failed to Update User`)
     }
 }
 
@@ -46,7 +45,7 @@ export const modDeleteUser = async (req : Request, res : Response) => {
         })
     } catch(e) {
         console.log(e)
-        throw getError(`Failed to Delete User`)
+        throw genGetError(`Failed to Delete User`)
     }
 }
 
@@ -66,7 +65,7 @@ export const modGetUsers = async (req : Request, res : Response) => {
         return await users
     } catch(e) {
         console.log(e)
-        throw getError(`Failed to Get Users`)
+        throw genGetError(`Failed to Get Users`)
     }
 }
 
@@ -89,7 +88,7 @@ export const modGetUserById = async (req : Request, res : Response) => {
         return await user
     } catch(e) {
         console.log(e)
-        throw getError(`Failed to Get User`)
+        throw genGetError(`Failed to Get User`)
     }
 }
 
@@ -111,6 +110,6 @@ export const modGetUserByEmail = async (req : Request, res : Response) => {
         return await user
     } catch(e) {
         console.log(e)
-        throw getError(`Failed to Get User`)
+        throw genGetError(`Failed to Get User`)
     }
 }
