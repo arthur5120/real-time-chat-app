@@ -4,10 +4,15 @@ import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
 import csrf from 'csurf'
 import rateLimit from 'express-rate-limit'
+import { idempotency } from 'express-idempotency'
 
 dotenv.config()
 
 const secretKey = process.env.SECRET_KEY as string
+
+export const midIdempotency = idempotency({
+    idempotencyKeyHeader: 'Idempotency-Key',
+})
 
 export const midRateLimiter = (windowMs : number = 60 * 1000, max : number = 1000 ) => {
 
@@ -28,12 +33,20 @@ export const midCSRFProtection = csrf({
     }
 })
 
-export const midHandleCSRFError : ErrorRequestHandler = (err, req, res, next) => {
+export const midHandleErrors : ErrorRequestHandler = (err, req, res, next) => {
+
     if (err.code === 'EBADCSRFTOKEN') {        
         return res.status(403).json({
             message: 'Something went wrong. Please refresh the page and try again.'
         })
     }
+
+    if (err.message.includes('idempotency')) {
+        return res.status(400).json({
+            message: 'Duplicate request detected.'
+        })
+    }
+
     next(err)
 }
 
@@ -93,4 +106,3 @@ export const midCheckDuplicate = (req : Request, requestKeys : string[]) => {
     return isDuplicate
 
 }
-
