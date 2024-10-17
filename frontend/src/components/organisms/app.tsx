@@ -39,16 +39,16 @@ const App = () => {
     try {
       Cookies.remove(`_csrf`)
       const res = await getCSRFToken()
-      if(res?.CSRFToken) {           
+      if(res?.CSRFToken) {
         setAxiosCSRFToken(res.CSRFToken)
-      }      
+      }
     } catch (e) {
       console.log(e)
       notifyUser(`Something Went Wrong`, `warning`)
     }
-  }  
+  }
 
-  const handleSocketOnlineList = async () => {        
+  const handleSocketOnlineList = async () => {
 
     const authInfo : TRes = await authStatus({})
     
@@ -67,7 +67,7 @@ const App = () => {
           setHasSessionExpired(false)
         }
   
-        if (auth && authInfo.id != `none` && !clickedToLogout) { // Login          
+        if (auth && authInfo.id != `none` && !clickedToLogout) { // Login
           //notifyUser(`Login.`)
           const user = await getUserById(authInfo.id)
           setRole ? setRole(authInfo.role) : ''
@@ -75,11 +75,11 @@ const App = () => {
           socket?.emit(`auth`, authRequest)
           socket?.emit(`authList`)
           socket?.emit(`inactiveList`)
-          // notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)          
+          // notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
           return
         }
     
-        if (!auth && authInfo.id != `none`) { // Logout             
+        if (!auth && authInfo.id != `none`) { // Logout
           setRole ? setRole('none') : ''
           const authRequest : TSocketAuthRequest = {user: {id : authInfo.id}, isConnecting : false}
           socket?.emit(`auth`, authRequest)
@@ -88,11 +88,11 @@ const App = () => {
           await authLogout({})
           // notifyUser(`${authRequest.isConnecting ? `Connecting` : `Disconnecting`} ${authRequest.user.id}`)
           return
-        }         
+        }
 
       } catch (e) {
         notifyUser(e)
-      }      
+      }
     
   }
 
