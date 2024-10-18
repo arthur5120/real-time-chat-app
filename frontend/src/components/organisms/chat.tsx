@@ -89,6 +89,7 @@ const Chat = () => {
   const [spamCountdown, setSpamCountdown] = useState(0)
   const [logOrder, setLogOrder] = useState(0)
   const [reverseLogOrder, setReverseLogOrder] = useState(false)
+  const [tickCounter, setTickCounter] = useState(0)
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let logContainerRef = useRef<HTMLDivElement>(null)
@@ -471,6 +472,10 @@ const Chat = () => {
       }
 
   }
+
+  // const setMessage = (updater: (prev: typeof messageRef.current) => typeof messageRef.current) => {
+  //   messageRef.current = updater(messageRef.current)
+  // }
 
   const addMessage = (newMessage : TChatMessage) => {
     setMessages((rest) => ([
@@ -1202,22 +1207,22 @@ const Chat = () => {
     }    
   }, [hasErrors])
 
-  // useEffect(() => { // Error Notifications
-  //   const {expired, message, timestamp} = currentError
-  //   if(!expired) {          
-  //     notifyUser(message, `warning`)
-  //     setCurrentError((lastError) => ({
-  //       ...lastError,
-  //       expired : true
-  //     }))      
-  //     setErrorList((currentList) => {        
-  //       const errorIndex = errorList.findIndex((e) => e.message == message && e.timestamp == timestamp)
-  //       const newList = currentList
-  //       newList.splice(errorIndex, 1)
-  //       return newList
-  //     })
-  //   }
-  // }, [currentError, errorList])
+  useEffect(() => {
+
+    const interval = setInterval(() => {
+      setTickCounter((prev) => {
+        if(prev >= 60) {
+          return 0
+        }
+        return prev + 1
+      })
+    }, 1000)
+
+    return () => {
+      clearInterval(interval)
+    }
+
+  }, [])
 
   useEffect(() => { // Update User List
     const listTimeout = setTimeout(() => {
@@ -1583,7 +1588,7 @@ const Chat = () => {
             const userName = currentUser.name ? currentUser.name : `You`
             const showUpdatedAt = message.created_at != message.updated_at
             const messageCreatedAt = getTimeElapsed(message.created_at)
-            const messageUpdatedAt = showUpdatedAt ? getTimeElapsed(message.updated_at) : ``            
+            const messageUpdatedAt = showUpdatedAt ? getTimeElapsed(message.updated_at) : ``
             
             return (
 
@@ -1690,8 +1695,10 @@ const Chat = () => {
 
                 </span>
 
+                
+                 
                 <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-2 p-1 justify-end bg-transparent`}>
-                  <h5 key={`msg-created_at-${id}`}  className='bg-transparent text-sm cursor-pointer' title={`Created : ${messageCreatedAt}\nUpdated : ${messageUpdatedAt}`}>
+                  <h5 key={`msg-created_at-${id}`}  className='bg-transparent text-sm cursor-pointer' title={`Created : ${messageCreatedAt} ${messageUpdatedAt != `` ? `\nUpdated : ${messageUpdatedAt}` : ``}`}>
                     <time>
                       {cropMessage(messageCreatedAt, 15)}
                     </time>
@@ -2003,7 +2010,7 @@ const Chat = () => {
         {`!!reload : ${!!reload} || firstLoad : ${firstLoad} || !serverStatus ${!serverStatus} || showLog ${showLog}`}
         </h3>
         <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
-          {JSON.stringify(errorList)}
+          {JSON.stringify(tickCounter)}
         </h3>
         */}
       </div>

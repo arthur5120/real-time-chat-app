@@ -9,23 +9,11 @@ import {
     modGetMessagesByUserId, 
 } from "../models/message-model"
 
-import { 
-    midCheckDuplicate,    
-} from "../utils/middleware"
-
 import { genGetErrorMessage } from "../utils/general-functions"
-
-const requestKeys : string[] = []
 
 export const conCreateMessage = async (req : Request, res : Response) => {      
 
-    try {
-
-        const isDuplicate = midCheckDuplicate(req, requestKeys)
-
-        if(isDuplicate) {        
-            return res.status(400).json({message : `Duplicate Request`})
-        }
+    try {  
 
         const newMessageId = await modCreateMessage(req, res)
         return res.status(200).send(newMessageId)

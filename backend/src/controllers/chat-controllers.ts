@@ -12,20 +12,11 @@ import {
     modGetUsersByChatId,    
 } from "../models/chat-model"
 
-import { midCheckDuplicate } from "../utils/middleware"
 import { genGetErrorMessage } from "../utils/general-functions"
-
-const requestKeys : string[] = [] 
 
 export const conCreateChat = async (req : Request, res : Response) => {
 
     try {
-    
-        const isDuplicate = midCheckDuplicate(req, requestKeys)
-
-        if(isDuplicate) {                        
-            return res.status(400).json({message : `Duplicate Request`})
-        }
     
         await modCreateChat(req, res)
         return res.status(200).json({message : 'Success'})
