@@ -44,7 +44,7 @@ type TFullUser = {id ? : string} & TUser & {diff ? : {nameEmoji ? : string, name
 type TMessageBeingEdited = TChatMessage & {previous ? : string, wasEdited : boolean}
 type TSocketPayload = Partial<{userId : string, userName : string, content : string, notification : string, roomName : string, roomId : string, notifyRoomOnly : boolean}>
 type TRoomLists = Partial<{currentOnlineUsers : number, currentInactiveUsers : number, currentRoomUsers : number, currentTypingUsers : number}>
-type TErrorObject = {expired : boolean, message : string, isDuplicate : boolean, timestamp : number,}
+type TErrorObject = {expired : boolean, message : string, timestamp : number,}
 
 const Chat = () => {
 
@@ -77,9 +77,9 @@ const Chat = () => {
   const [cooldown, setCooldown] = useState(0)
   const [useDelayOnEmit, setUseDelayOnEmit] = useState(false)
   const [firstLoad, setFirstLoad] = useState(true)
-  const [reload, setReload] = useState(1)
-  const [currentError, setCurrentError] = useState<TErrorObject>(errorObjectPlaceholder)
+  const [reload, setReload] = useState(1)  
   const [errorList, setErrorList] = useState<TErrorObject[]>([])
+  const [hasErrors, setHasErrors] = useState(false)
   
   const [log, setLog] = useState<TLog[]>([])
   const [filteredLog, setFilteredLog] = useState<TLog[]>([])
@@ -128,32 +128,30 @@ const Chat = () => {
     setSearchText(``)
   }
 
-  const notifyError = (e ? : any) => {            
-    setCurrentError((lastError) => {
-      const message = e?.error && e?.message ? e.message : errorMessagePlaceholder
-      const isRepeatedMessage = message == lastError.message
+  const notifyError = (errorEvent ? : any) => {    
+    setErrorList((oldList) => {
+      let currentList = [...oldList]
+      const lastError = currentList.length > 0 ? currentList[currentList.length - 1] : errorObjectPlaceholder
+      const message = errorEvent?.error && errorEvent?.message ? errorEvent.message : errorMessagePlaceholder
+      const isMessageRepeated = message == lastError.message
       const timestampNow = Date.now()
-      const isWithinRange = lastError.timestamp == 0 || timestampNow - lastError.timestamp > 1000      
-      const isDuplicate = isRepeatedMessage && !isWithinRange
-      const expired = isDuplicate && lastError.expired
+      const isRangeAcceptable = lastError.timestamp == 0 || timestampNow - lastError.timestamp > 1000
+      const isPresentInList = !!currentList.find((e) => e.message == message && timestampNow - e.timestamp < 1000)
+      const expired = isMessageRepeated && !isRangeAcceptable || isPresentInList
       const newError = {
-        expired : expired,
-        isDuplicate : isDuplicate,
+        expired : expired,        
         message : message,
-        timestamp : isDuplicate ? lastError.timestamp : timestampNow,
+        timestamp : expired ? lastError.timestamp : timestampNow,
       }
       if(!expired) {
-        setErrorList((currentList) => {
-          let newList = [...currentList]
-          if (currentList.length - 1 >= 3) {
-            newList.splice(0, 1)
-          }                    
-          newList.push(newError)
-          return newList
-        })
+        if (currentList.length - 1 >= 20) {          
+          currentList = currentList.slice(1)
+        }
+        currentList.push(newError)        
+        setHasErrors(true)
       }
-      return newError
-    })
+      return currentList
+    })   
   }
 
   const getCookieSpam = () : number => {
@@ -1188,21 +1186,38 @@ const Chat = () => {
   }, [showNotifications])  
 
   useEffect(() => { // Error Notifications
-    const {expired, message, timestamp} = currentError
-    if(!expired) {          
-      notifyUser(message, `warning`)
-      setCurrentError((lastError) => ({
-        ...lastError,
-        expired : true
-      }))      
-      setErrorList((currentList) => {        
-        const errorIndex = errorList.findIndex((e) => e.message == message && e.timestamp == timestamp)
-        const newList = currentList
-        newList.splice(errorIndex, 1)
-        return newList
-      })
-    }
-  }, [currentError, errorList])
+    if(hasErrors && errorList.length > 0) {
+       const lastIndex = errorList.length - 1
+       const {message, expired} = errorList[lastIndex]
+      if(!expired) {
+        notifyUser(message, `warning`)
+        setErrorList((currentList) => {
+          let newList = [...currentList]
+          return newList.map((e, i) => {      
+            return i == lastIndex ? {...e, expired : true,} : e           
+          })           
+        })
+      }            
+      setHasErrors(false)
+    }    
+  }, [hasErrors])
+
+  // useEffect(() => { // Error Notifications
+  //   const {expired, message, timestamp} = currentError
+  //   if(!expired) {          
+  //     notifyUser(message, `warning`)
+  //     setCurrentError((lastError) => ({
+  //       ...lastError,
+  //       expired : true
+  //     }))      
+  //     setErrorList((currentList) => {        
+  //       const errorIndex = errorList.findIndex((e) => e.message == message && e.timestamp == timestamp)
+  //       const newList = currentList
+  //       newList.splice(errorIndex, 1)
+  //       return newList
+  //     })
+  //   }
+  // }, [currentError, errorList])
 
   useEffect(() => { // Update User List
     const listTimeout = setTimeout(() => {
@@ -1921,7 +1936,6 @@ const Chat = () => {
               notifyUser(`${bugsToFix[i]}`)
             }}
           />          
-          */}
           <CustomButton
             value={`Test 🦾`}
             variationName='varthree'
@@ -1941,30 +1955,26 @@ const Chat = () => {
                 })
               }
 
-              let dummyArray = [1, 2, 3, 4]
-              dummyArray.splice(dummyArray.length - 1, 1)
-
-              notifyUser(dummyArray.length)
-
-              // setTimeout(() => {
-              //   notifyDummyError(`Dummy Error 1`)
-              // }, 100)
-              // setTimeout(() => {
-              //   notifyDummyError(`Dummy Error 2`)
-              // }, 150)
-              // setTimeout(() => {
-              //   notifyDummyError(`Dummy Error 2`)
-              // }, 200)
-              // setTimeout(() => {
-              //   notifyDummyError(`Dummy Error 1`)
-              // }, 250)
-              // setTimeout(() => {                
-              //   notifyDummyError(`Dummy Error 1`)
-              // }, 300)
+              setTimeout(() => {
+                notifyDummyError(`Dummy Error 1`)
+              }, 100)
+              setTimeout(() => {
+                notifyDummyError(`Dummy Error 2`)
+              }, 150)
+              setTimeout(() => {
+                notifyDummyError(`Dummy Error 2`)
+              }, 200)
+              setTimeout(() => {
+                notifyDummyError(`Dummy Error 1`)
+              }, 250)
+              setTimeout(() => {                
+                notifyDummyError(`Dummy Error 1`)
+              }, 300)
 
             }}
 
           /> 
+          */}
 
        </div>
 
@@ -1992,10 +2002,10 @@ const Chat = () => {
         <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>    
         {`!!reload : ${!!reload} || firstLoad : ${firstLoad} || !serverStatus ${!serverStatus} || showLog ${showLog}`}
         </h3>
-        */}
         <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
           {JSON.stringify(errorList)}
         </h3>
+        */}
       </div>
      
     </section>

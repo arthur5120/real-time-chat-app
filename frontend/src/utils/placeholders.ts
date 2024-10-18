@@ -32,8 +32,7 @@ export const currentRoomPlaceHolder = {
 export const errorMessagePlaceholder = `Something Went Wrong, please try again later`
 
 export const errorObjectPlaceholder = {
-    expired : true,
-    isDuplicate : false,
+    expired : true,    
     message : errorMessagePlaceholder,
     timestamp : 0,
 }
