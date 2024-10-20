@@ -36,6 +36,7 @@ import CustomSelect from '../atoms/select'
 import CustomButton from '../atoms/button'
 import Log from '../molecules/log'
 import { editMenuButtonPrefix, emojis, orderText, textColors } from '../../utils/other-resources'
+import MessageTime from '../molecules/message-time'
 
 type TCurrentRoom = {id : string, selectId : number, name : string}
 type TRoom = {id : string, name : string}
@@ -473,10 +474,6 @@ const Chat = () => {
 
   }
 
-  // const setMessage = (updater: (prev: typeof messageRef.current) => typeof messageRef.current) => {
-  //   messageRef.current = updater(messageRef.current)
-  // }
-
   const addMessage = (newMessage : TChatMessage) => {
     setMessages((rest) => ([
       ...rest,
@@ -861,8 +858,8 @@ const Chat = () => {
       notifyError(e)
     }
   }
-
-  const getOrderIcon = (orderNumber : number) => {
+  
+  const returnOrderIcon = (orderNumber : number) => {
     if(orderNumber >= 2) { // room name            
       return (
         !reverseLogOrder ? 
@@ -882,6 +879,145 @@ const Chat = () => {
       )
     }    
   }
+
+  const returnMessages = () => {
+
+    return (
+      messages?.map((message : TChatMessage, id : number) => {
+
+        // 🥗 🌮 🍣 🍙 🍘 🍥 🍨 ☕️ 🎂 🥡 🍵 🍢🍡
+
+        const isUserSender = message.isUserSender
+        const isMessageSelected = message.id == messageBeingEdited.id
+        const isMessageFocused = document.activeElement == messageContainerRef.current
+        const userEmoji = currentUser.diff?.nameEmoji ? currentUser.diff?.nameEmoji : `🍣`
+        const userName = currentUser.name ? currentUser.name : `You`
+        const showUpdatedAt = message.created_at != message.updated_at
+        const messageCreatedAt = getTimeElapsed(message.created_at)
+        const messageUpdatedAt = showUpdatedAt ? getTimeElapsed(message.updated_at) : ``
+        
+        return (
+
+          <Fragment key={`message-fragment-${id}`}>
+
+            <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 py-2 justify-end bg-transparent`}>
+              <h4 className={`bg-transparent font-semibold ${isUserSender ? 'text-yellow-500 cursor-default' : ''}`}>
+                {isUserSender ? `${userEmoji} ${userName}` : `${message.user}`}
+              </h4>
+            </span>
+                        
+            <span // Editable component with `children` managed by React.
+              
+              data-id={message.id}
+              ref={isMessageSelected ? messageContainerRef : null}
+              className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 ${primaryDefault} flex-shrink-1 rounded max-w-48 h-fit h-min-10 break-words cursor-pointer ${message.content != '' || isMessageSelected ? '' : 'text-slate-400'}`}
+              suppressContentEditableWarning={true}
+              contentEditable={isUserSender && isMessageSelected}
+              title={isUserSender ? `Click to edit/delete this message.` : `Click to view details about this message.`}
+              data-action={`confirm`}
+              onClick={(e) => {                    
+                const isCookiePresent = hasCSRFCookie()
+                if(!isCookiePresent) {
+                  notifyUser(`Something went wrong, please refresh the page.`, `warning`)
+                  resetMessageContent()
+                  return
+                }
+                if (isUserSender) {
+                  if (!messageBeingEdited.content) {
+                    onEnterMessageEditMode(e)
+                  }
+                } else {
+                  notifyUser(
+                    `Message wrote by ${message.user} ${getTimeElapsed(message.updated_at)} ${message.updated_at == message.created_at ? `` : `and updated at ${getTimeElapsed(message.updated_at)}`}`
+                  )
+                }
+              }}
+
+              onInput={(e) => {
+                onInputEditableMessage(e)
+              }}
+
+              onBlur={(e) => {
+                onBlurEditableMessage(e)
+              }}
+
+              onKeyDown={(e) => {                    
+                if (e.key === "Enter") {
+                  if (e.ctrlKey || e.metaKey) {
+                    onClickEditModeIcon(e)
+                  }
+                }
+                if(isMessageSelected && messageBeingEdited.wasEdited == false) {
+                  setMessageBeingEdited((values) => ({
+                    ...values,
+                    wasEdited : true
+                  }))
+                }
+              }}
+
+            >                  
+              
+              {message.content != '' || isMessageSelected ? message.content : '...'}
+
+            </span>
+          
+            <span className={`flex items-end justify-end cursor-pointer mx-3 px-1 gap-1 ${(isUserSender && isMessageSelected) ? '' : 'hidden'}`}>
+              
+              { !isMessageFocused && !messageBeingEdited.content ? <button
+                id={`${editMenuButtonPrefix}-edit`}
+                className='hover:bg-slate-600 rounded-full'
+                data-action={`edit`}
+                title={`Edit`}
+                onClick={(e) => onClickEditModeIcon(e)}>
+                  &#128393;
+              </button> : ''}
+              
+              { isMessageFocused || messageBeingEdited.content ? <button
+                id={`${editMenuButtonPrefix}-confirm`}
+                className='hover:bg-slate-600 rounded-full'
+                data-action={`confirm`}
+                title={`Confirm`}
+                onClick={(e) => onClickEditModeIcon(e)}>
+                  &#10003;
+              </button> : ''}
+              
+              { !isMessageFocused && !messageBeingEdited.content ? <button 
+                id={`${editMenuButtonPrefix}-delete`}
+                className='hover:bg-slate-600 rounded-full' 
+                data-action={`delete`} 
+                title={`Delete`} 
+                onClick={(e) => onClickEditModeIcon(e)}>
+                  &#128465;
+              </button> : ''}
+              
+              <button 
+                id={`${editMenuButtonPrefix}-cancel`}
+                className='hover:bg-slate-600 rounded-full'
+                data-action={`cancel`}
+                title={`Cancel`}
+                onClick={(e) => onClickEditModeIcon(e)}>
+                  &#10005;
+              </button>
+
+            </span>
+
+            <span key={`msg-time-${id}`} className={`${isUserSender ? 'self-end' : 'self-start'} mx-2 p-1 justify-end bg-transparent`}>
+              <MessageTime                
+                messageUpdatedAt={messageUpdatedAt}
+                messageCreatedAt={messageCreatedAt}
+                showUpdatedAt={showUpdatedAt}
+                messages={messages}
+              />            
+            </span>            
+
+          </Fragment>
+
+        )
+
+      })
+    )
+
+  } // returnMessages-END
 
   useEffect(() => { // Socket
 
@@ -1222,7 +1358,7 @@ const Chat = () => {
       clearInterval(interval)
     }
 
-  }, [])
+  }, [])  
 
   useEffect(() => { // Update User List
     const listTimeout = setTimeout(() => {
@@ -1537,7 +1673,7 @@ const Chat = () => {
                   }                  
                 }}
               >         
-                {getOrderIcon(logOrder)}
+                {returnOrderIcon(logOrder)}
               </button>
             }
             
@@ -1576,143 +1712,9 @@ const Chat = () => {
           ref={chatContainerRef}>
 
           { showLog ? <Log values={filteredLog.length == 0 ? log : filteredLog} ref={logContainerRef} order={logOrder} reverseOrder={reverseLogOrder}/> : 
-          messages?.length <= 0 ? <TextPlaceholder className={`cursor-default`} value={`No messages yet...`}/> : 
-          messages?.map((message : TChatMessage, id : number) => {
-
-            // 🥗 🌮 🍣 🍙 🍘 🍥 🍨 ☕️ 🎂 🥡 🍵 🍢🍡
-
-            const isUserSender = message.isUserSender
-            const isMessageSelected = message.id == messageBeingEdited.id
-            const isMessageFocused = document.activeElement == messageContainerRef.current
-            const userEmoji = currentUser.diff?.nameEmoji ? currentUser.diff?.nameEmoji : `🍣`
-            const userName = currentUser.name ? currentUser.name : `You`
-            const showUpdatedAt = message.created_at != message.updated_at
-            const messageCreatedAt = getTimeElapsed(message.created_at)
-            const messageUpdatedAt = showUpdatedAt ? getTimeElapsed(message.updated_at) : ``
-            
-            return (
-
-              <Fragment key={`message-fragment-${id}`}>
-
-                <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 py-2 justify-end bg-transparent`}>
-                  <h4 className={`bg-transparent font-semibold ${isUserSender ? 'text-yellow-500 cursor-default' : ''}`}>
-                    {isUserSender ? `${userEmoji} ${userName}` : `${message.user}`}
-                  </h4>
-                </span>
-                            
-                <span // Editable component with `children` managed by React.
-                  
-                  data-id={message.id}
-                  ref={isMessageSelected ? messageContainerRef : null}
-                  className={`${isUserSender ? 'self-end' : 'self-start'} mx-3 p-2 ${primaryDefault} flex-shrink-1 rounded max-w-48 h-fit h-min-10 break-words cursor-pointer ${message.content != '' || isMessageSelected ? '' : 'text-slate-400'}`}
-                  suppressContentEditableWarning={true}
-                  contentEditable={isUserSender && isMessageSelected}
-                  title={isUserSender ? `Click to edit/delete this message.` : `Click to view details about this message.`}
-                  data-action={`confirm`}
-                  onClick={(e) => {                    
-                    const isCookiePresent = hasCSRFCookie()
-                    if(!isCookiePresent) {
-                      notifyUser(`Something went wrong, please refresh the page.`, `warning`)
-                      resetMessageContent()
-                      return
-                    }
-                    if (isUserSender) {
-                      if (!messageBeingEdited.content) {
-                        onEnterMessageEditMode(e)
-                      }
-                    } else {
-                      notifyUser(
-                        `Message wrote by ${message.user} ${getTimeElapsed(message.updated_at)} ${message.updated_at == message.created_at ? `` : `and updated at ${getTimeElapsed(message.updated_at)}`}`
-                      )
-                    }
-                  }}
-
-                  onInput={(e) => {
-                    onInputEditableMessage(e)
-                  }}
-
-                  onBlur={(e) => {
-                    onBlurEditableMessage(e)
-                  }}
-
-                  onKeyDown={(e) => {                    
-                    if (e.key === "Enter") {
-                      if (e.ctrlKey || e.metaKey) {
-                        onClickEditModeIcon(e)
-                      }
-                    }
-                    if(isMessageSelected && messageBeingEdited.wasEdited == false) {
-                      setMessageBeingEdited((values) => ({
-                        ...values,
-                        wasEdited : true
-                      }))
-                    }
-                  }}
-
-                >                  
-                  
-                  {message.content != '' || isMessageSelected ? message.content : '...'}
-
-                </span>
-              
-                <span className={`flex items-end justify-end cursor-pointer mx-3 px-1 gap-1 ${(isUserSender && isMessageSelected) ? '' : 'hidden'}`}>
-                  
-                  { !isMessageFocused && !messageBeingEdited.content ? <button
-                    id={`${editMenuButtonPrefix}-edit`}
-                    className='hover:bg-slate-600 rounded-full'
-                    data-action={`edit`}
-                    title={`Edit`}
-                    onClick={(e) => onClickEditModeIcon(e)}>
-                      &#128393;
-                  </button> : ''}
-                  
-                  { isMessageFocused || messageBeingEdited.content ? <button
-                    id={`${editMenuButtonPrefix}-confirm`}
-                    className='hover:bg-slate-600 rounded-full'
-                    data-action={`confirm`}
-                    title={`Confirm`}
-                    onClick={(e) => onClickEditModeIcon(e)}>
-                      &#10003;
-                  </button> : ''}
-                  
-                  { !isMessageFocused && !messageBeingEdited.content ? <button 
-                    id={`${editMenuButtonPrefix}-delete`}
-                    className='hover:bg-slate-600 rounded-full' 
-                    data-action={`delete`} 
-                    title={`Delete`} 
-                    onClick={(e) => onClickEditModeIcon(e)}>
-                      &#128465;
-                  </button> : ''}
-                  
-                  <button 
-                    id={`${editMenuButtonPrefix}-cancel`}
-                    className='hover:bg-slate-600 rounded-full'
-                    data-action={`cancel`}
-                    title={`Cancel`}
-                    onClick={(e) => onClickEditModeIcon(e)}>
-                      &#10005;
-                  </button>
-
-                </span>
-
-                
-                 
-                <span className={`${isUserSender ? 'self-end' : 'self-start'} mx-2 p-1 justify-end bg-transparent`}>
-                  <h5 key={`msg-created_at-${id}`}  className='bg-transparent text-sm cursor-pointer' title={`Created : ${messageCreatedAt} ${messageUpdatedAt != `` ? `\nUpdated : ${messageUpdatedAt}` : ``}`}>
-                    <time>
-                      {cropMessage(messageCreatedAt, 15)}
-                    </time>
-                    <time key={`msg-update_at-${id}`} className={`text-slate-300 italic`}>
-                      {showUpdatedAt ? ` 📝(${cropMessage(messageUpdatedAt, 15)})` : ``}
-                    </time>
-                  </h5>
-                </span>
-
-              </Fragment>
-
-            )
-
-          })}
+            messages?.length <= 0 ? <TextPlaceholder className={`cursor-default`} value={`No messages yet...`}/> :             
+            returnMessages()
+          }
             
         </div>
 
@@ -1906,8 +1908,10 @@ const Chat = () => {
             }
             variationName='vartwo'
             className={`w-20 h-full max-h-28 m-0 flex items-center justify-center group`}
-            disabled={!!reload || firstLoad || !serverStatus}
-            title={`Delete all rooms`}
+            //disabled={!!reload || firstLoad || !serverStatus}
+            disabled={true}
+            //title={`Delete all rooms`}
+            title={`Chat room removal functionality is being updated.`}
             onClick={() => onResetRoomsClick()}
           />}
 
