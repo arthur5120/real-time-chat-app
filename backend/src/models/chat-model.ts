@@ -82,10 +82,8 @@ export const modDeleteChat = async (req : Request, res : Response) => {
 
 export const modDeleteAllChats = async (req : Request, res : Response) => { // For Testing Purposes
 
-    try {
-        
-        await prisma.chat.deleteMany() // For testing purposes
-
+    try {        
+        await prisma.chat.deleteMany() // For testing purposes        
     } catch (e) {
         console.log(e)
         throw genGetError(`Failed to Delete All Chat Rooms `)

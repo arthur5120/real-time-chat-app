@@ -15,72 +15,76 @@ import {
 import { genGetErrorMessage } from "../utils/general-functions"
 
 export const conCreateChat = async (req : Request, res : Response) => {
-
-    try {
-    
-        await modCreateChat(req, res)
-        return res.status(200).json({message : 'Success'})
-
+    try {            
+        await modCreateChat(req, res)      
     } catch (e) {
         console.log(e)
         return res.status(500).json(genGetErrorMessage(e))
     }
-    
+    if(!res.headersSent) {
+        return res.status(200).json({message : 'Success'})
+    }    
 }
 
 export const conAddUserToChat = async (req : Request, res : Response) => {
 
     try {
-        await modAddUserToChat(req, res)
-        return res.status(200).json({message : 'Success'})
+        await modAddUserToChat(req, res)        
     } catch (e) {
         console.log(e)
         return res.status(500).json(genGetErrorMessage(e))
     }
-
+    if(!res.headersSent) {
+        return res.status(200).json({message : 'Success'})
+    } 
 }
 
 export const conDeleteChat = async (req : Request, res : Response) => {
 
     try {
-        await modDeleteChat(req, res)
-        return res.status(200).json({message : 'Success'})
+        await modDeleteChat(req, res)        
     } catch (e) {
         console.log(e)
         return res.status(500).json(genGetErrorMessage(e))
     }
-
+    if(!res.headersSent) {
+        return res.status(200).json({message : 'Success'})
+    } 
 }
 
 export const conDeleteAllChats = async (req : Request, res : Response) => {
 
     try {
-        await modDeleteAllChats(req, res)
-        return res.status(200).json({message : 'Success'})
+        await modDeleteAllChats(req, res)        
     } catch (e) {
-        console.log(e)
-        return res.status(500).json(genGetErrorMessage(e))
+        console.log(e)        
+        return res.status(500).json(genGetErrorMessage(e))        
     }
-
+    if(!res.headersSent) {
+        return res.status(200).json({message : 'Success'})
+    } 
 }
 
 export const conRemoveUserFromChat = async (req : Request, res : Response) => {
 
     try {
-        await modRemoveUserFromChat(req, res)
-        return res.status(200).json({message : 'Success'})
+        await modRemoveUserFromChat(req, res)        
     } catch (e) {
         console.log(e)
         return res.status(500).json(genGetErrorMessage(e))
     }
-
+    if(!res.headersSent) {
+        return res.status(200).json({message : 'Success'})
+    } 
 }
 
 export const conGetChatById = async (req : Request, res : Response) => {
 
     try {
         const chat = await modGetChatById(req, res)
-        return res.status(200).send(chat)
+        if(!res.headersSent) {
+            return res.status(200).send(chat)
+        }
     } catch (e) {
         return res.status(500).json(genGetErrorMessage(e))
     }

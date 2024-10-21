@@ -29,10 +29,13 @@ export const conUpdateMessage = async (req : Request, res : Response) => {
 
     try {
         await modUpdateMessage(req, res)
-        return res.status(200).json({message : 'Success'})
+        
     } catch (e) {
         console.log(e)
         return res.status(500).json(genGetErrorMessage(e))
+    }
+    if(!res.headersSent) {
+        return res.status(200).json({message : 'Success'})
     }
 
 }

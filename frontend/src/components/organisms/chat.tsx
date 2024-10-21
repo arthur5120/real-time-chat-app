@@ -1908,10 +1908,10 @@ const Chat = () => {
             }
             variationName='vartwo'
             className={`w-20 h-full max-h-28 m-0 flex items-center justify-center group`}
-            //disabled={!!reload || firstLoad || !serverStatus}
-            disabled={true}
-            //title={`Delete all rooms`}
-            title={`Chat room removal functionality is being updated.`}
+            disabled={!!reload || firstLoad || !serverStatus}
+            //disabled={true}
+            title={`Delete all rooms`}
+            //title={`Chat room removal functionality is being updated.`}
             onClick={() => onResetRoomsClick()}
           />}
 

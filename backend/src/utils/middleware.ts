@@ -33,21 +33,28 @@ export const midCSRFProtection = csrf({
     }
 })
 
-export const midHandleErrors : ErrorRequestHandler = (err, req, res, next) => {
+export const midHandleErrors : ErrorRequestHandler = (err, req, res, next) => {    
 
     if (err.code === 'EBADCSRFTOKEN') {        
+        console.log(`Middleware error : BAD CSRF Token`)
         return res.status(403).json({
             message: 'Something went wrong. Please refresh the page and try again.'
         })
     }
 
     if (err.message.includes('idempotency')) {
+        console.log(`Middleware error : Duplicate request detected`)
         return res.status(400).json({
             message: 'Duplicate request detected.'
         })
     }
 
+    if(res.headersSent) {
+        return
+    }
+
     next(err)
+
 }
 
 export const midSetCors = Cors({
