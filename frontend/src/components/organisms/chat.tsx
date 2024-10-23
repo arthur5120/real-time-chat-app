@@ -90,7 +90,7 @@ const Chat = () => {
   const [spamCountdown, setSpamCountdown] = useState(0)
   const [logOrder, setLogOrder] = useState(0)
   const [reverseLogOrder, setReverseLogOrder] = useState(false)
-  const [tickCounter, setTickCounter] = useState(0)
+  const [messageTimeUpdate, setMessageTimeUpdate] = useState(false)
 
   let chatContainerRef = useRef<HTMLDivElement>(null)
   let logContainerRef = useRef<HTMLDivElement>(null)
@@ -1007,6 +1007,7 @@ const Chat = () => {
                 messageCreatedAt={messageCreatedAt}
                 showUpdatedAt={showUpdatedAt}
                 messages={messages}
+                updateFlag={messageTimeUpdate}
               />            
             </span>            
 
@@ -1343,16 +1344,11 @@ const Chat = () => {
     }    
   }, [hasErrors])
 
-  useEffect(() => {
+  useEffect(() => { // Periodic Message Time Update
 
     const interval = setInterval(() => {
-      setTickCounter((prev) => {
-        if(prev >= 60) {
-          return 0
-        }
-        return prev + 1
-      })
-    }, 1000)
+      setMessageTimeUpdate((prev) => !prev)
+    }, 60000)
 
     return () => {
       clearInterval(interval)

@@ -7,9 +7,10 @@ export type TMessageTime = {
     messageCreatedAt : string,
     showUpdatedAt : boolean,      
     messages : TChatMessage[],
+    updateFlag : boolean
 } 
 
-const MessageTime : FC<TMessageTime> = memo(({messageUpdatedAt, messageCreatedAt, showUpdatedAt, messages}) => {      
+const MessageTime : FC<TMessageTime> = memo(({messageUpdatedAt, messageCreatedAt, showUpdatedAt, messages, updateFlag}) => {      
 
     const memoizedMessageTime = useMemo(() => {             
         return (              
@@ -22,7 +23,7 @@ const MessageTime : FC<TMessageTime> = memo(({messageUpdatedAt, messageCreatedAt
                 </time>
             </h5>                        
           )          
-    }, [messages])
+    }, [messages, updateFlag])
 
     return memoizedMessageTime
     
