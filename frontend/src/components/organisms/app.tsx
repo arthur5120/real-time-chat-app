@@ -9,7 +9,7 @@ import { healthContext } from "../../utils/contexts/health-provider"
 import { TSocketAuthRequest, TRes } from "../../utils/types"
 import { authStatus, getUserById, authLogout } from "../../utils/axios-functions"
 import { getCSRFToken, setAxiosCSRFToken } from "../../utils/axios-functions"
-import { hasCSRFCookie } from "../../utils/useful-functions"
+import { getCSRFCookie, verifyCSRFToken } from "../../utils/useful-functions"
 import Cookies from 'js-cookie'
 
 const App = () => {
@@ -35,15 +35,36 @@ const App = () => {
     }
   }
 
-  const retrieveCSRFToken = async () => {    
-    try {
-      Cookies.remove(`_csrf`)
-      const res = await getCSRFToken()
-      if(res?.CSRFToken) {
-        setAxiosCSRFToken(res.CSRFToken)
+  const retrieveCSRFTokenIfInvalid = async () => {            
+    try {      
+
+      const CSRFCookie = getCSRFCookie(`_csrf_manual`)
+
+      if(CSRFCookie) {
+        setAxiosCSRFToken(CSRFCookie)
       }
-    } catch (e) {
-      console.log(e)
+
+      const isTokenValid = !CSRFCookie ? await verifyCSRFToken() : await verifyCSRFToken(CSRFCookie)
+
+      if(!CSRFCookie || !isTokenValid) {
+        notifyUser(`retrieving new token : ${CSRFCookie ? `` : `No Cookie Found.`} ${isTokenValid ? `` : `Token Invalid.`}`)
+        Cookies.remove(`_csrf`)
+        Cookies.remove(`_csrf_manual`)        
+        const res = await getCSRFToken()
+        if(res?.CSRFToken) {        
+          const CSRFToken = getCSRFCookie()
+          if(!CSRFToken) {
+            return
+          }
+          setAxiosCSRFToken(res.CSRFToken)          
+          Cookies.set(`_csrf_manual`, res.CSRFToken, {
+            httpOnly: false,
+            secure: false,
+            sameSite: 'strict'
+          })
+        }
+      }
+    } catch (e) {       
       notifyUser(`Something Went Wrong`, `warning`)
     }
   }
@@ -124,11 +145,10 @@ const App = () => {
       }  
       delay = setTimeout(() => { // avoids flicking on the UI        
         handleSessionExpiration()
-      }, 200)
-      const isCookiePresent = hasCSRFCookie()
-      if(!isCookiePresent) {
-        retrieveCSRFToken()
-      }
+      }, 200)                  
+
+      retrieveCSRFTokenIfInvalid()
+
     }, 15000)
     
     return () => {   
@@ -153,7 +173,9 @@ const App = () => {
     }, 1000)
   }, [socket])  
 
-  useEffect(() => {     
+
+  useEffect(() => {   
+
     if(!serverStatus) {
       if(!firstLoad) {
         notifyUser(`Lost connection to the server.`)
@@ -167,8 +189,11 @@ const App = () => {
     }
     const delay = setTimeout(() => { // avoids flicking on the UI      
       handleSessionExpiration()
-    }, 200)
-    retrieveCSRFToken()      
+    }, 200) 
+
+    //retrieveCSRFToken()
+    retrieveCSRFTokenIfInvalid()
+
     return () => {
      clearTimeout(delay) 
     }    

@@ -61,7 +61,7 @@ export const genGetErrorMessage = (e ? : unknown) => {
     const defaultError = {
         error : `Internal Error`,
         success : false,        
-        message : `Something went wrong`,    
+        message : `Something went wrong`,
         timestamp: new Date().toISOString(),
         statusCode: 500,
     }

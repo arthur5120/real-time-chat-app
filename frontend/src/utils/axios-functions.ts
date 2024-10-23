@@ -283,8 +283,20 @@ export const getMessageByUserId = async (userId : string) => {
 
 export const getCSRFToken = async () => {
     try {
-        const res = await baseURL.get(`get-csrf-token`)
+        const res = await baseURL.get(`get-csrf-token`, {})
         return res.data
+    } catch (e) {
+        if (axios.isAxiosError(e) && e?.response?.status) {
+            throw e.response.data
+        }
+    }
+}
+
+export const checkCSRFToken = async (csrfToken ? : string) => {
+    try {                
+        const config = csrfToken ? {headers: {'X-CSRF-Token' : csrfToken}} : undefined
+        const res = await baseURL.post(`check-csrf-token`, {}, config)
+        return res.data        
     } catch (e) {
         if (axios.isAxiosError(e) && e?.response?.status) {
             throw e.response.data

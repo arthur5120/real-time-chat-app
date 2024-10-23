@@ -4,13 +4,13 @@ import {
     conAuth, 
     conGetAuth, 
     conLogout, 
-    conGetCSRFToken 
+    conGetCSRFToken, 
+    conCheckCSRFToken
 } from "../controllers/auth-controllers"
 
-import { 
-    midCSRFProtection, 
+import {     
     midBodyParsers, 
-    midCheckAuth,
+    midCheckAuth,    
     midRateLimiter,     
 } from '../utils/middleware'
 
@@ -21,6 +21,7 @@ const getAuthRateLimiter = midRateLimiter()
 authRouter.post('/auth', midBodyParsers, authRateLimiter, conAuth)
 authRouter.post('/get-auth', midBodyParsers, getAuthRateLimiter, conGetAuth)
 authRouter.post('/logout', midBodyParsers, authRateLimiter, midCheckAuth, conLogout)
-authRouter.get('/get-csrf-token', midBodyParsers, midCSRFProtection, conGetCSRFToken)
+authRouter.post('/check-csrf-token', midBodyParsers, conCheckCSRFToken)
+authRouter.get('/get-csrf-token', midBodyParsers, conGetCSRFToken)
 
 export default authRouter

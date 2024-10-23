@@ -20,7 +20,7 @@ const mockUserData = {
   password : 'Password@123'
 }
 
-const defaultFeedback = `Something went wrong, please try again later.`
+const defaultFeedback = `Something went wrong, please try again later`
 
 const Login = () => {  
 
@@ -45,8 +45,8 @@ const Login = () => {
         } else {          
           setMessage(serverResponse?.message ? serverResponse.message : defaultFeedback)
         }
-      } catch (e) {
-        setMessage(defaultFeedback)
+      } catch (e) {        
+        setMessage(e instanceof Error && e.message ? e.message : defaultFeedback)
       }      
     }
 

@@ -1,6 +1,7 @@
 import { TChatMessage } from "./types"
 import { v4 as uuidv4 } from "uuid"
 import Cookies from 'js-cookie'
+import { checkCSRFToken } from "./axios-functions";
 
 export const capitalizeFirst = (string : string) : string => {
     const newString = string.charAt(0).toUpperCase() + string.slice(1);
@@ -168,7 +169,16 @@ export const isThingValidSpecific = (input : any) : boolean => {
    }   
 }
 
-export const hasCSRFCookie = () => {
-    const result = !!Cookies.get(`_csrf`)
-    return result
+export const getCSRFCookie = (csrfCookieName ? : string) => {
+    const res = csrfCookieName ? Cookies.get(csrfCookieName) : Cookies.get(`_csrf`)
+    return res
+}
+
+export const verifyCSRFToken = async (csrfToken ? : string) => {
+    try {
+        const res = await checkCSRFToken(csrfToken)
+        return res.success
+    } catch(e) {
+        return false
+    }
 }

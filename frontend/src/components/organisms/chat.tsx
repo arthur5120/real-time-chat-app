@@ -18,7 +18,7 @@ import {
 
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest, TLog } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder, roomsPlaceholder, currentRoomPlaceHolder, errorMessagePlaceholder, errorObjectPlaceholder } from '../../utils/placeholders'
-import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, hasCSRFCookie, isThingValid, isThingValidSpecific, sortAlphabeticallyByAny, sortAlphabeticallyByName, sortByMilliseconds, sortChronogicallyByAny } from '../../utils/useful-functions'
+import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, getCSRFCookie, isThingValid, isThingValidSpecific, sortAlphabeticallyByAny, sortAlphabeticallyByName, sortByMilliseconds, sortChronogicallyByAny, verifyCSRFToken } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
@@ -149,7 +149,7 @@ const Chat = () => {
         if (currentList.length - 1 >= 20) {          
           currentList = currentList.slice(1)
         }
-        currentList.push(newError)        
+        currentList.push(newError)
         setHasErrors(true)
       }
       return currentList
@@ -494,7 +494,7 @@ const Chat = () => {
 
       const dateTimeNow = Date.now()
       const isSpammingResult = isSpamming(dateTimeNow) 
-      const isCookiePresent = hasCSRFCookie()
+      const isCookiePresent = getCSRFCookie()
       
       if(!isCookiePresent) {
         notifyUser(`Something went wrong, please refresh the page.`, `warning`)
@@ -756,7 +756,7 @@ const Chat = () => {
 
   const onResetRoomsClick = async () => {
 
-    const isCookiePresent = hasCSRFCookie()
+    const isCookiePresent = getCSRFCookie()
 
       if(!isCookiePresent) {
         notifyUser(`Something went wrong, please refresh the page.`, `warning`)
@@ -786,7 +786,7 @@ const Chat = () => {
   }
   
   const onNewRoomClick = async () => {
-    const isCookiePresent = hasCSRFCookie()
+    const isCookiePresent = getCSRFCookie()
     if(!isCookiePresent) {
       notifyUser(`Something went wrong, please refresh the page.`, `warning`)
       resetMessageContent()
@@ -916,7 +916,7 @@ const Chat = () => {
               title={isUserSender ? `Click to edit/delete this message.` : `Click to view details about this message.`}
               data-action={`confirm`}
               onClick={(e) => {                    
-                const isCookiePresent = hasCSRFCookie()
+                const isCookiePresent = getCSRFCookie()
                 if(!isCookiePresent) {
                   notifyUser(`Something went wrong, please refresh the page.`, `warning`)
                   resetMessageContent()
@@ -1959,31 +1959,17 @@ const Chat = () => {
               // socket?.connect()
               // socket?.emit(`updateInactive`, { id : authInfo.id, name: currentUser.name, inactive: false })
               // inactivityTimerId ? clearTimeout(inactivityTimerId) : ''              
-              const notifyDummyError = (message : string) => {                                
-                notifyError({
-                  message : message, 
-                  error : true
-                })
-              }
-
-              setTimeout(() => {
-                notifyDummyError(`Dummy Error 1`)
-              }, 100)
-              setTimeout(() => {
-                notifyDummyError(`Dummy Error 2`)
-              }, 150)
-              setTimeout(() => {
-                notifyDummyError(`Dummy Error 2`)
-              }, 200)
-              setTimeout(() => {
-                notifyDummyError(`Dummy Error 1`)
-              }, 250)
-              setTimeout(() => {                
-                notifyDummyError(`Dummy Error 1`)
-              }, 300)
-
+              const CSRFCookie = getCSRFCookie()
+              const CSRFCookie_Axios_Headers = Cookies.get(`_csrf_manual`)
+              const res1 = await verifyCSRFToken()
+              const res2 = await verifyCSRFToken(CSRFCookie)
+              const res3 = await verifyCSRFToken(CSRFCookie_Axios_Headers)
+              console.log({
+                Axios_Instance : res1,
+                CSRFCookie : res2,
+                ManualCookie : res3,
+              })              
             }}
-
           /> 
           */}
 

@@ -115,13 +115,24 @@ export const conLogout = async (req : Request, res : Response) => {
     }
 }
 
-export const conGetCSRFToken = async (req: Request, res: Response) => {    
-   try {        
-        return res.status(200).json({ 
-            CSRFToken: req.csrfToken()
-        })
+export const conGetCSRFToken = async (req: Request, res: Response) => { 
+   try {            
+    const token = req.csrfToken()
+    return res.status(200).json({
+        CSRFToken: token,  
+    })    
    } catch (e) {
         console.log(e)
         return await res.status(500).json(genGetErrorMessage(e))
    }
 }
+
+export const conCheckCSRFToken = async (req: Request, res: Response) => {    
+    try {          
+        console.log(`valid token ${req.headers['x-csrf-token']}`)      
+        return res.status(200).json({success : true})
+    } catch (e) {
+         console.log(e)
+         return await res.status(500).json(genGetErrorMessage(e))
+    }    
+ } 

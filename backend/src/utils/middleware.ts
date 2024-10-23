@@ -25,8 +25,9 @@ export const midRateLimiter = (windowMs : number = 60 * 1000, max : number = 100
     return midRateLimiter
 }
 
-export const midCSRFProtection = csrf({ 
+export const midCSRFProtection = csrf({     
     cookie: {
+        key : `_csrf`,
         httpOnly: false,
         secure: false,
         sameSite: 'strict',
@@ -36,16 +37,19 @@ export const midCSRFProtection = csrf({
 export const midHandleErrors : ErrorRequestHandler = (err, req, res, next) => {    
 
     if (err.code === 'EBADCSRFTOKEN') {        
-        console.log(`Middleware error : BAD CSRF Token`)
+        console.log(`Middleware error : BAD CSRF Token`)        
+        console.log('Token from Client:', req.headers['x-csrf-token'])
         return res.status(403).json({
-            message: 'Something went wrong. Please refresh the page and try again.'
+            message: 'Something went wrong. Please refresh the page and try again.',
+            success : false,
         })
     }
 
     if (err.message.includes('idempotency')) {
         console.log(`Middleware error : Duplicate request detected`)
         return res.status(400).json({
-            message: 'Duplicate request detected.'
+            message: 'Duplicate request detected.',
+            success : false,
         })
     }
 
@@ -67,6 +71,7 @@ export const midSetCors = Cors({
 export const midBodyParsers = [        
     express.json(),
     express.text(),
+    express.urlencoded({extended : true}),
 ]
 
 export const midCheckAuth = async (req : Request, res : Response, next : NextFunction) => {               
