@@ -18,7 +18,7 @@ import {
 
 import { TUser, TMessage, TChatMessage, TChatRoom, TRes, TSocketAuthRequest, TLog } from '../../utils/types'
 import { userPlaceholder, messagePlaceholder, roomsPlaceholder, currentRoomPlaceHolder, errorMessagePlaceholder, errorObjectPlaceholder } from '../../utils/placeholders'
-import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, getCSRFCookie, isThingValid, isThingValidSpecific, sortAlphabeticallyByAny, sortAlphabeticallyByName, sortByMilliseconds, sortChronogicallyByAny, verifyCSRFToken } from '../../utils/useful-functions'
+import { capitalizeFirst, convertDatetimeToMilliseconds, cropMessage, getFormattedDate, getFormattedTime, getItemFromString, getTimeElapsed, getCSRFCookie, isThingValid, isThingValidSpecific, sortAlphabeticallyByAny, sortAlphabeticallyByName, sortByMilliseconds, sortChronogicallyByAny, verifyCSRFToken, generateUniqueId } from '../../utils/useful-functions'
 import { authContext } from '../../utils/contexts/auth-provider'
 import { socketContext } from '../../utils/contexts/socket-provider'
 import { toastContext } from '../../utils/contexts/toast-provider'
@@ -1348,7 +1348,7 @@ const Chat = () => {
 
     const interval = setInterval(() => {
       setMessageTimeUpdate((prev) => !prev)
-    }, 60000)
+    }, 15000)
 
     return () => {
       clearInterval(interval)
@@ -1950,21 +1950,6 @@ const Chat = () => {
             disabled={!!reload || firstLoad || !serverStatus}
             title={``}
             onClick={ async () => {
-              // setUserActivity(true)
-              // const authInfo : TRes = await authStatus({})
-              // socket?.connect()
-              // socket?.emit(`updateInactive`, { id : authInfo.id, name: currentUser.name, inactive: false })
-              // inactivityTimerId ? clearTimeout(inactivityTimerId) : ''              
-              const CSRFCookie = getCSRFCookie()
-              const CSRFCookie_Axios_Headers = Cookies.get(`_csrf_manual`)
-              const res1 = await verifyCSRFToken()
-              const res2 = await verifyCSRFToken(CSRFCookie)
-              const res3 = await verifyCSRFToken(CSRFCookie_Axios_Headers)
-              console.log({
-                Axios_Instance : res1,
-                CSRFCookie : res2,
-                ManualCookie : res3,
-              })              
             }}
           /> 
           */}

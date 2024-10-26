@@ -35,35 +35,44 @@ const App = () => {
     }
   }
 
-  const retrieveCSRFTokenIfInvalid = async () => {            
-    try {      
+  const retrieveCSRFToken = async () => {    
 
-      const CSRFCookie = getCSRFCookie(`_csrf_manual`)
+    Cookies.remove(`_csrf`)
+    Cookies.remove(`_csrf_manual`)
 
-      if(CSRFCookie) {
-        setAxiosCSRFToken(CSRFCookie)
-      }
+    const res = await getCSRFToken()
 
-      const isTokenValid = !CSRFCookie ? await verifyCSRFToken() : await verifyCSRFToken(CSRFCookie)
-
-      if(!CSRFCookie || !isTokenValid) {
-        notifyUser(`retrieving new token : ${CSRFCookie ? `` : `No Cookie Found.`} ${isTokenValid ? `` : `Token Invalid.`}`)
-        Cookies.remove(`_csrf`)
-        Cookies.remove(`_csrf_manual`)        
-        const res = await getCSRFToken()
-        if(res?.CSRFToken) {        
-          const CSRFToken = getCSRFCookie()
-          if(!CSRFToken) {
-            return
-          }
-          setAxiosCSRFToken(res.CSRFToken)          
+      if(res?.CSRFToken) {        
+        setAxiosCSRFToken(res.CSRFToken)        
           Cookies.set(`_csrf_manual`, res.CSRFToken, {
             httpOnly: false,
             secure: false,
             sameSite: 'strict'
           })
+      }    
+  }
+
+  const retrieveCSRFTokenIfInvalid = async () => {
+    try {
+
+      const CSRFCookie = getCSRFCookie(`_csrf_manual`)
+
+      if(CSRFCookie) {
+        
+        const isTokenValid = await verifyCSRFToken(CSRFCookie)
+                
+        if(isTokenValid) {
+          setAxiosCSRFToken(CSRFCookie)
+        } else {          
+          notifyUser(`retrieving new token : Token Invalid.`)
+          retrieveCSRFToken()
         }
+        
+      } else {
+        notifyUser(`retrieving new token : No Cookie Found.`)
+        retrieveCSRFToken()
       }
+
     } catch (e) {       
       notifyUser(`Something Went Wrong`, `warning`)
     }

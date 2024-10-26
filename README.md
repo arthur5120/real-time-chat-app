@@ -62,6 +62,11 @@ A real time chat application with authentication/authorization features, message
 - Tooltips and Help Text
 - Keyboard Shortcuts
 
+| Other Functionalities |
+| :---        |
+- Idempotency
+- CSRF Protection
+
 ## 3. About Specific Features
 
 | User Status & Chat Rooms |

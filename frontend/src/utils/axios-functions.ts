@@ -318,3 +318,30 @@ export const getServerHealth = async () => {
         }
     }
 }
+
+export const obscureData = async (data : string) => {
+    try {
+        const res = await baseURL.post(`obscure-data`, {
+            data : data
+        })
+        
+        return res.data
+    } catch (e) {
+        if (axios.isAxiosError(e) && e?.response?.status) {
+            throw e.response.data
+        }
+    }
+}
+
+export const revealData = async (data : string) => {
+    try {
+        const res = await baseURL.post(`reveal-data`, {
+            data : data
+        })
+        return res.data
+    } catch (e) {
+        if (axios.isAxiosError(e) && e?.response?.status) {
+            throw e.response.data
+        }
+    }
+}
