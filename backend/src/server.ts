@@ -17,7 +17,7 @@ const PORT = process.env.PORT
 app.use(
     midSetCors,
     cookieParser(),
-    midCSRFProtection,
+    //midCSRFProtection,
     midIdempotency,    
     ...router,
     midHandleErrors,

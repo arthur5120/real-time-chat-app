@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { midBodyParsers } from '../utils/middleware'
+import { midBodyParsers, midCSRFProtection, midRateLimiter } from '../utils/middleware'
 
 import { 
     conCheckCSRFToken,
@@ -10,11 +10,12 @@ import {
 } from '../controllers/utils-controllers'
 
 const utilsRouter = Router()
+const utilRateLimiter = midRateLimiter(1000, 5)
 
 utilsRouter.get(`/check-health`, conCheckHealth)
-utilsRouter.get('/get-csrf-token', midBodyParsers, conGetCSRFToken)
-utilsRouter.post(`/obscure-data`, midBodyParsers, conObscureData)
-utilsRouter.post(`/reveal-data`, midBodyParsers, conRevealData)
-utilsRouter.post('/check-csrf-token', midBodyParsers, conCheckCSRFToken)
+utilsRouter.get('/get-csrf-token', midBodyParsers, midCSRFProtection, conGetCSRFToken)
+utilsRouter.post('/check-csrf-token', midBodyParsers, midCSRFProtection, conCheckCSRFToken)
+utilsRouter.post(`/obscure-data`, midBodyParsers, utilRateLimiter, conObscureData)
+utilsRouter.post(`/reveal-data`, midBodyParsers, utilRateLimiter, conRevealData)
 
 export default utilsRouter

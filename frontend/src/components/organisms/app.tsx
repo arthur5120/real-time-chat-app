@@ -9,7 +9,7 @@ import { healthContext } from "../../utils/contexts/health-provider"
 import { TSocketAuthRequest, TRes } from "../../utils/types"
 import { authStatus, getUserById, authLogout } from "../../utils/axios-functions"
 import { getCSRFToken, setAxiosCSRFToken } from "../../utils/axios-functions"
-import { getCSRFCookie, verifyCSRFToken } from "../../utils/useful-functions"
+import { getCSRFCookie, obscureString, revealString, verifyCSRFToken } from "../../utils/useful-functions"
 import Cookies from 'js-cookie'
 
 const App = () => {
@@ -43,8 +43,9 @@ const App = () => {
     const res = await getCSRFToken()
 
       if(res?.CSRFToken) {        
-        setAxiosCSRFToken(res.CSRFToken)        
-          Cookies.set(`_csrf_manual`, res.CSRFToken, {
+        setAxiosCSRFToken(res.CSRFToken)
+        const obString = await obscureString(res.CSRFToken)
+          Cookies.set(`_csrf_manual`, obString, {
             httpOnly: false,
             secure: false,
             sameSite: 'strict'
@@ -58,18 +59,19 @@ const App = () => {
       const CSRFCookie = getCSRFCookie(`_csrf_manual`)
 
       if(CSRFCookie) {
-        
-        const isTokenValid = await verifyCSRFToken(CSRFCookie)
+
+        const reString = await revealString(CSRFCookie)
+        const isTokenValid = await verifyCSRFToken(reString)
                 
-        if(isTokenValid) {
-          setAxiosCSRFToken(CSRFCookie)
+        if(isTokenValid) {          
+          setAxiosCSRFToken(reString)
         } else {          
-          notifyUser(`retrieving new token : Token Invalid.`)
+          console.log(`retrieving new token : Token Invalid.`)
           retrieveCSRFToken()
         }
         
       } else {
-        notifyUser(`retrieving new token : No Cookie Found.`)
+        console.log(`retrieving new token : No Cookie Found.`)
         retrieveCSRFToken()
       }
 
