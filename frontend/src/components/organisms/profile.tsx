@@ -4,7 +4,6 @@ import CustomTitle from "../atoms/title"
 import { useContext, useEffect, useState } from "react"
 import { TUser } from "../../utils/types"
 import { toastContext } from "../../utils/contexts/toast-provider"
-import { useNavigate } from "react-router-dom"
 
 const Profile = () => {
 
@@ -12,19 +11,21 @@ const Profile = () => {
     const {notifyUser} = useContext(toastContext)
     const [user, setUser] = useState<TUser>({})
     const [chatsCounter, setChatsCounter] = useState(0)
-    const [messagesCounter, setMessagesCounter] = useState(0)    
-    const navigate = useNavigate()
+    const [messagesCounter, setMessagesCounter] = useState(0) 
+    const [hasToken, setHasToken] = useState(true)
 
     const handleStart = async () => {  
         
         try {
         
             const userAuthInfo = await authStatus({}) as {id : string, authenticated : boolean}
-            const hasAuthToken = userAuthInfo ? userAuthInfo.authenticated : false            
+            const foundToken = userAuthInfo ? userAuthInfo.authenticated : false            
 
-            if(!hasAuthToken) {
-                navigate('/login')
+            if(!foundToken) {
+                setHasToken(false)
                 return
+            } else if(!hasToken) {
+                setHasToken(true)
             }
 
             const currentUser = await getUserById(userAuthInfo.id)     
@@ -48,7 +49,7 @@ const Profile = () => {
         return () => {
             clearTimeout(delay)
         }
-    }, [])
+    }, [auth, location])
 
     return (
 
@@ -57,7 +58,7 @@ const Profile = () => {
         <CustomTitle value='Current Profile' className='text-green-500 my-3'/>
 
         {
-            auth ? 
+            auth && hasToken ? 
                 <h3>
                   Name : {user.name} <br/>
                   Email : {user.email} <br/>

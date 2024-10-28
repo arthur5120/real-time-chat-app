@@ -179,11 +179,13 @@ const App = () => {
   }, [location, auth])
 
   useEffect(() => {      
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       requestSocketListUpdate()      
     }, 1000)
-  }, [socket])  
-
+    return () => {
+      clearTimeout(timeout)
+    }
+  }, [socket])
 
   useEffect(() => {   
 
@@ -201,8 +203,7 @@ const App = () => {
     const delay = setTimeout(() => { // avoids flicking on the UI      
       handleSessionExpiration()
     }, 200) 
-
-    //retrieveCSRFToken()
+    
     retrieveCSRFTokenIfInvalid()
 
     return () => {

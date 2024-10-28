@@ -1052,11 +1052,11 @@ const Chat = () => {
     })
         
     socket?.on(`minorChange`, (msg : TSocketPayload) => {
-      const {userName, notification, roomId, roomName, content, notifyRoomOnly} = msg
+      const {userId, userName, notification, roomId, roomName, content, notifyRoomOnly} = msg
       const isRoomIdValid = roomId && isThingValidSpecific(roomId) // Redundant check for it to be recognized
       const isRoomMember = isRoomIdValid ? checkForUserInRoom(roomId) : false
-      const shouldNotifyUser = notification && showNotificationsRef.current
-      const shouldAddToLog = userName && roomName && content
+      const shouldNotifyUser = notification && showNotificationsRef.current      
+      const shouldAddToLog = userName && roomName && content && userId != currentUserIdRef.current
       console.log(`socket on minorChange : ${roomId}`)
         if(isRoomIdValid) {
           if (roomId == currentRoomIdRef.current || !notifyRoomOnly) { // if the message's global or if it's in the current room.
@@ -1453,7 +1453,8 @@ const Chat = () => {
           const notificationMessage = `${currentUser?.name ? capitalizeFirst(currentUser.name) : ``} updated "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`
           const logMessage = `updated "${previousMessage}" to "${updatedMessage}"`
           const socketPayload : TSocketPayload = {
-            userName : currentUser.name, 
+            userId : currentUser.id,
+            userName : currentUser.name,
             roomName : currentRoom.name,
             roomId : currentRoom.id,
             notification : notificationMessage, 
