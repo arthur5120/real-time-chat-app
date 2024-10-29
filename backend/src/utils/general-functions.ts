@@ -80,7 +80,7 @@ export const genGetErrorMessage = (e ? : unknown) => {
 
 export const obscureData = (rawString : string, salt : string = obString, interval : number = obInterval) => {
     let obscuredString = ``, j = 0
-    const salt_l = salt.length, rawString_l = rawString.length
+    const salt_l = salt.length, rawString_l = Math.min(rawString.length, 50)
     for(let i = 0 ; i < rawString_l; i++) {
       const shouldAdd = j >= interval
       const randomLetter = shouldAdd ? salt[Math.random() * salt_l | 0] : ``                
@@ -92,7 +92,7 @@ export const obscureData = (rawString : string, salt : string = obString, interv
 
 export const revealData = (obscuredString : string, interval : number = obInterval) => {
     let revealedString = ``, j = 0
-    const encryptedString_l = obscuredString.length
+    const encryptedString_l = Math.min(obscuredString.length, 50)
     for(let i = 0 ; i < encryptedString_l; i++) {                  
       if (j <= interval) {
         revealedString = `${revealedString}${obscuredString[i]}`                
