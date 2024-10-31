@@ -58,7 +58,7 @@ export const conRevealData = async (req : Request, res : Response) => {
         if(!data) {
             return res.status(404).json({success : false, message : `Invalid data`})
         }        
-        const revealedData = revealData(data)
+        const revealedData = revealData(data)        
         return res.status(200).json({success : true, data : revealedData})
     } catch(e) {
         console.log(e)

@@ -194,9 +194,10 @@ export const obscureString = async (data : string) => {
 
 export const revealString = async (data : string) => { 
     try {
-        const res = await revealData(data)        
+        const res = await revealData(data)          
         return await res.success ? res.data : false
     } catch (e) {        
+        console.log(JSON.stringify(e))
         return false
     }
 }

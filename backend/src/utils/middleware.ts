@@ -25,7 +25,7 @@ export const midRateLimiter = (windowMs : number = 60 * 1000, max : number = 100
     return midRateLimiter
 }
 
-export const midCSRFProtection = csrf({     
+export const midCSRFGuard = csrf({     
     cookie: {
         key : `_csrf`,
         httpOnly: false,
@@ -33,6 +33,17 @@ export const midCSRFProtection = csrf({
         sameSite: 'strict',
     }
 })
+
+export const midCSRFConditionalGuard = (req : Request, res : Response, next: NextFunction) => {
+
+    const allowedRoutes = [`/obscure-data`,`/reveal-data`,]
+
+    if (allowedRoutes.includes(req.path)) {
+        return next()
+    }
+    
+    midCSRFGuard(req, res, next)
+}
 
 export const midHandleErrors : ErrorRequestHandler = (err, req, res, next) => {    
 

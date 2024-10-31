@@ -4,7 +4,7 @@ import CustomButton from "../atoms/button"
 import { FormEvent, useContext, useEffect, useState } from "react"
 import { TUser, TFieldKeys } from "../../utils/types"
 import { userPlaceholder } from "../../utils/placeholders"
-import { authLogin } from "../../utils/axios-functions"
+import { authLogin, authStatus } from "../../utils/axios-functions"
 import { authContext } from "../../utils/contexts/auth-provider"
 import { useNavigate } from "react-router-dom"
 import { primaryDefault, secondaryDefault } from "../../utils/tailwindVariations"
@@ -24,7 +24,7 @@ const defaultFeedback = `Something went wrong, please try again later`
 
 const Login = () => {  
 
-  const {auth, setAuth} = useContext(authContext)
+  const {auth, setAuth, logout} = useContext(authContext)
   const [data, setData] = useState<TUser>(mockUserData)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)  
@@ -34,10 +34,17 @@ const Login = () => {
   const onSubmit = async (e : FormEvent<HTMLFormElement>) => {       
     
     e.preventDefault()  
-    setLoading(true)    
+    setLoading(true)
 
     if (setAuth != null) {      
       try {
+        
+        const hasToken = await authStatus({})
+
+        if(hasToken && logout) {
+          logout()
+        }
+        
         const serverResponse = await authLogin(data)
         if(serverResponse.success) {
           setMessage(`Authenticated`)

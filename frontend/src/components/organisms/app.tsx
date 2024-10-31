@@ -66,12 +66,12 @@ const App = () => {
         if(isTokenValid) {          
           setAxiosCSRFToken(reString)
         } else {          
-          console.log(`retrieving new token : Token Invalid.`)
+          notifyUser(`retrieving new token : Token Invalid. ${reString}`)
           retrieveCSRFToken()
         }
         
       } else {
-        console.log(`retrieving new token : No Cookie Found.`)
+        notifyUser(`retrieving new token : No Cookie Found.`)
         retrieveCSRFToken()
       }
 
