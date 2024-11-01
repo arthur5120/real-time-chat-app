@@ -1955,7 +1955,7 @@ const Chat = () => {
             className={`${spam ? `bg-yellow-500` : `bg-black`} active:bg-gray-900 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad || !serverStatus}
             title={``}
-            onClick={ async () => {
+            onClick={ async () => {              
             }}
           /> 
           */}

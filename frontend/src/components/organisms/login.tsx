@@ -46,6 +46,7 @@ const Login = () => {
         }
         
         const serverResponse = await authLogin(data)
+        
         if(serverResponse.success) {
           setMessage(`Authenticated`)
           setAuth(true)

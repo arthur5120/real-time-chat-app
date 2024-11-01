@@ -9,7 +9,7 @@ import { healthContext } from "../../utils/contexts/health-provider"
 import { TSocketAuthRequest, TRes } from "../../utils/types"
 import { authStatus, getUserById, authLogout } from "../../utils/axios-functions"
 import { getCSRFToken, setAxiosCSRFToken } from "../../utils/axios-functions"
-import { getCSRFCookie, obscureString, revealString, verifyCSRFToken } from "../../utils/useful-functions"
+import { getCSRFCookie, getCurrentUserId, obscureString, revealString, verifyCSRFToken } from "../../utils/useful-functions"
 import Cookies from 'js-cookie'
 
 const App = () => {
@@ -23,6 +23,7 @@ const App = () => {
   const [hasSessionExpired, setHasSessionExpired] = useState(false)
   const [requireRefresh, setRequireRefresh] = useState(true)
   const [firstLoad, setFirstLoad] = useState(true)
+  const [currentUserId, setCurrentUserId] = useState(``)
   const location = useLocation()
   const navigate = useNavigate() 
 
@@ -209,12 +210,27 @@ const App = () => {
     return () => {
      clearTimeout(delay) 
     }    
-  }, [serverStatus])
+  }, [serverStatus])  
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const userId = await getCurrentUserId()
+      if(userId) {
+        if(userId != currentUserId) {
+          handleSessionExpiration()
+        }
+        setCurrentUserId(userId)
+      }      
+  }, 1000)
+    return () => {
+      clearInterval(interval)
+    }
+  }, [currentUserId])
 
   useEffect(() => {    
-    const delay = setTimeout(() => {      
+    const delay = setTimeout(() => {     
       setFirstLoad(false)
-    }, 500)
+    }, 500)    
     return () => {
       clearTimeout(delay)
     }

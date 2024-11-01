@@ -1,7 +1,7 @@
 import { TChatMessage } from "./types"
 import { v4 as uuidv4 } from "uuid"
 import Cookies from 'js-cookie'
-import { checkCSRFToken, obscureData, revealData } from "./axios-functions";
+import { authStatus, checkCSRFToken, obscureData, revealData } from "./axios-functions";
 
 export const capitalizeFirst = (string : string) : string => {
     const newString = string.charAt(0).toUpperCase() + string.slice(1);
@@ -199,5 +199,16 @@ export const revealString = async (data : string) => {
     } catch (e) {        
         console.log(JSON.stringify(e))
         return false
+    }
+}
+
+export const getCurrentUserId = async () => {
+    try {
+      const userInfo = await authStatus({}) as {id : string}
+      if(userInfo) {
+        return userInfo.id
+      }      
+    } catch(e) {
+      return `none`
     }
 }
