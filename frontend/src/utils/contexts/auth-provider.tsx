@@ -17,6 +17,8 @@ type TAuth = Partial<{
   setRole : Dispatch<SetStateAction<string>>,
   clickedToLogout : boolean,
   setClickedToLogout : Dispatch<SetStateAction<boolean>>,
+  clickedToLogin : boolean,
+  setClickedToLogin : Dispatch<SetStateAction<boolean>>,
   getAuthTokenStatus : Function,
   logout : Function,
 }>
@@ -28,6 +30,7 @@ const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
   const [auth, setAuth] = useState(false)
   const [role, setRole] = useState('none')
   const [clickedToLogout, setClickedToLogout] = useState(false)
+  const [clickedToLogin, setClickedToLogin] = useState(false)
 
   const logout = async () => {
     setClickedToLogout(true)
@@ -58,7 +61,7 @@ const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
   }, [auth])
 
   return (
-    <authContext.Provider value={{auth, setAuth, role, setRole, clickedToLogout, setClickedToLogout, getAuthTokenStatus, logout}}>
+    <authContext.Provider value={{auth, setAuth, role, setRole, clickedToLogout, setClickedToLogout, clickedToLogin, setClickedToLogin, getAuthTokenStatus, logout}}>
       {children}
     </authContext.Provider>
   )

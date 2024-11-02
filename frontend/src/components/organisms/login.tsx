@@ -24,7 +24,7 @@ const defaultFeedback = `Something went wrong, please try again later`
 
 const Login = () => {  
 
-  const {auth, setAuth, logout} = useContext(authContext)
+  const {auth, setAuth, setClickedToLogin, logout} = useContext(authContext)
   const [data, setData] = useState<TUser>(mockUserData)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)  
@@ -36,7 +36,7 @@ const Login = () => {
     e.preventDefault()  
     setLoading(true)
 
-    if (setAuth != null) {      
+    if (setAuth && setClickedToLogin) {      
       try {
         
         const hasToken = await authStatus({})
@@ -49,6 +49,7 @@ const Login = () => {
         
         if(serverResponse.success) {
           setMessage(`Authenticated`)
+          setClickedToLogin(true)
           setAuth(true)
         } else {          
           setMessage(serverResponse?.message ? serverResponse.message : defaultFeedback)

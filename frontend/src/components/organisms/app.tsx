@@ -16,13 +16,13 @@ const App = () => {
 
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
-  const {auth, setAuth, setRole, getAuthTokenStatus, clickedToLogout, setClickedToLogout} = useContext(authContext)
+  const {auth, setAuth, setRole, getAuthTokenStatus, clickedToLogout, setClickedToLogout, clickedToLogin} = useContext(authContext)
   const {updateServerStatus} = useContext(healthContext)
   const {serverStatus} = useContext(healthContext)
   const [previousAuth, setPreviousAuth] = useState(auth)
   const [hasSessionExpired, setHasSessionExpired] = useState(false)
   const [requireRefresh, setRequireRefresh] = useState(true)
-  const [firstLoad, setFirstLoad] = useState(true)
+  const [firstLoad, setFirstLoad] = useState(true)  
   const [currentUserId, setCurrentUserId] = useState(``)
   const location = useLocation()
   const navigate = useNavigate() 
@@ -129,12 +129,14 @@ const App = () => {
     
   }
 
-  const handleSessionExpiration = async () => {
+  const handleSessionExpiration = async (sendLogoutMessage : boolean = true) => {
     const authenticated = getAuthTokenStatus ? await getAuthTokenStatus() : ''
     if (!authenticated) {
       setAuth ? setAuth(false) : ''
       if (auth) {
-        notifyUser(`Logged out`)
+        if(sendLogoutMessage) {
+          notifyUser(`Logged out`)
+        }
         setHasSessionExpired(true)
         navigate('/login')
       }      
@@ -148,7 +150,7 @@ const App = () => {
     let delay : NodeJS.Timeout | null = null
 
     const timer = setInterval(async () => {
-      const currentServerStatus = updateServerStatus ? await updateServerStatus() : ``      
+      const currentServerStatus = updateServerStatus ? await updateServerStatus() : ``
       if(!currentServerStatus) {
         return
       }
@@ -170,8 +172,26 @@ const App = () => {
       clearInterval(timer)
     }
 
-  }, [location])
+  }, [location])  
   
+  useEffect(() => { // Handles auth propagation across tabs.
+    const delay = setTimeout(() => { // avoids flicking on the UI        
+      if(!firstLoad || !clickedToLogout || !clickedToLogin) {
+        handleSessionExpiration(false)
+      }
+    }, 200)  
+    const interval = setInterval(async () => {
+      const userId = await getCurrentUserId()
+      if(userId != currentUserId) {
+        setCurrentUserId(`${userId}`)
+      }  
+    }, 1000)
+    return () => {
+      clearInterval(interval)  
+      clearTimeout(delay)
+    }
+  }, [currentUserId, clickedToLogout, clickedToLogin])
+   
   useEffect(() => {     
     if (auth != previousAuth) {
       handleSocketOnlineList()
@@ -210,22 +230,7 @@ const App = () => {
     return () => {
      clearTimeout(delay) 
     }    
-  }, [serverStatus])  
-
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      const userId = await getCurrentUserId()
-      if(userId) {
-        if(userId != currentUserId) {
-          handleSessionExpiration()
-        }
-        setCurrentUserId(userId)
-      }      
-  }, 1000)
-    return () => {
-      clearInterval(interval)
-    }
-  }, [currentUserId])
+  }, [serverStatus])
 
   useEffect(() => {    
     const delay = setTimeout(() => {     
