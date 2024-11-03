@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken'
 import csrf from 'csurf'
 import rateLimit from 'express-rate-limit'
 import { idempotency } from 'express-idempotency'
+import { genGetErrorMessage } from './general-functions'
 
 dotenv.config()
 
@@ -51,6 +52,7 @@ export const midHandleErrors : ErrorRequestHandler = (err, req, res, next) => {
         console.log(`Middleware error : BAD CSRF Token`)        
         console.log('Token from Client:', req.headers['x-csrf-token'])
         return res.status(403).json({
+            error : `Forbidden`,
             message: 'Something went wrong. Please refresh the page and try again.',
             success : false,
         })
@@ -59,6 +61,7 @@ export const midHandleErrors : ErrorRequestHandler = (err, req, res, next) => {
     if (err.message.includes('idempotency')) {
         console.log(`Middleware error : Duplicate request detected`)
         return res.status(400).json({
+            error : `Bad Request`,
             message: 'Duplicate request detected.',
             success : false,
         })
@@ -90,8 +93,11 @@ export const midCheckAuth = async (req : Request, res : Response, next : NextFun
         const {auth} = req.cookies
         jwt.verify(auth, secretKey)      
         next()
-    } catch (e) {             
-        return res.status(403).json({message : 'Not Authenticated/Authorized'})
+    } catch (e) {
+        const errorMessage = `Not Authenticated`
+        const errorObject = {message : errorMessage}
+        console.log(errorMessage)
+        return res.status(403).json(genGetErrorMessage(errorObject, 403))
     }
 }
 
@@ -103,13 +109,19 @@ export const midCheckAllowed = async (req : Request, res : Response, next : Next
         const authInfo = jwt.verify(auth, secretKey) as {role : 'User' | 'Admin'}
 
         if(authInfo.role == 'User') {
-            return res.status(403).json({message : 'Not Authenticated/Authorized'})
+            const errorMessage = `Not Authorized`
+            const errorObject = {message : errorMessage}
+            console.log(errorMessage)
+            return res.status(403).json(genGetErrorMessage(errorObject, 403))
         } else {
             next()
         }
 
-    } catch (e) {             
-        return res.status(403).json({message : 'Not Authenticated/Authorized'})
+    } catch (e) {        
+        const errorMessage = `Not Authorized`
+        const errorObject = {message : errorMessage}
+        console.log(errorMessage)
+        return res.status(403).json(genGetErrorMessage(errorObject, 403))
     }
 
 }

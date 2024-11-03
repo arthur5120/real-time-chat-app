@@ -58,17 +58,19 @@ export const genGetError = (desc ? : string) => {
     return newError
 }
 
-export const genGetErrorMessage = (e ? : unknown) => {    
+export const genGetErrorMessage = (e ? : unknown, statusCode : number = 500) => {   
+    
+    const isObjectWithMessage = e && typeof e === 'object' && 'message' in e
     
     const defaultError = {
         error : `Internal Error`,
         success : false,        
         message : `Something went wrong`,
         timestamp: new Date().toISOString(),
-        statusCode: 500,
+        statusCode: statusCode,
     }
     
-    if (e instanceof Error) {
+    if (e instanceof Error || isObjectWithMessage) {
         return { 
             ...defaultError, 
             message: e.message || `Something went wrong`,            

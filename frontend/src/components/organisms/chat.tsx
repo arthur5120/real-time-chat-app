@@ -131,8 +131,9 @@ const Chat = () => {
   }
 
   const notifyError = (errorEvent ? : any) => {    
-    setErrorList((oldList) => {
-      let currentList = [...oldList]
+    //console.log(`new error : ${JSON.stringify(errorEvent)}`)
+    setErrorList((oldList) => {      
+      let currentList = [...oldList]      
       const lastError = currentList.length > 0 ? currentList[currentList.length - 1] : errorObjectPlaceholder
       const message = errorEvent?.error && errorEvent?.message ? errorEvent.message : errorMessagePlaceholder
       const isMessageRepeated = message == lastError.message
@@ -556,9 +557,10 @@ const Chat = () => {
 
       const delay = useDelayOnEmit ? 500 : 0 // Prevents the socket from being disconnected too early.
 
-      setTimeout(() => { // setTimeout start
+      setTimeout(() => { // setTimeout start        
 
         const socketPayload = {
+          user_id : currentUser.id,        
           message : savedMessage,
           currentRoomUsers : roomUsers.length
         }
@@ -1038,17 +1040,18 @@ const Chat = () => {
       console.log(`socket on sendMessage : ${currentRoomIdRef.current}`)
       
       const {message : msg} = payload // currentRoomUsers, currentOnlineUsers, currentInactiveUsers
-      const {id, room} = msg
+      const {id, user_id, room} = msg
       const firstMessageId = messages?.length > 0 ? messages[0].id : -1
       const isRoomIdValid = room && isThingValidSpecific(room) // Redundant check for it to be recognized
       const isRoomMember = isRoomIdValid ? checkForUserInRoom(room) : false
+      const shouldNotifyUser = isRoomMember && showNotificationsRef.current && user_id && user_id != currentUserIdRef.current      
 
       if (room == currentRoomIdRef.current) {
         if (id != firstMessageId) {
           addMessage(msg)
           setRefreshChat(true)
         }
-      } else if(isRoomMember && showNotificationsRef.current) {
+      } else if(shouldNotifyUser) {            
           notifyUserInRoom(room)
       }
 

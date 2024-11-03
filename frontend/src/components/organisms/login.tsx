@@ -3,7 +3,7 @@ import CustomForm from "../molecules/form"
 import CustomButton from "../atoms/button"
 import { FormEvent, useContext, useEffect, useState } from "react"
 import { TUser, TFieldKeys } from "../../utils/types"
-import { userPlaceholder } from "../../utils/placeholders"
+import { userPlaceholder, errorMessagePlaceholder } from "../../utils/placeholders"
 import { authLogin, authStatus } from "../../utils/axios-functions"
 import { authContext } from "../../utils/contexts/auth-provider"
 import { useNavigate } from "react-router-dom"
@@ -19,8 +19,6 @@ const mockUserData = {
   email : 'mockuser@hotmail.com', 
   password : 'Password@123'
 }
-
-const defaultFeedback = `Something went wrong, please try again later`
 
 const Login = () => {  
 
@@ -52,10 +50,10 @@ const Login = () => {
           setClickedToLogin(true)
           setAuth(true)
         } else {          
-          setMessage(serverResponse?.message ? serverResponse.message : defaultFeedback)
+          setMessage(serverResponse?.message ? serverResponse.message : errorMessagePlaceholder)
         }
       } catch (e) {        
-        setMessage(e instanceof Error && e.message ? e.message : defaultFeedback)
+        setMessage(e instanceof Error && e.message ? e.message : errorMessagePlaceholder)
       }      
     }
 
