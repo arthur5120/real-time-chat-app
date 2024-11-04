@@ -16,14 +16,13 @@ const App = () => {
 
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
-  const {auth, setAuth, setRole, getAuthTokenStatus, clickedToLogout, setClickedToLogout, clickedToLogin} = useContext(authContext)
+  const {auth, setAuth, setRole, getAuthTokenStatus, clickedToLogout, setClickedToLogout, clickedToLogin, currentAuthId, setCurrentAuthId} = useContext(authContext)
   const {updateServerStatus} = useContext(healthContext)
   const {serverStatus} = useContext(healthContext)
   const [previousAuth, setPreviousAuth] = useState(auth)
   const [hasSessionExpired, setHasSessionExpired] = useState(false)
   const [requireRefresh, setRequireRefresh] = useState(true)
-  const [firstLoad, setFirstLoad] = useState(true)  
-  const [currentUserId, setCurrentUserId] = useState(``)
+  const [firstLoad, setFirstLoad] = useState(true)    
   const location = useLocation()
   const navigate = useNavigate() 
 
@@ -67,12 +66,12 @@ const App = () => {
         if(isTokenValid) {          
           setAxiosCSRFToken(reString)
         } else {          
-          notifyUser(`retrieving new token : Token Invalid. ${reString}`)
+          console.log(`retrieving new token : Token Invalid. ${reString}`)
           retrieveCSRFToken()
         }
         
       } else {
-        notifyUser(`retrieving new token : No Cookie Found.`)
+        console.log(`retrieving new token : No Cookie Found.`)
         retrieveCSRFToken()
       }
 
@@ -175,22 +174,22 @@ const App = () => {
   }, [location])  
   
   useEffect(() => { // Handles auth propagation across tabs.
-    const delay = setTimeout(() => { // avoids flicking on the UI        
+    const delay = setTimeout(() => {      
       if(!firstLoad || !clickedToLogout || !clickedToLogin) {
         handleSessionExpiration(false)
       }
-    }, 200)  
+    }, 200)
     const interval = setInterval(async () => {
       const userId = await getCurrentUserId()
-      if(userId != currentUserId) {
-        setCurrentUserId(`${userId}`)
+      if(userId && userId != currentAuthId && setCurrentAuthId) {
+        setCurrentAuthId(userId)
       }  
     }, 1000)
     return () => {
       clearInterval(interval)  
       clearTimeout(delay)
     }
-  }, [currentUserId, clickedToLogout, clickedToLogin])
+  }, [currentAuthId, clickedToLogout, clickedToLogin])  
    
   useEffect(() => {     
     if (auth != previousAuth) {
@@ -230,7 +229,7 @@ const App = () => {
     return () => {
      clearTimeout(delay) 
     }    
-  }, [serverStatus])
+  }, [serverStatus])  
 
   useEffect(() => {    
     const delay = setTimeout(() => {     
@@ -239,7 +238,7 @@ const App = () => {
     return () => {
       clearTimeout(delay)
     }
-  }, [])
+  }, []) 
 
   return (
 

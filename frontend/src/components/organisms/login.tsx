@@ -4,7 +4,7 @@ import CustomButton from "../atoms/button"
 import { FormEvent, useContext, useEffect, useState } from "react"
 import { TUser, TFieldKeys } from "../../utils/types"
 import { userPlaceholder, errorMessagePlaceholder } from "../../utils/placeholders"
-import { authLogin, authStatus } from "../../utils/axios-functions"
+import { authLogin } from "../../utils/axios-functions"
 import { authContext } from "../../utils/contexts/auth-provider"
 import { useNavigate } from "react-router-dom"
 import { primaryDefault, secondaryDefault } from "../../utils/tailwindVariations"
@@ -22,7 +22,7 @@ const mockUserData = {
 
 const Login = () => {  
 
-  const {auth, setAuth, setClickedToLogin, logout} = useContext(authContext)
+  const {auth, setAuth, setClickedToLogin} = useContext(authContext)
   const [data, setData] = useState<TUser>(mockUserData)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)  
@@ -35,26 +35,23 @@ const Login = () => {
     setLoading(true)
 
     if (setAuth && setClickedToLogin) {      
-      try {
-        
-        const hasToken = await authStatus({})
 
-        if(hasToken && logout) {
-          logout()
-        }
-        
+      try {      
+                
         const serverResponse = await authLogin(data)
-        
+      
         if(serverResponse.success) {
           setMessage(`Authenticated`)
           setClickedToLogin(true)
           setAuth(true)
         } else {          
           setMessage(serverResponse?.message ? serverResponse.message : errorMessagePlaceholder)
-        }
+        }        
+        
       } catch (e) {        
         setMessage(e instanceof Error && e.message ? e.message : errorMessagePlaceholder)
-      }      
+      }         
+
     }
 
     setLoading(false)

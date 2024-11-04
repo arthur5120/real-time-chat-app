@@ -21,6 +21,8 @@ type TAuth = Partial<{
   setClickedToLogin : Dispatch<SetStateAction<boolean>>,
   getAuthTokenStatus : Function,
   logout : Function,
+  currentAuthId : string,
+  setCurrentAuthId : Dispatch<SetStateAction<string>>,
 }>
 
 export const authContext = createContext<TAuth>({})
@@ -29,6 +31,7 @@ const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
   
   const [auth, setAuth] = useState(false)
   const [role, setRole] = useState('none')
+  const [currentAuthId, setCurrentAuthId] = useState(``)
   const [clickedToLogout, setClickedToLogout] = useState(false)
   const [clickedToLogin, setClickedToLogin] = useState(false)
 
@@ -58,11 +61,15 @@ const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
 
   useEffect(() => { // Update the role
     updateBannerRole()
-  }, [auth])
+  }, [auth])    
 
   return (
-    <authContext.Provider value={{auth, setAuth, role, setRole, clickedToLogout, setClickedToLogout, clickedToLogin, setClickedToLogin, getAuthTokenStatus, logout}}>
-      {children}
+    <authContext.Provider value={{
+      auth, setAuth, role, setRole, clickedToLogout, setClickedToLogout, 
+      clickedToLogin, setClickedToLogin, getAuthTokenStatus, logout,
+      currentAuthId, setCurrentAuthId,
+    }}>
+        {children}
     </authContext.Provider>
   )
 

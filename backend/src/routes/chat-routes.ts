@@ -29,7 +29,7 @@ chatRouter.delete('/delete-chat/:id', midBodyParsers, chatRateLimiter, midCheckA
 chatRouter.delete('/delete-all-chats/', midBodyParsers, chatRateLimiter, midCheckAuth, midCheckAllowed, conDeleteAllChats)
 chatRouter.get('/chats', conGetChats)
 chatRouter.get('/chats/:id', conGetChatById)
-chatRouter.get('/chats/:id/users', midBodyParsers, chatRateLimiter, midCheckAuth, conGetUsersByChatId) // Check if user is in room.
-chatRouter.get('/users/:id/chats', midBodyParsers, chatRateLimiter, midCheckAuth, conGetChatsByUserId)
+chatRouter.get('/chats/:id/users', midBodyParsers, chatRateLimiter, conGetUsersByChatId)
+chatRouter.get('/users/:id/chats', midBodyParsers, chatRateLimiter, conGetChatsByUserId)
 
 export default chatRouter

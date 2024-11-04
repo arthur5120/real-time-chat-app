@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState, Fragment, useMemo } from 'react'
+import { useContext, useEffect, useRef, useState, Fragment } from 'react'
 
 import { 
   addUserToChat, 
@@ -104,7 +104,7 @@ const Chat = () => {
 
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
-  const {auth} = useContext(authContext)
+  const {auth, currentAuthId} = useContext(authContext)
   const {serverStatus} = useContext(healthContext)
 
   const scrollToLatest = () => {
@@ -310,6 +310,12 @@ const Chat = () => {
   }
 
   const checkForUserInRoom = async (roomId : string, userId ? : string) => {
+
+    const isRoomIdValid = roomId && typeof roomId === 'string'
+
+    if(!isRoomIdValid) {
+      return
+    }
     
     try {    
 
@@ -1382,10 +1388,16 @@ const Chat = () => {
 
   useEffect(() => { // Update isUserInRoom state
     if(!firstLoad && currentRoomIdRef && !isUserInRoom)  {
-      const foundUserInChat = checkForUserInRoom(`${currentRoomIdRef}`)
+      const foundUserInChat = checkForUserInRoom(currentRoomIdRef.current)
       setIsUserInRoom(!!foundUserInChat)
     }
   }, [roomUsers, isUserInRoom, currentRoomIdRef])
+
+  useEffect(() => { // Update UI if auth id changes. 
+    if(!firstLoad && currentAuthId != currentUser.id) {
+      setReload(reload + 1)
+    }
+  }, [currentAuthId])
 
   useEffect(() => { // Periodic Message Time Update
 
@@ -1988,7 +2000,6 @@ const Chat = () => {
               notifyUser(`${bugsToFix[i]}`)
             }}
           />          
-          */}
           <CustomButton
             value={`Test 🦾`}
             variationName='varthree'
@@ -2004,6 +2015,7 @@ const Chat = () => {
               }, 500)
             }}
           /> 
+          */}
 
        </div>
 
