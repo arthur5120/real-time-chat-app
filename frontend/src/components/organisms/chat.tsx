@@ -97,6 +97,7 @@ const Chat = () => {
   let chatRoomContainerRef =  useRef<HTMLSelectElement>(null)
   let messageContainerRef =  useRef<HTMLSpanElement>(null)
   let handleUserActivityRef = useRef<() => void>(() => {})
+  let changeUserActivityStatusRef = useRef<(ToInactive : boolean) => void>(() => {})
   let showNotificationsRef = useRef<boolean>(showNotifications)   
   let currentRoomIdRef = useRef<string>(currentRoom.id)
   let currentUserIdRef = useRef<string | undefined>(currentUser.id)
@@ -818,6 +819,25 @@ const Chat = () => {
     await retrieveMessages()    
   }
 
+  const changeUserActivityStatus = (ToInactive : boolean) => {    
+    inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
+    if (ToInactive) {      
+      setUserActivity(false)
+      socket?.connect()
+      socket?.emit(`updateInactive`, { id : currentUser.id, name: currentUser.name, inactive: true })
+    } else {
+      setUserActivity(true)
+      socket?.connect()
+      socket?.emit(`updateInactive`, { id : currentUser.id, name: currentUser.name, inactive: false })
+      const timerId = setTimeout(() => {                                
+        setUserActivity(false)
+        socket?.connect()
+        socket?.emit(`updateInactive`, { id : currentUser.id, name: currentUser.name, inactive: true })
+      }, 60000) // Time until inactivity
+      setInactivityTimerId(timerId)
+    }
+  }
+  
   const setInactivityTimer =  async (localUserName = null) => {        
     if (userActivity) {      
       const name = localUserName ? localUserName : currentUser.name
@@ -1075,8 +1095,8 @@ const Chat = () => {
         } else { // Send it to everyone if room is undefined.
           shouldNotifyUser ? notifyUser(notification, `info`) : ``
           shouldAddToLog ? addToLog({userName : userName, roomName : roomName, content : content}) : ``
-        }
-        setRefreshChat(true)      
+        }        
+        setRefreshChat(true)
     })
     
     socket?.on(`majorChange`, (payload : TSocketPayload) => {      
@@ -1098,20 +1118,28 @@ const Chat = () => {
     })
     
     socket?.on(`updateInactive`, (currentInactiveUsers : {id : string, name : string}[]) => {
-      console.log(`socket on updateInactive : ${currentRoomIdRef.current}`)
+      console.log(`socket on updateInactive : ${currentRoomIdRef.current}`)      
+      const isUserGoingInactive = currentUserIdRef.current ? currentInactiveUsers.find((u) => u.id == currentUserIdRef.current) : false      
+      changeUserActivityStatusRef.current(!!isUserGoingInactive)
       setInactiveUsers(currentInactiveUsers)
-      setRefreshChat(true)
+      setRefreshChat(true)      
     })
     
     socket?.on(`updateTyping`, (payload : TRoomUser & {isTyping : boolean}) => {
       console.log(`socket on updateTyping : ${currentRoomIdRef.current}`)
       const {id, name, isTyping} = payload
       if(isTyping) {
+        if(id == currentUserIdRef.current) {
+          setIsTyping(true)
+        }
         setTypingUsers((values) => ([
           ...values,
           {id : id, name : name}
         ]))
       } else {
+        if(id == currentUserIdRef.current) {
+          setIsTyping(false)
+        }
         let newTypingUsers = typingUsers
         const typingUserID = newTypingUsers.findIndex((u) => u.id == id)
         newTypingUsers.splice(typingUserID, 1)
@@ -1218,6 +1246,7 @@ const Chat = () => {
       return
     }    
     handleUserActivityRef.current = handleUserActivity
+    changeUserActivityStatusRef.current = changeUserActivityStatus
     if(!firstLoad) { // First load handled by retrieveCurrentUser
       setInactivityTimer()
     }    
@@ -1350,6 +1379,13 @@ const Chat = () => {
       setHasErrors(false)
     }    
   }, [hasErrors])
+
+  useEffect(() => { // Update isUserInRoom state
+    if(!firstLoad && currentRoomIdRef && !isUserInRoom)  {
+      const foundUserInChat = checkForUserInRoom(`${currentRoomIdRef}`)
+      setIsUserInRoom(!!foundUserInChat)
+    }
+  }, [roomUsers, isUserInRoom, currentRoomIdRef])
 
   useEffect(() => { // Periodic Message Time Update
 
@@ -1952,16 +1988,22 @@ const Chat = () => {
               notifyUser(`${bugsToFix[i]}`)
             }}
           />          
+          */}
           <CustomButton
             value={`Test 🦾`}
             variationName='varthree'
             className={`${spam ? `bg-yellow-500` : `bg-black`} active:bg-gray-900 w-20 h-full max-h-28 m-0 flex items-center justify-center`}
             disabled={!!reload || firstLoad || !serverStatus}
             title={``}
-            onClick={ async () => {              
+            onClick={ async () => {     
+              setTimeout(async () => {                
+                changeUserActivityStatus(!userActivity)
+                setUserActivity(false)
+                socket?.connect()
+                socket?.emit(`updateInactive`, { id : currentUser.id, name: currentUser.name, inactive: true })
+              }, 500)
             }}
           /> 
-          */}
 
        </div>
 
