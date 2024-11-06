@@ -315,7 +315,7 @@ const Chat = () => {
 
     if(!isRoomIdValid) {
       return
-    }
+    }    
     
     try {    
 
@@ -844,11 +844,11 @@ const Chat = () => {
     }
   }
   
-  const setInactivityTimer =  async (localUserName = null) => {        
+  const setInactivityTimer =  async (localUserName = null) => {                
     if (userActivity) {      
       const name = localUserName ? localUserName : currentUser.name
       const timerId = setTimeout(async () => {                                
-        setUserActivity(false)
+        setUserActivity(false)        
         const authInfo : TRes = await authStatus({})
         socket?.connect()
         socket?.emit(`updateInactive`, { id : authInfo.id, name: name, inactive: true })
@@ -1124,6 +1124,9 @@ const Chat = () => {
     })
     
     socket?.on(`updateInactive`, (currentInactiveUsers : {id : string, name : string}[]) => {
+      if(!serverStatus) {
+        return
+      }
       console.log(`socket on updateInactive : ${currentRoomIdRef.current}`)      
       const isUserGoingInactive = currentUserIdRef.current ? currentInactiveUsers.find((u) => u.id == currentUserIdRef.current) : false      
       changeUserActivityStatusRef.current(!!isUserGoingInactive)

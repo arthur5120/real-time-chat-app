@@ -36,15 +36,15 @@ const Login = () => {
 
     if (setAuth && setClickedToLogin) {      
 
-      try {      
+      try {
                 
         const serverResponse = await authLogin(data)
       
-        if(serverResponse.success) {
+        if(serverResponse?.success) {
           setMessage(`Authenticated`)
           setClickedToLogin(true)
           setAuth(true)
-        } else {          
+        } else {
           setMessage(serverResponse?.message ? serverResponse.message : errorMessagePlaceholder)
         }        
         

@@ -4,15 +4,18 @@ import CustomTitle from "../atoms/title"
 import { useContext, useEffect, useState } from "react"
 import { TUser } from "../../utils/types"
 import { toastContext } from "../../utils/contexts/toast-provider"
+import { healthContext } from "../../utils/contexts/health-provider"
 
 const Profile = () => {
 
     const {auth} = useContext(authContext)
     const {notifyUser} = useContext(toastContext)
+    const {serverStatus} = useContext(healthContext)
     const [user, setUser] = useState<TUser>({})
     const [chatsCounter, setChatsCounter] = useState(0)
-    const [messagesCounter, setMessagesCounter] = useState(0) 
+    const [messagesCounter, setMessagesCounter] = useState(0)
     const [hasToken, setHasToken] = useState(true)
+    
 
     const handleStart = async () => {  
         
@@ -58,7 +61,7 @@ const Profile = () => {
         <CustomTitle value='Current Profile' className='text-green-500 my-3'/>
 
         {
-            auth && hasToken ? 
+            auth && hasToken && serverStatus ? 
                 <h3>
                   Name : {user.name} <br/>
                   Email : {user.email} <br/>

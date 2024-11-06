@@ -17,8 +17,7 @@ const App = () => {
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
   const {auth, setAuth, setRole, getAuthTokenStatus, clickedToLogout, setClickedToLogout, clickedToLogin, currentAuthId, setCurrentAuthId} = useContext(authContext)
-  const {updateServerStatus} = useContext(healthContext)
-  const {serverStatus} = useContext(healthContext)
+  const {updateServerStatus, serverStatus} = useContext(healthContext)  
   const [previousAuth, setPreviousAuth] = useState(auth)
   const [hasSessionExpired, setHasSessionExpired] = useState(false)
   const [requireRefresh, setRequireRefresh] = useState(true)
@@ -26,7 +25,10 @@ const App = () => {
   const location = useLocation()
   const navigate = useNavigate() 
 
-  const requestSocketListUpdate = async () => { 
+  const requestSocketListUpdate = async () => {     
+    if(!serverStatus) {      
+      return
+    }
     const authInfo : TRes = await authStatus({})
     if(authInfo.id != `none`) {      
       socket?.connect()
@@ -81,6 +83,10 @@ const App = () => {
   }
 
   const handleSocketOnlineList = async () => {
+    
+    if(!serverStatus) {      
+      return
+    }
 
     const authInfo : TRes = await authStatus({})
     
@@ -129,6 +135,9 @@ const App = () => {
   }
 
   const handleSessionExpiration = async (sendLogoutMessage : boolean = true) => {
+    if(!serverStatus) {
+      return
+    }
     const authenticated = getAuthTokenStatus ? await getAuthTokenStatus() : ''
     if (!authenticated) {
       setAuth ? setAuth(false) : ''
@@ -174,6 +183,9 @@ const App = () => {
   }, [location])  
   
   useEffect(() => { // Handles auth propagation across tabs.
+    if(!serverStatus) {
+      return
+    }
     const delay = setTimeout(() => {      
       if(!firstLoad || !clickedToLogout || !clickedToLogin) {
         handleSessionExpiration(false)
@@ -198,9 +210,9 @@ const App = () => {
     }
   }, [location, auth])
 
-  useEffect(() => {      
-    const timeout = setTimeout(() => {
-      requestSocketListUpdate()      
+  useEffect(() => { // Place Condition
+    const timeout = setTimeout(() => {            
+      requestSocketListUpdate()
     }, 1000)
     return () => {
       clearTimeout(timeout)
