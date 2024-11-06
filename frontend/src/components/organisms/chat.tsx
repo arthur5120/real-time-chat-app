@@ -98,14 +98,14 @@ const Chat = () => {
   let messageContainerRef =  useRef<HTMLSpanElement>(null)
   let handleUserActivityRef = useRef<() => void>(() => {})
   let changeUserActivityStatusRef = useRef<(ToInactive : boolean) => void>(() => {})
-  let showNotificationsRef = useRef<boolean>(showNotifications)   
+  let showNotificationsRef = useRef<boolean>(showNotifications)
   let currentRoomIdRef = useRef<string>(currentRoom.id)
   let currentUserIdRef = useRef<string | undefined>(currentUser.id)
 
   const socket = useContext(socketContext)
   const {notifyUser} = useContext(toastContext)
   const {auth, currentAuthId} = useContext(authContext)
-  const {serverStatus} = useContext(healthContext)
+  const {serverStatus, updateServerStatus} = useContext(healthContext)
 
   const scrollToLatest = () => {
       if (autoScroll && chatContainerRef.current) {
@@ -131,7 +131,10 @@ const Chat = () => {
     setSearchText(``)
   }
 
-  const notifyError = (errorEvent ? : any) => {    
+  const notifyError = async (errorEvent ? : any) => {
+    if (updateServerStatus) {
+      await updateServerStatus()
+    }    
     //console.log(`new error : ${JSON.stringify(errorEvent)}`)
     setErrorList((oldList) => {      
       let currentList = [...oldList]      
@@ -263,18 +266,26 @@ const Chat = () => {
   }  
 
   const addUserToOnlineList = async () => {
-    const authInfo = await authStatus({})    
-    const isUserOnList = onlineUsers.find((u) => u.id == authInfo.id)
-    if(!isUserOnList) {
-      const userInfo = await getUserById(authInfo.id)      
-      const authRequest : TSocketAuthRequest = {
-        user : {id : authInfo.id, name : userInfo.name},
-        isConnecting : true
+    try {
+      if(!serverStatus) { // Check
+        return
       }
-      socket?.emit(`auth`, authRequest)
-      socket?.emit(`authList`)
-    } else {
-      return
+      const authInfo = await authStatus({})
+      const isUserOnList = onlineUsers.find((u) => u.id == authInfo.id)
+      if(!isUserOnList) {
+        const userInfo = await getUserById(authInfo.id)      
+        const authRequest : TSocketAuthRequest = {
+          user : {id : authInfo.id, name : userInfo.name},
+          isConnecting : true
+        }
+        socket?.emit(`auth`, authRequest)
+        socket?.emit(`authList`)
+      } else {
+        return
+      }
+    } catch (e) {
+      console.log(`Error when adding user to online list.`)
+      notifyError(e)
     }
   }
 
@@ -283,7 +294,9 @@ const Chat = () => {
     console.log(`FUNCTION : Retrieving current user.`)
 
     try { 
-
+      if(!serverStatus) { // Check
+        return
+      }
       const authInfo : TRes = await authStatus({})
       const user = await getUserById(authInfo.id)
       const emoji = getItemFromString(`${authInfo.id}`, emojis)
@@ -325,6 +338,9 @@ const Chat = () => {
         if (currentUser.id) {
           userIdToFind = currentUser.id
         } else {
+          if(!serverStatus) { // Check
+            return
+          }
           const authInfo = await authStatus({})          
           userIdToFind = authInfo.id
         }
@@ -365,6 +381,10 @@ const Chat = () => {
     console.log(`FUNCTION : Retrieving rooms.`)    
 
     try {
+
+      if(!serverStatus) { // Check
+        return
+      }
 
       const unsortedLocalRooms = await getChats() as TChatRoom[]
       const sortedLocalRooms = sortAlphabeticallyByName(unsortedLocalRooms)
@@ -420,6 +440,10 @@ const Chat = () => {
     console.log(`FUNCTION : Retrieving messages.`)
     
       try {
+
+        if(!serverStatus) { // Check
+          return
+        }
 
         if(firstLoad) {          
           const cookieSpam = getCookieSpam()
@@ -499,6 +523,10 @@ const Chat = () => {
   const sendMessage = async (messageContent = '') => {
     
     try {
+
+      if(!serverStatus) { // Check
+        return
+      }
 
       const dateTimeNow = Date.now()
       const isSpammingResult = isSpamming(dateTimeNow) 
@@ -642,6 +670,10 @@ const Chat = () => {
 
     try {
 
+      if(!serverStatus) {
+        return
+      }
+
       const notificationMessage = `New Room Created!`
       const creationMessage = `created a new room`
       const userInfo = await authStatus({})
@@ -768,31 +800,40 @@ const Chat = () => {
 
   const onResetRoomsClick = async () => {
 
-    const isCookiePresent = getCSRFCookie()
-
-      if(!isCookiePresent) {
-        notifyUser(`Something went wrong, please refresh the page.`, `warning`)
-        resetMessageContent()
+    try {
+      if(!serverStatus) { // Check
         return
       }
-
-    if(!cooldown) {
-      
-      const userInfo = await authStatus({})
   
-      if (!userInfo.authenticated || userInfo.role != 'Admin') {
-        notifyUser('Not Allowed!', 'error')
-        return
+      const isCookiePresent = getCSRFCookie()
+  
+        if(!isCookiePresent) {
+          notifyUser(`Something went wrong, please refresh the page.`, `warning`)
+          resetMessageContent()
+          return
+        }
+  
+      if(!cooldown) {
+        
+        const userInfo = await authStatus({})
+    
+        if (!userInfo.authenticated || userInfo.role != 'Admin') {
+          notifyUser('Not Allowed!', 'error')
+          return
+        }
+  
+        setCurrentRoom({ id: '-1', selectId: 0, name : ''})
+  
+        await deleteAllRooms()
+  
+        setCooldown(5000)
+  
+      } else {
+        notifyUser(`Please Wait a Moment`,`warning`)
       }
-
-      setCurrentRoom({ id: '-1', selectId: 0, name : ''})
-
-      await deleteAllRooms()
-
-      setCooldown(5000)
-
-    } else {
-      notifyUser(`Please Wait a Moment`,`warning`)
+    } catch (e) {
+      console.log(`Error on rooms reset.`)
+      notifyError(e)      
     }
 
   }
@@ -844,27 +885,45 @@ const Chat = () => {
     }
   }
   
-  const setInactivityTimer =  async (localUserName = null) => {                
-    if (userActivity) {      
-      const name = localUserName ? localUserName : currentUser.name
-      const timerId = setTimeout(async () => {                                
-        setUserActivity(false)        
-        const authInfo : TRes = await authStatus({})
-        socket?.connect()
-        socket?.emit(`updateInactive`, { id : authInfo.id, name: name, inactive: true })
-      }, 60000) // Time until inactivity
-      setInactivityTimerId(timerId)
+  const setInactivityTimer =  async (localUserName = null) => {     
+    try {   
+      if(!serverStatus) { // Check
+        return
+      }      
+      if (userActivity) {      
+        const name = localUserName ? localUserName : currentUser.name
+        const timerId = setTimeout(async () => {                                
+          setUserActivity(false)        
+          const authInfo : TRes = await authStatus({})
+          socket?.connect()
+          socket?.emit(`updateInactive`, { id : authInfo.id, name: name, inactive: true })
+        }, 60000) // Time until inactivity
+        setInactivityTimerId(timerId)
+      }
+    } catch(e) {
+      console.log(`Error when setting inactivity timer.`)
+      notifyError(e)
     }
   }
 
   const handleUserActivity = async () => {
-    if (!userActivity) {      
-      setUserActivity(true)
-      const authInfo : TRes = await authStatus({})
-      socket?.connect()
-      socket?.emit(`updateInactive`, { id : authInfo.id, name: currentUser.name, inactive: false })
-      inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
+    try {
+      if(!serverStatus) { // Check
+        return
+      }
+  
+      if (!userActivity) {      
+        setUserActivity(true)
+        const authInfo : TRes = await authStatus({})
+        socket?.connect()
+        socket?.emit(`updateInactive`, { id : authInfo.id, name: currentUser.name, inactive: false })
+        inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
+      }
+    } catch(e) {
+      console.log(`Error when handling user activity.`)
+      notifyError(e)
     }
+ 
   }
 
   const retrieveUserLists = async () => {      
@@ -1483,48 +1542,59 @@ const Chat = () => {
       }
 
       case 'delete' : {   
-        messageBeingEdited.id ? await deleteMessage(messageBeingEdited.id) : ''
-        const editedMessage = messageBeingEdited?.previous ?  messageBeingEdited.previous : ''
-        const notificationMessage = `${currentUser.name ? capitalizeFirst(currentUser.name) : ``} deleted "${cropMessage(editedMessage)}" on ${currentRoom.name}`
-        const logMessage = `deleted "${cropMessage(editedMessage)}"`
-        const socketPayload : TSocketPayload = {
-          userId : currentUser.id,
-          userName : currentUser.name, 
-          roomName : currentRoom.name, 
-          roomId : currentRoom.id,
-          notification : notificationMessage, 
-          content : logMessage,
-          notifyRoomOnly : true,
-        }
-        socket?.emit(`minorChange`, socketPayload)
-        setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
-        addToLog({userName : currentUser.name, roomName : currentRoom.name, content : logMessage})
-        setRefreshChat(true)
-        break
-      }
-
-      case 'confirm' : {        
-        if(messageBeingEdited.wasEdited == true) {          
-          messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
-          messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
-          const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
-          const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
-          const notificationMessage = `${currentUser?.name ? capitalizeFirst(currentUser.name) : ``} updated "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`
-          const logMessage = `updated "${previousMessage}" to "${updatedMessage}"`
+        try {
+          messageBeingEdited.id ? await deleteMessage(messageBeingEdited.id) : ''
+          const editedMessage = messageBeingEdited?.previous ?  messageBeingEdited.previous : ''
+          const notificationMessage = `${currentUser.name ? capitalizeFirst(currentUser.name) : ``} deleted "${cropMessage(editedMessage)}" on ${currentRoom.name}`
+          const logMessage = `deleted "${cropMessage(editedMessage)}"`
           const socketPayload : TSocketPayload = {
             userId : currentUser.id,
-            userName : currentUser.name,
-            roomName : currentRoom.name,
+            userName : currentUser.name, 
+            roomName : currentRoom.name, 
             roomId : currentRoom.id,
             notification : notificationMessage, 
             content : logMessage,
             notifyRoomOnly : true,
           }
           socket?.emit(`minorChange`, socketPayload)
+          setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
           addToLog({userName : currentUser.name, roomName : currentRoom.name, content : logMessage})
           setRefreshChat(true)
+          
+        } catch(e) {   
+          console.log(`Error when deleting message.`)
+          notifyError(e)
         }
-        setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false})
+        break
+      }
+
+      case 'confirm' : {        
+        try {
+          if(messageBeingEdited.wasEdited == true) {          
+            messageContainerRef.current ? messageContainerRef.current.textContent = messageBeingEdited.content : ''
+            messageBeingEdited.id ? await updateMessage(messageBeingEdited.id, messageBeingEdited.content) : ''
+            const previousMessage = messageBeingEdited?.previous ? cropMessage(messageBeingEdited.previous, 20) : '...'
+            const updatedMessage = messageBeingEdited?.content ? cropMessage(messageBeingEdited.content, 20) : '...'
+            const notificationMessage = `${currentUser?.name ? capitalizeFirst(currentUser.name) : ``} updated "${previousMessage}" to "${updatedMessage}" on ${currentRoom.name}`
+            const logMessage = `updated "${previousMessage}" to "${updatedMessage}"`
+            const socketPayload : TSocketPayload = {
+              userId : currentUser.id,
+              userName : currentUser.name,
+              roomName : currentRoom.name,
+              roomId : currentRoom.id,
+              notification : notificationMessage, 
+              content : logMessage,
+              notifyRoomOnly : true,
+            }
+            socket?.emit(`minorChange`, socketPayload)
+            addToLog({userName : currentUser.name, roomName : currentRoom.name, content : logMessage})
+            setRefreshChat(true)
+          }
+          setMessageBeingEdited({...messagePlaceholder, previous : '', wasEdited : false}) 
+        } catch(e) {
+          console.log(`Error when confirming message.`)
+          notifyError(e)
+        }
         break
       }
 
