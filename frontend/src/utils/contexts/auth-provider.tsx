@@ -8,7 +8,7 @@ import {
   useEffect,  
 } from 'react';
 
-import { authStatus } from '../axios-functions';
+import { authStatus, getServerHealth } from '../axios-functions';
 
 type TAuth = Partial<{
   auth : boolean,
@@ -50,12 +50,19 @@ const AuthProvider : FC<{children : ReactElement}> = ({children}) => {
     }
   }
 
-  const updateBannerRole = async () => {    
-    if(auth) {
-      const {role} = await authStatus({})
-      setRole(role)
-    } else {
-      setRole(`none`)
+  const updateBannerRole = async () => {
+    try {
+      const isServerRunning = await getServerHealth()
+      if(isServerRunning) {
+        if(auth) {
+          const {role} = await authStatus({})
+          setRole(role)
+        } else {
+          setRole(`none`)
+        }
+      }
+    } catch(e) {
+      console.log(`Error while changing auth banner role.`)
     }
   }
 

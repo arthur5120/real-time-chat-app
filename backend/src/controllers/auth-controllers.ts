@@ -7,7 +7,8 @@ import {
     genGenerateToken, 
     genGenerateUniqueId, 
     genExpirationCheck, 
-    genGetErrorMessage 
+    genGetErrorMessage, 
+    genComparePassword
 } from "../utils/general-functions"
 
 dotenv.config()
@@ -35,7 +36,15 @@ export const conAuth = async (req : Request, res : Response) => {
 
     try {
 
-        const user = await modGetUserByEmail(req, res) as {id : string}
+        const user = await modGetUserByEmail(req, res) as {id : string, password : string}
+        const {password} = req.body
+        const hashedPassword = user.password        
+        const arePasswordsTheSame = await genComparePassword(password, hashedPassword)
+
+        if(!arePasswordsTheSame) {
+            return res.status(403).json({success : false, message : `Invalid email or password.`})
+        }
+
         const guid = genGenerateUniqueId()
         const payload = {...user, guid : guid}
         const token = genGenerateToken(payload)

@@ -92,7 +92,7 @@ export const modGetUserById = async (req : Request, res : Response) => {
     }
 }
 
-export const modGetUserByEmail = async (req : Request, res : Response) => {
+export const modGetUserByEmail = async (req : Request, res : Response) => { // Returns encrypted password
 
     const userEmail = req.body.email
 
@@ -101,6 +101,7 @@ export const modGetUserByEmail = async (req : Request, res : Response) => {
             where : {email : userEmail}, 
             select : {
                 id : true,
+                password : true,        
                 name : true,
                 username : true,
                 email : true,

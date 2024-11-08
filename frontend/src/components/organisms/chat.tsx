@@ -866,7 +866,10 @@ const Chat = () => {
     await retrieveMessages()    
   }
 
-  const changeUserActivityStatus = (ToInactive : boolean) => {    
+  const changeUserActivityStatus = (ToInactive : boolean) => {
+    if(!currentUser.id) {
+      return
+    }
     inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
     if (ToInactive) {      
       setUserActivity(false)
@@ -885,18 +888,17 @@ const Chat = () => {
     }
   }
   
-  const setInactivityTimer =  async (localUserName = null) => {     
-    try {   
-      if(!serverStatus) { // Check
+  const setInactivityTimer =  async (localUserName = null) => {         
+    try {         
+      if(!serverStatus && !currentUser.id) { // Check
         return
       }      
       if (userActivity) {      
-        const name = localUserName ? localUserName : currentUser.name
+        const currentUserName = localUserName ? localUserName : currentUser.name
         const timerId = setTimeout(async () => {                                
-          setUserActivity(false)        
-          const authInfo : TRes = await authStatus({})
+          setUserActivity(false)                  
           socket?.connect()
-          socket?.emit(`updateInactive`, { id : authInfo.id, name: name, inactive: true })
+          socket?.emit(`updateInactive`, { id : currentUser.id, name: currentUserName, inactive: true })
         }, 60000) // Time until inactivity
         setInactivityTimerId(timerId)
       }
@@ -908,15 +910,14 @@ const Chat = () => {
 
   const handleUserActivity = async () => {
     try {
-      if(!serverStatus) { // Check
+      if(!serverStatus || !currentUser.id) { // Check
         return
       }
   
       if (!userActivity) {      
-        setUserActivity(true)
-        const authInfo : TRes = await authStatus({})
+        setUserActivity(true)        
         socket?.connect()
-        socket?.emit(`updateInactive`, { id : authInfo.id, name: currentUser.name, inactive: false })
+        socket?.emit(`updateInactive`, { id : currentUser.id, name: currentUser.name, inactive: false })
         inactivityTimerId ? clearTimeout(inactivityTimerId) : ''
       }
     } catch(e) {
@@ -2113,13 +2114,16 @@ const Chat = () => {
         <h3 className={`flex mb-5 ${serverStatus ? `bg-green-600` : `bg-red-600` } rounded-lg p-3`}>
         server {serverStatus ? 'on' : 'off'}
         </h3>
+        <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
+        {JSON.stringify(tickCounter)}
+        </h3>
         <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>    
         {`!!reload : ${!!reload} || firstLoad : ${firstLoad} || !serverStatus ${!serverStatus} || showLog ${showLog}`}
         </h3>
-        <h3 className={`flex mb-5 bg-orange-600 rounded-lg p-3`}>
-          {JSON.stringify(tickCounter)}
-        </h3>
         */}
+        <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>    
+        {renderCounter}
+        </h3>
       </div>
      
     </section>
