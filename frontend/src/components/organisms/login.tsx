@@ -8,6 +8,7 @@ import { authLogin } from "../../utils/axios-functions"
 import { authContext } from "../../utils/contexts/auth-provider"
 import { useNavigate } from "react-router-dom"
 import { primaryDefault, secondaryDefault } from "../../utils/tailwindVariations"
+import { toastContext } from "../../utils/contexts/toast-provider"
 
 const fieldList : TFieldKeys[] = [
   'email',
@@ -35,21 +36,22 @@ const Login = () => {
     setLoading(true)
 
     if (setAuth && setClickedToLogin) {      
-
-      try {
-                
-        const serverResponse = await authLogin(data)
       
-        if(serverResponse?.success) {
+      try {
+        
+        const serverResponse = await authLogin(data)                
+        
+        if(serverResponse?.success) { // if falsy, it won't reach this point, but jump to the catch block.
           setMessage(`Authenticated`)
           setClickedToLogin(true)
           setAuth(true)
-        } else {
+        } else {              
           setMessage(serverResponse?.message ? serverResponse.message : errorMessagePlaceholder)
         }        
         
-      } catch (e) {        
-        setMessage(e instanceof Error && e.message ? e.message : errorMessagePlaceholder)
+      } catch (e) {
+        const error = e as {message ? : string}
+        setMessage(error.message ? error.message : errorMessagePlaceholder)
       }         
 
     }
