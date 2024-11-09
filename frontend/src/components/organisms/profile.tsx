@@ -15,9 +15,11 @@ const Profile = () => {
     const [chatsCounter, setChatsCounter] = useState(0)
     const [messagesCounter, setMessagesCounter] = useState(0)
     const [hasToken, setHasToken] = useState(true)
-    
+    const [loading, setLoading] = useState(true)
 
     const handleStart = async () => {  
+
+        setLoading(true)
         
         try {
         
@@ -43,6 +45,8 @@ const Profile = () => {
             notifyUser(`Something Went Wrong`,`error`)
             console.log(e)
         }
+
+        setLoading(false)
     }
     
     useEffect(() => {              
@@ -61,6 +65,7 @@ const Profile = () => {
         <CustomTitle value='Current Profile' className='text-green-500 my-3'/>
 
         {
+            !loading ?
             auth && hasToken && serverStatus ? 
                 <h3>
                   Name : {user.name} <br/>
@@ -75,6 +80,7 @@ const Profile = () => {
                 <h3>
                     Not Authenticated/Authorized
                 </h3>
+            : <h3>Please wait...</h3>
         }
 
       </section>

@@ -674,14 +674,30 @@ const Chat = () => {
         return
       }
 
-      const notificationMessage = `New Room Created!`
-      const creationMessage = `created a new room`
+      const isCookiePresent = getCSRFCookie()
+    
+      if(!isCookiePresent) {
+        notifyUser(`Something went wrong, please refresh the page.`, `warning`)
+        resetMessageContent()
+        return
+      }
+
       const userInfo = await authStatus({})
 
       if (!userInfo.authenticated) {
         notifyUser('Not Allowed!', 'error')
         return
       }
+
+      if(cooldown) {      
+        notifyUser(`Please Wait a Moment`,`warning`)
+        return
+      }
+      
+      setCooldown(5000)
+
+      const notificationMessage = `New Room Created!`
+      const creationMessage = `created a new room`      
 
       await createChat()
 
@@ -812,16 +828,16 @@ const Chat = () => {
           resetMessageContent()
           return
         }
+
+      const userInfo = await authStatus({})
+    
+      if (!userInfo.authenticated || userInfo.role != 'Admin') {
+        notifyUser('Not Allowed!', 'error')
+        return
+      }
   
       if(!cooldown) {
-        
-        const userInfo = await authStatus({})
-    
-        if (!userInfo.authenticated || userInfo.role != 'Admin') {
-          notifyUser('Not Allowed!', 'error')
-          return
-        }
-  
+                 
         setCurrentRoom({ id: '-1', selectId: 0, name : ''})
   
         await deleteAllRooms()
@@ -836,21 +852,6 @@ const Chat = () => {
       notifyError(e)      
     }
 
-  }
-  
-  const onNewRoomClick = async () => {
-    const isCookiePresent = getCSRFCookie()
-    if(!isCookiePresent) {
-      notifyUser(`Something went wrong, please refresh the page.`, `warning`)
-      resetMessageContent()
-      return
-    }
-    if(!cooldown) {
-      await createRoom()
-      setCooldown(5000)
-    } else {
-      notifyUser(`Please Wait a Moment`,`warning`)
-    }
   }
 
   const initializeRooms = async () => {
@@ -2003,7 +2004,7 @@ const Chat = () => {
             className={`w-20 h-full max-h-28 m-0 flex items-center justify-center group`}
             disabled={!!reload || firstLoad || !serverStatus || showLog}
             title={`Create a new room`}
-            onClick={() => onNewRoomClick()}
+            onClick={() => createRoom()}
 
           />
         
@@ -2119,11 +2120,8 @@ const Chat = () => {
         </h3>
         <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>    
         {`!!reload : ${!!reload} || firstLoad : ${firstLoad} || !serverStatus ${!serverStatus} || showLog ${showLog}`}
-        </h3>
+        </h3>        
         */}
-        <h3 className={`flex mb-5 bg-gray-500 rounded-lg p-3`}>    
-        {renderCounter}
-        </h3>
       </div>
      
     </section>
